@@ -1,0 +1,11 @@
+[
+  {
+    "id": "conf-1",
+    "policyId": "UTM-POL-9824",
+    "amountPaid": 5850,
+    "paymentMethod": "M-Pesa",
+    "transactionReference": "MPESA-REF-123456",
+    "timestamp": "2026-06-16T16:50:00Z",
+    "confirmedByStaffId": "staff-4"
+  }
+]

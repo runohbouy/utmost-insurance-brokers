@@ -1,0 +1,14 @@
+[
+  {
+    "id": "UTM-POL-9824",
+    "quoteId": "quote-mock-1",
+    "clientId": "client-1",
+    "insurerId": "icea",
+    "category": "motor",
+    "premiumAmount": 58500,
+    "status": "active",
+    "startDate": "2026-06-16",
+    "endDate": "2027-06-15",
+    "createdAt": "2026-06-16T16:50:00Z"
+  }
+]

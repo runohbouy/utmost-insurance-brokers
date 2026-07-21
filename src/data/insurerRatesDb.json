@@ -1,0 +1,1724 @@
+{
+  "levies": {
+    "pcfRate": 0.0025,
+    "itlRate": 0.002,
+    "stampDuty": 40
+  },
+  "versions": [
+    {
+      "id": "rate-ver-jubilee-initial",
+      "versionNumber": 1,
+      "insurerId": "jubilee",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Jubilee Health Insurance Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 34818,
+        "medicalDentalOptRate": 14302,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.5
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3.75
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.25,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 50000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.5,
+            "minPremium": 120000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-icea-initial",
+      "versionNumber": 1,
+      "insurerId": "icea",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "ICEA LION General Insurance Company Limited",
+        "motorTpoRate": 8000,
+        "medicalMultiplier": 1.05,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 8500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.75
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.25
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.5,
+            "minPremium": 38000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.25,
+            "minPremium": 48000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.25,
+            "minPremium": 55000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "rate": 7,
+            "minPremium": 150000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.3,
+            "minPremium": 3000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.3,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-heritage-initial",
+      "versionNumber": 1,
+      "insurerId": "heritage",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "The Heritage Insurance Company Limited",
+        "motorTpoRate": 8500,
+        "medicalMultiplier": 0.95,
+        "medicalMaternityRate": 15000,
+        "medicalDentalOptRate": 6800,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.85
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.5
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.15
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.6,
+            "minPremium": 32000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.4,
+            "minPremium": 42000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.5,
+            "minPremium": 48000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 7.5,
+            "minPremium": 130000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 8,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-cic-initial",
+      "versionNumber": 1,
+      "insurerId": "cic",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "CIC General Insurance Limited",
+        "motorTpoRate": 9000,
+        "medicalMultiplier": 0.9,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 10500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 5
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.75
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.5
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.9,
+            "minPremium": 30000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.7,
+            "minPremium": 40000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 8,
+            "minPremium": 140000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.35,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.35,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-kenindia-initial",
+      "versionNumber": 1,
+      "insurerId": "kenindia",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Kenindia Assurance Company Limited",
+        "motorTpoRate": 9500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 8500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 5.3
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 5
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.8
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 5.2,
+            "minPremium": 36000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 46000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 6,
+            "minPremium": 52000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 8.5,
+            "minPremium": 160000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.4,
+            "minPremium": 3500
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.4,
+            "minPremium": 3000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 12,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-stardiscover-initial",
+      "versionNumber": 1,
+      "insurerId": "stardiscover",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Star Discover Insurance Limited",
+        "motorTpoRate": 7800,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 17214,
+        "medicalDentalOptRate": 10493,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.4
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.1
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3.9
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.2,
+            "minPremium": 31000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 3.9,
+            "minPremium": 41000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 4.8,
+            "minPremium": 46000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "rate": 6,
+            "minPremium": 110000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-britam-initial",
+      "versionNumber": 1,
+      "insurerId": "britam",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Britam General Insurance Company (K) Limited",
+        "motorTpoRate": 8200,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 12500,
+        "medicalDentalOptRate": 4500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.6
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.3
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.1
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.5,
+            "minPremium": 34000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.2,
+            "minPremium": 44000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.1,
+            "minPremium": 51000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.8,
+            "minPremium": 135000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 9,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-aar-initial",
+      "versionNumber": 1,
+      "insurerId": "aar",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "AAR Insurance (Kenya) Limited",
+        "motorTpoRate": 8800,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 8500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.9
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.6
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.3
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.8,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.5,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.5,
+            "minPremium": 52000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 7.5,
+            "minPremium": 140000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.3,
+            "minPremium": 3000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.3,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-oldmutual-initial",
+      "versionNumber": 1,
+      "insurerId": "oldmutual",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-15T06:18:55.431Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Old Mutual General Insurance Kenya Limited",
+        "motorTpoRate": 8600,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 16176,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.8
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.5
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.2
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.7,
+            "minPremium": 33000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.4,
+            "minPremium": 43000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.3,
+            "minPremium": 49000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "rate": 7.2,
+            "minPremium": 138000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.28,
+            "minPremium": 2800
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.28,
+            "minPremium": 2200
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 9.5,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-jubilee-2",
+      "versionNumber": 2,
+      "insurerId": "jubilee",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-17T10:18:58.264Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Jubilee Health Insurance Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 34818,
+        "medicalDentalOptRate": 14302,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.5
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3.75
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 5.75,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 50000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.5,
+            "minPremium": 120000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "textName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-jubilee-3",
+      "versionNumber": 3,
+      "insurerId": "jubilee",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-17T11:16:45.105Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Jubilee Health Insurance Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 34818,
+        "medicalDentalOptRate": 14302,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.5
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3.75
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.85,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 50000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.5,
+            "minPremium": 120000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "textName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-jubilee-4",
+      "versionNumber": 4,
+      "insurerId": "jubilee",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-17T11:28:12.981Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Jubilee Health Insurance Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 34818,
+        "medicalDentalOptRate": 14302,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.5
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3.75
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 5.25,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 50000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.5,
+            "minPremium": 120000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "textName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-geminia-initial",
+      "versionNumber": 1,
+      "insurerId": "geminia",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-17T05:12:00.000Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Geminia Insurance Company Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 30000,
+        "medicalDentalOptRate": 12000,
+        "isExcessProtectorInclusive": false,
+        "isPvtInclusive": false,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1500000,
+            "rate": 6,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 1500001,
+            "max": 2000000,
+            "rate": 5,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 2000001,
+            "max": 2500000,
+            "rate": 4,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 2500001,
+            "max": 3000000,
+            "rate": 3.5,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 3000001,
+            "max": 3500000,
+            "rate": 3.25,
+            "isPvtInclusive": false
+          },
+          {
+            "min": 3500001,
+            "max": 99999999,
+            "rate": 3,
+            "isPvtInclusive": false
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.5,
+            "minPremium": 5000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-mua-initial",
+      "versionNumber": 1,
+      "insurerId": "mua",
+      "category": "all",
+      "status": "inactive",
+      "timestamp": "2026-07-20T01:50:00.000Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "MUA Insurance (Kenya) Limited",
+        "motorTpoRate": 12000,
+        "motorTpoFleetRate": 10000,
+        "tpoNote": "TODO: Commercial Own Goods and General Cartage TPO for MUA still need tonnage-based rates from the source document (Priority 3 scope); Motor Private TPO is 12,000 for single unit and 10,000 for fleet.",
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 25000,
+        "medicalDentalOptRate": 10000,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1500000,
+            "rate": 4.5
+          },
+          {
+            "min": 1500001,
+            "max": 3000000,
+            "rate": 4.25
+          },
+          {
+            "min": 3000001,
+            "max": 5000000,
+            "rate": 4
+          },
+          {
+            "min": 5000001,
+            "max": 99999999,
+            "rate": 3.75
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.25,
+            "minPremium": 35000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5,
+            "minPremium": 50000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.5,
+            "minPremium": 120000
+          }
+        ],
+        "commercialRates": {
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 1500000,
+                "rate": 5.5
+              },
+              {
+                "min": 1500001,
+                "max": 3000000,
+                "rate": 5
+              },
+              {
+                "min": 3000001,
+                "max": 5000000,
+                "rate": 5
+              },
+              {
+                "min": 5000001,
+                "max": 99999999,
+                "rate": 4.5
+              }
+            ],
+            "minPremium": 50000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 1500000,
+                "rate": 4.5
+              },
+              {
+                "min": 1500001,
+                "max": 3000000,
+                "rate": 4.5
+              },
+              {
+                "min": 3000001,
+                "max": 5000000,
+                "rate": 4
+              },
+              {
+                "min": 5000001,
+                "max": 99999999,
+                "rate": 4
+              }
+            ],
+            "minPremium": 50000
+          }
+        },
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "status": "unsourced_fully_inclusive",
+            "rate": null,
+            "minPremium": null,
+            "isInclusive": true,
+            "note": "Fully inclusive in MUA comprehensive base rates; no separate rate or minimum premium published."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "status": "unsourced_fully_inclusive",
+            "rate": null,
+            "minPremium": null,
+            "isInclusive": true,
+            "note": "Fully inclusive in MUA comprehensive base rates; no separate rate or minimum premium published."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 0,
+            "limitType": "threshold",
+            "thresholds": [
+              {
+                "min": 0,
+                "max": 2000000,
+                "limit": 50000
+              },
+              {
+                "min": 2000001,
+                "max": 99999999,
+                "limit": 100000
+              }
+            ],
+            "note": "≤2M: 50,000 free; >2M: 100,000 free"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rate-ver-mua-2",
+      "versionNumber": 2,
+      "insurerId": "mua",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-20T14:00:00.000Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "MUA Insurance (Kenya) Limited",
+        "motorTpoRate": 12000,
+        "motorTpoFleetRate": 10000,
+        "tpoRates": {
+          "private": 12000,
+          "commercial_goods": 12000,
+          "commercial_general_cartage": 20000,
+          "institutional": 20000,
+          "motorcycle": 5000
+        },
+        "tpoNote": "Single-unit, lowest tonnage tier (up to 3 tons) rates sourced from MUA 2025 binder Table 7 & 11 (Priority 3 scope closed). Fleet and higher-tonnage tiers are not yet modeled in the flat per-vehicleUse TPO engine: Commercial Own Goods single/fleet - up to 3t 12,000/10,000, 3-8t 15,000/12,500, over 8t 20,000/18,000, institutional 20,000/15,000, prime mover 25,000/20,000; Commercial General Cartage single/fleet - up to 3t 20,000/15,000, 3-8t 25,000/20,000, over 8t 30,000/25,000. Motor Private TPO fleet rate: 10,000 (see motorTpoFleetRate).",
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 25000,
+        "medicalDentalOptRate": 10000,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1500000,
+            "rate": 5
+          },
+          {
+            "min": 1500001,
+            "max": 2000000,
+            "rate": 4.5
+          },
+          {
+            "min": 2000001,
+            "max": 4000000,
+            "rate": 3.5
+          },
+          {
+            "min": 4000001,
+            "max": 99999999,
+            "rate": 3
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "minPremium": 37500
+          }
+        ],
+        "vehicleTypesNote": "MUA Motor Private comprehensive is rated purely by sum-insured band (see sumInsuredBands), not by vehicle body type - no per-type 'rate' is published in the binder, so type-specific rates were removed here to let sumInsuredBands apply uniformly. Min premium of Kshs 37,500 applies across all bands per binder Table 1.",
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 1500000,
+                "rate": 5.5
+              },
+              {
+                "min": 1500001,
+                "max": 4000000,
+                "rate": 5
+              },
+              {
+                "min": 4000001,
+                "max": 99999999,
+                "rate": 4
+              }
+            ],
+            "minPremium": 50000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 1500000,
+                "rate": 5.5
+              },
+              {
+                "min": 1500001,
+                "max": 4000000,
+                "rate": 5
+              },
+              {
+                "min": 4000001,
+                "max": 99999999,
+                "rate": 4.5
+              }
+            ],
+            "minPremium": 50000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 2000000,
+                "rate": 4.5
+              },
+              {
+                "min": 2000001,
+                "max": 99999999,
+                "rate": 4
+              }
+            ],
+            "minPremium": 50000
+          }
+        },
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 5000,
+            "note": "Motor Private rate per binder Appendix A optional benefits: 0.25% of value, min Kshs 5,000. Motor Commercial (Own Goods/General Cartage) excess protector is 0.5% of SI, min Kshs 5,000 per binder Appendix B - not yet split by vehicleUse in this engine, so the Private rate is applied across all classes."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500,
+            "note": "Motor Private rate per binder Appendix A optional benefits: 0.25% of value, min Kshs 2,500. Motor Commercial (Own Goods) PVT extension is 0.45% individual / 0.3% fleet, min Kshs 2,500 per binder Appendix B - not yet split by vehicleUse in this engine, so the Private rate is applied across all classes."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limitType": "threshold",
+            "thresholds": [
+              {
+                "min": 0,
+                "max": 2000000,
+                "limit": 50000
+              },
+              {
+                "min": 2000001,
+                "max": 99999999,
+                "limit": 100000
+              }
+            ],
+            "note": "≤2M SI: 50,000 free limit; >2M SI: 100,000 free limit. Binder: 'Charge 10% for anything above the free limit.'"
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "freeLimit": 50000,
+            "rate": 0,
+            "note": "Free limit of Kshs 50,000 per binder Table 0 (Radio and Accessories). No separate uplift rate is published for Radio & Entertainment above the free limit, unlike Windscreen which explicitly states 'charge 10% for anything above the free limit' - rate left at 0 pending confirmation."
+          },
+          {
+            "riderId": "courtesy_car",
+            "riderName": "Courtesy Car / Loss of Use",
+            "ratePerDay": 3000,
+            "maxDays": 10,
+            "waitingDays": 3,
+            "note": "Loss of Use per binder Table 2 (optional additional benefit, Motor Private): Kshs 3,000/day, 10-day limit (Kshs 30,000 total benefit), applicable after 3 days of full claim documentation. Binder separately prices the buy-up premium to activate this benefit at 10% of the Kshs 30,000 limit (i.e. Kshs 3,000 flat) rather than a per-day premium - the ratePerDay field here approximates that as a per-day charge capped at maxDays."
+          }
+        ],
+        "otherLines": {
+          "domestic_package": {
+            "label": "Domestic Package",
+            "minPremium": 5000,
+            "items": [
+              {
+                "name": "Residential Houses (Buildings)",
+                "rateType": "percent",
+                "rate": 0.12
+              },
+              {
+                "name": "Earthquake Extension",
+                "rateType": "percent",
+                "rate": 0.025
+              },
+              {
+                "name": "All Contents",
+                "rateType": "percent",
+                "rate": 0.75
+              },
+              {
+                "name": "All Risks (Worldwide)",
+                "rateType": "percent",
+                "rate": 1
+              }
+            ],
+            "note": "Sourced from MUA binder Appendix E (Domestic Package). Owner/Personal Liability is free up to Kshs 2,000,000 then 1 per mille above; Domestic Servants WIBA is first two free then Kshs 500-1,000 each - both flat/threshold benefits, not sum-insured-rated, so not modeled as line items here. Minimum premium Kshs 5,000 applies across the whole policy."
+          },
+          "fire": {
+            "label": "Fire & Perils",
+            "minPremium": 0,
+            "items": [],
+            "note": "Not offered as a standalone product in the MUA binder - fire peril cover is bundled into the Domestic Package's Residential Houses line above rather than sold separately."
+          },
+          "medical": {
+            "label": "Health / Medical Insurance",
+            "minPremium": 0,
+            "items": [],
+            "note": "Not offered. The MUA binder covers Motor, Personal Accident and Domestic Package only - no individual/family medical scheme is provided."
+          }
+        }
+      }
+    },
+    {
+      "id": "rate-ver-cannon-initial",
+      "versionNumber": 1,
+      "insurerId": "cannon",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-07-20T15:00:00.000Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Cannon General Insurance Company Limited",
+        "motorTpoRate": 12000,
+        "tpoRates": {
+          "private": 12000,
+          "commercial_goods": 12000,
+          "commercial_general_cartage": 20000,
+          "institutional": 10000,
+          "motorcycle": 5000
+        },
+        "tpoNote": "Single-unit, lowest tier rates sourced from the CANNON/UTMOST scheme agreement (effective 1 Feb 2023), Appendices A, B, D & E. Higher tonnage/passenger-count and fleet tiers are not modeled in the flat per-vehicleUse TPO engine: Commercial Own Goods single/fleet - up to 3t 12,000/10,000, up to 8t 15,000/12,500, over 8t 20,000/18,000; Commercial General Cartage single/fleet - up to 3t 20,000/15,000, up to 20t 25,000/20,000, 20-30t 30,000/25,000, prime mover 25,000/20,000; Institutional buses/vans single unit - up to 10 pax 10,000, above 10 pax 15,000.",
+        "medicalMultiplier": null,
+        "medicalMaternityRate": null,
+        "medicalDentalOptRate": null,
+        "medicalNote": "Not offered. The CANNON/UTMOST binder covers Motor, Personal Accident, GPA/WIBA, Employer's Liability (Common Law), Domestic Package, Fire & Special Perils and Burglary only - no individual/family medical scheme is provided, so Cannon is excluded from medical quote generation.",
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1500000,
+            "rate": 5
+          },
+          {
+            "min": 1500001,
+            "max": 2500000,
+            "rate": 4.5
+          },
+          {
+            "min": 2500001,
+            "max": 99999999,
+            "rate": 3.5
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "minPremium": 37500
+          }
+        ],
+        "vehicleTypesNote": "Cannon Motor Private comprehensive (Appendix C) is rated purely by sum-insured band, not by vehicle body type - no per-type rate is published in the binder, so sumInsuredBands applies uniformly. Min premium of Kshs 37,500 applies across all bands. Sports/racing/rally cars are explicitly excluded from comprehensive cover per the binder's Special Features clause.",
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5
+              }
+            ],
+            "minPremium": 50000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5.5
+              }
+            ],
+            "minPremium": 75000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 4.5
+              }
+            ],
+            "minPremium": 40000
+          }
+        },
+        "commercialRatesNote": "Cannon Motor Commercial classes (Appendices A, B & D) are rated flat per Sum Insured (not sum-insured banded) - Own Goods 5.0% min Kshs 50,000, General Cartage 5.5% min Kshs 75,000. Institutional uses the binder's 'Institutional Vehicles (Staff vans/buses)' rate of 4.5% min Kshs 40,000; the binder separately offers School/Church Buses/Vans at 4.0% and a 3-or-more-vehicle fleet rate of 3.75% (both min Kshs 40,000), neither of which is split out by this engine.",
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "isInclusive": true,
+            "note": "Accidental Damage Excess Protector is included at no extra cost within the comprehensive base rate for Motor Private, Commercial Own Goods, General Cartage and Institutional classes per the binder's Applicable Clauses. A separate optional Theft Excess Protector (waiving theft excess only, not modeled here) is priced at 1% of SI, min Kshs 5,000-10,000 depending on class. Motorcycles (Appendix E) price this benefit separately at 0.25% of SI, min Kshs 1,000 rather than including it free - not reflected here since riders are insurer-wide, not per vehicleUse."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "isInclusive": true,
+            "note": "Political Risks, Terrorism & Sabotage is included at no extra cost within the comprehensive base rate for Motor Private, Commercial Own Goods, General Cartage and Institutional classes per the binder's Applicable Clauses. Motorcycles (Appendix E) price PVT separately at 0.25% of SI, min Kshs 1,000 - not reflected here since riders are insurer-wide, not per vehicleUse."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 50000,
+              "suv": 50000,
+              "pickup": 50000,
+              "sports": 50000
+            },
+            "note": "Flat Kshs 50,000 free limit across all vehicle types and classes per the binder (no sum-insured-band differentiation, unlike MUA). Binder: 'Replacement up to Kshs.50,000 free, to charge 10% of value above Kshs.50,000.00'."
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "freeLimit": 50000,
+            "rate": 10,
+            "note": "Flat Kshs 50,000 free limit, 10% of value charged above it, explicitly repeated across Appendices A, B, C & D per the binder: 'Replacement up to Kshs.50,000.00 free to charge 10% of value above Kshs.50,000'."
+          },
+          {
+            "riderId": "courtesy_car",
+            "riderName": "Courtesy Car / Loss of Use",
+            "ratePerDay": 3000,
+            "maxDays": 30,
+            "waitingDays": 3,
+            "note": "Motor Private only (Appendix C, clause 25): Kshs 3,000/day excluding the first 3 days, maximum 30 days; alternatively CANNON offers a physical courtesy car for a flat Kshs 8,000. After a claim, cover ceases and must be reinstated at 10% of the limit for the remaining period. Not offered on Commercial Own Goods or General Cartage - both explicitly state 'no cover for loss of use' under Special Features."
+          }
+        ],
+        "otherLines": {
+          "domestic_package": {
+            "label": "Domestic Package",
+            "minPremium": 0,
+            "items": [
+              {
+                "name": "Residential Houses (Buildings, incl. Earthquake)",
+                "rateType": "permille",
+                "rate": 1.45
+              },
+              {
+                "name": "Loss of Rent",
+                "rateType": "permille",
+                "rate": 1.45
+              },
+              {
+                "name": "All Contents (incl. Earthquake)",
+                "rateType": "permille",
+                "rate": 6.5
+              },
+              {
+                "name": "All Risks (Worldwide)",
+                "rateType": "permille",
+                "rate": 10
+              },
+              {
+                "name": "Political Risks, Terrorism & Sabotage (Buildings & Contents)",
+                "rateType": "permille",
+                "rate": 0.5
+              }
+            ],
+            "note": "Sourced from CANNON/UTMOST binder Appendix K (Domestic Package Insurance). All Risks carries an excess of Kshs 2,500 on mobile phones / 10% on laptops, min Kshs 15,000, not modeled as a rate line. Owner's/Occupiers' Personal Liability and Employer's Liability are each free up to Kshs 2,000,000 then 0.5 per mille above - flat/threshold benefits, not modeled as sum-insured-rated line items."
+          },
+          "fire": {
+            "label": "Fire & Perils",
+            "minPremium": 0,
+            "items": [
+              {
+                "name": "Residential / Apartments (incl. Earthquake)",
+                "rateType": "permille",
+                "rate": 1.45
+              }
+            ],
+            "note": "Sourced from CANNON/UTMOST binder Appendix L (Fire & Perils Insurance), first-class construction only. Commercial buildings are explicitly 'Refer to CANNON for rating' in the binder - no fixed rate published, so not listed as a line item; refer such risks to the underwriter directly."
+          },
+          "medical": {
+            "label": "Health / Medical Insurance",
+            "minPremium": 0,
+            "items": [],
+            "note": "Not offered. The CANNON/UTMOST binder covers Motor, Personal Accident, GPA/WIBA, Employer's Liability, Domestic Package, Fire & Special Perils and Burglary only - no individual/family medical scheme is provided."
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "staff-1",
+    "fullName": "Sample Underwriter",
+    "role": "underwriter",
+    "supervisorId": null,
+    "approvalLimitKES": 5000000,
+    "active": true,
+    "createdAt": "2026-07-14T01:00:00.000Z"
+  },
+  {
+    "id": "staff-2",
+    "fullName": "Sample Supervisor A",
+    "role": "supervisor",
+    "supervisorId": null,
+    "approvalLimitKES": null,
+    "active": true,
+    "createdAt": "2026-07-14T01:00:00.000Z"
+  },
+  {
+    "id": "staff-3",
+    "fullName": "Sample Supervisor B",
+    "role": "supervisor",
+    "supervisorId": null,
+    "approvalLimitKES": null,
+    "active": true,
+    "createdAt": "2026-07-14T01:00:00.000Z"
+  },
+  {
+    "id": "staff-4",
+    "fullName": "Sample Accountant",
+    "role": "accountant",
+    "supervisorId": null,
+    "approvalLimitKES": 20000000,
+    "active": true,
+    "createdAt": "2026-07-14T01:00:00.000Z"
+  },
+  {
+    "id": "staff-1784018591758",
+    "fullName": "Sample Verification Underwriter",
+    "role": "underwriter",
+    "supervisorId": null,
+    "approvalLimitKES": 100000,
+    "active": true,
+    "createdAt": "2026-07-14T08:42:38.000Z"
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "claimId": "UTM-CLM-8419",
+    "policyNumber": "UTM-POL-9824",
+    "claimType": "Motor Private Accident",
+    "phoneNumber": "+254 712 345678",
+    "description": "Minor bumper scratch in traffic along Uhuru Highway, Nairobi.",
+    "status": "Submitted to insurer",
+    "assignedOfficer": "Sample Supervisor A",
+    "officerDetails": "Email: supervisor-a@brokerage.com | Direct extension: +254 700 000000",
+    "actionGuidance": [
+      "DO NOT admit liability to third parties under any circumstances (Motor accident guidelines).",
+      "Ensure you obtain a certified Police Abstract as soon as possible.",
+      "Take photographs of all damaged items, assets, or vehicles immediately.",
+      "Contact our 24h claims hotline for assistance on emergency logistics or immediate advisor dispatch."
+    ],
+    "timeline": [
+      {
+        "status": "Notification received",
+        "date": "2026-06-17T10:30:00Z",
+        "completed": true,
+        "detail": "Claim created and registered instantly on the brokerage system."
+      },
+      {
+        "status": "Initial review",
+        "date": "2026-06-17T11:00:00Z",
+        "completed": true,
+        "detail": "A claims specialist reviewed your policy validity and asset scope."
+      },
+      {
+        "status": "Submitted to insurer",
+        "date": "2026-06-17T12:00:00Z",
+        "completed": true,
+        "detail": "File submitted to the carrier underwriting panel for liability settlement."
+      }
+    ],
+    "timestamp": "2026-06-17T10:30:00Z"
+  }
+]

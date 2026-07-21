@@ -1,0 +1,37 @@
+[
+  {
+    "id": "scan-mock-1",
+    "timestamp": "2026-06-17T09:12:00.000Z",
+    "roomType": "Living Room",
+    "status": "Cluttered",
+    "clutterScore": 7,
+    "totalContentsValueKES": 390000,
+    "domesticPackageIndicativePremiumKES": 5850,
+    "analysis": {
+      "roomType": "Living Room",
+      "status": "Cluttered",
+      "clutterScore": 7,
+      "organizationSuggestions": [
+        "Clear the floor of loose cords, papers and laundry to instantly enlarge the path.",
+        "Introduce a multi-tier modular storage rack or shelving unit along the main wall.",
+        "Categorize all items on open surfaces into 'Keep', 'Donate', and 'Recycle' bins."
+      ],
+      "safetyHazards": [
+        {
+          "hazardName": "Cable Cluttered Path",
+          "description": "Multiple electrical wires laying completely exposed across the main walkways.",
+          "fixAction": "Install self-adhesive cable raceways or zip-ties along the baseboard to completely clear the path."
+        }
+      ],
+      "estimatedItems": [
+        {
+          "itemName": "Smart Television & Soundbar",
+          "estimatedValueKES": 85000,
+          "insuranceTip": "Mount TV securely to the wall to avoid accidental tip-over."
+        }
+      ],
+      "totalContentsValueKES": 390000,
+      "domesticPackageIndicativePremiumKES": 5850
+    }
+  }
+]

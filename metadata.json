@@ -1,0 +1,6 @@
+{
+  "name": "Utmost Insurance Brokers",
+  "description": "Kenya's premier digital insurance marketplace featuring AI room organization and domestic package home risk assessment tools.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

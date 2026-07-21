@@ -1,0 +1,188 @@
+[
+  {
+    "id": "log-1784548600000-101",
+    "timestamp": "2026-07-20T23:16:40.000Z",
+    "action": "RATE_TABLE_DEACTIVATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "versionId": "rate-ver-jubilee-4",
+      "reason": "Jubilee Health Insurance Limited is licensed only for IRA class 12 (Medical) per the Licensed Entities 2026 notice; the entity holds no Motor (07/08) or Fire (03/04) authorisation. Motor rate version deactivated and Jubilee removed from the live motor quote engine and Domestic Package carrier list. Medical quoting is unaffected."
+    }
+  },
+  {
+    "id": "log-1784548600000-102",
+    "timestamp": "2026-07-20T23:16:40.000Z",
+    "action": "RATE_TABLE_DEACTIVATED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "versionId": "rate-ver-aar-initial",
+      "reason": "AAR Insurance (Kenya) Limited is not licensed for IRA classes 07/08 (Motor Private/Commercial) per the Licensed Entities 2026 notice. Motor rate version deactivated and AAR removed from the live motor quote engine."
+    }
+  },
+  {
+    "id": "log-1784547541611-665",
+    "timestamp": "2026-07-20T11:39:01.611Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1784287692981-640",
+    "timestamp": "2026-07-17T11:28:12.981Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-jubilee-3",
+      "newVersionId": "rate-ver-jubilee-4",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1784287005105-885",
+    "timestamp": "2026-07-17T11:16:45.105Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-jubilee-2",
+      "newVersionId": "rate-ver-jubilee-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1784283538264-699",
+    "timestamp": "2026-07-17T10:18:58.264Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-jubilee-initial",
+      "newVersionId": "rate-ver-jubilee-2",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1784104393454-319",
+    "timestamp": "2026-07-15T08:33:13.454Z",
+    "action": "QUOTE_CALCULATED",
+    "entityType": "quote",
+    "entityId": "quote-pers-1784104393454",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "totalPremiumKES": 141926
+    }
+  },
+  {
+    "id": "log-1784101839059-941",
+    "timestamp": "2026-07-15T07:50:39.059Z",
+    "action": "QUOTE_CALCULATED",
+    "entityType": "quote",
+    "entityId": "quote-pers-1784101839058",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "totalPremiumKES": 383006
+    }
+  },
+  {
+    "id": "log-1784096335453-654",
+    "timestamp": "2026-07-15T06:18:55.453Z",
+    "action": "QUOTE_CALCULATED",
+    "entityType": "quote",
+    "entityId": "quote-pers-1784096335452",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "totalPremiumKES": 383006
+    }
+  },
+  {
+    "id": "log-1784018597627-161",
+    "timestamp": "2026-07-14T08:43:17.627Z",
+    "action": "QUOTE_CALCULATED",
+    "entityType": "quote",
+    "entityId": "quote-verification-1",
+    "actorId": "staff-1784018591758",
+    "actorType": "staff",
+    "details": {
+      "totalPremium": 12596.25
+    }
+  },
+  {
+    "id": "log-1",
+    "timestamp": "2026-06-17T12:45:00.000Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "icea",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "seedData": true,
+    "details": {
+      "oldVersionId": "rate-ver-icea-initial",
+      "newVersionId": "rate-ver-icea-2",
+      "changes": "Updated ICEA LION comprehensive rating coefficient to 4.3% in backend database"
+    }
+  },
+  {
+    "id": "log-2",
+    "timestamp": "2026-06-17T10:30:00.000Z",
+    "action": "STATUS_TRANSITION",
+    "entityType": "claim",
+    "entityId": "UTM-CLM-8419",
+    "actorId": "staff-2",
+    "actorType": "staff",
+    "seedData": true,
+    "details": {
+      "oldStatus": "Notification received",
+      "newStatus": "Submitted to insurer",
+      "notes": "Approved claims liability settlement on UTM-CLM-8419"
+    }
+  },
+  {
+    "id": "log-3",
+    "timestamp": "2026-06-17T09:12:00.000Z",
+    "action": "PII_ACCESS",
+    "entityType": "compliance",
+    "entityId": "odpc-consent",
+    "actorId": "staff-3",
+    "actorType": "staff",
+    "seedData": true,
+    "details": {
+      "notes": "Audited ODPC compliance consents for data declarations"
+    }
+  },
+  {
+    "id": "log-4",
+    "timestamp": "2026-06-16T16:50:00.000Z",
+    "action": "PREMIUM_CONFIRMED",
+    "entityType": "policy",
+    "entityId": "UTM-POL-9824",
+    "actorId": "staff-4",
+    "actorType": "staff",
+    "seedData": true,
+    "details": {
+      "notes": "Reconciled KES 5,850 M-Pesa push receipt under policy UTM-POL-9824"
+    }
+  }
+]

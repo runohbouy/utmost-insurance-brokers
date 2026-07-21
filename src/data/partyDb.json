@@ -1,0 +1,54 @@
+[
+  {
+    "id": "client-1",
+    "fullName": "David Kiprop",
+    "email": "dkiprop@gmail.com",
+    "phoneNumber": "+254 712 345678",
+    "clientType": "individual",
+    "nationalId": "32456789",
+    "kraPin": "A001234567B",
+    "collectedAtStage": "policy_issuance",
+    "consentGiven": true,
+    "consentTimestamp": "2026-06-15T10:00:00Z",
+    "createdAt": "2026-06-15T10:00:00Z"
+  },
+  {
+    "id": "client-2",
+    "fullName": "Serah Wanjiku",
+    "email": "swanjiku@yahoo.com",
+    "phoneNumber": "+254 722 987654",
+    "clientType": "individual",
+    "nationalId": "28456123",
+    "kraPin": "A009876543C",
+    "collectedAtStage": "quote_submitted",
+    "consentGiven": true,
+    "consentTimestamp": "2026-06-16T11:30:00Z",
+    "createdAt": "2026-06-16T11:30:00Z"
+  },
+  {
+    "id": "client-3",
+    "fullName": "Kennedy Omondi",
+    "email": "komondi@outlook.com",
+    "phoneNumber": "+254 733 456123",
+    "clientType": "individual",
+    "nationalId": "30123456",
+    "kraPin": "A004561234D",
+    "collectedAtStage": "quote_draft",
+    "consentGiven": true,
+    "consentTimestamp": "2026-06-17T09:00:00Z",
+    "createdAt": "2026-06-17T09:00:00Z"
+  },
+  {
+    "id": "client-verification",
+    "fullName": "Test Verification Client",
+    "email": "test-verification@client.com",
+    "phoneNumber": "+254 799 999999",
+    "clientType": "individual",
+    "nationalId": "99999999",
+    "kraPin": "A009999999X",
+    "collectedAtStage": "quote_draft",
+    "consentGiven": true,
+    "consentTimestamp": "2026-07-14T02:00:00.000Z",
+    "createdAt": "2026-07-14T02:00:00.000Z"
+  }
+]

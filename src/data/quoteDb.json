@@ -1,0 +1,116 @@
+[
+  {
+    "id": "quote-pers-1784104393454",
+    "timestamp": "2026-07-15T08:33:13.454Z",
+    "clientId": "client-verification",
+    "status": "draft",
+    "sumInsuredKES": 2500000,
+    "basePremiumKES": 125000,
+    "pcfLevyKES": 353,
+    "itlLevyKES": 283,
+    "stampDutyKES": 40,
+    "totalPremiumKES": 141926,
+    "category": "motor",
+    "insurerId": "jubilee",
+    "insurerName": "Jubilee Insurance",
+    "rateVersionRef": "rate-ver-jubilee-initial",
+    "vehicleUse": "commercial_goods",
+    "vehicleType": "suv",
+    "isProvisionalRate": true,
+    "provisionalLoadingFactor": 1.25,
+    "riderBreakdown": {
+      "excessProtector": 6250,
+      "pvt": 0,
+      "windscreen": 10000
+    },
+    "assignedStaffId": "staff-1",
+    "assignmentHistory": [
+      {
+        "staffId": "staff-1",
+        "assignedBy": "system",
+        "assignedAt": "2026-07-15T08:33:13.454Z",
+        "reason": "Initial assignment on quote calculation"
+      }
+    ]
+  },
+  {
+    "id": "quote-pers-1784101839058",
+    "timestamp": "2026-07-15T07:50:39.058Z",
+    "clientId": "client-verification-fixed",
+    "status": "draft",
+    "sumInsuredKES": 2500000,
+    "basePremiumKES": 125000,
+    "pcfLevyKES": 953,
+    "itlLevyKES": 763,
+    "stampDutyKES": 40,
+    "totalPremiumKES": 383006,
+    "category": "motor",
+    "insurerId": "jubilee",
+    "insurerName": "Jubilee Insurance",
+    "rateVersionRef": "rate-ver-jubilee-initial",
+    "vehicleUse": "commercial_goods",
+    "vehicleType": "suv",
+    "isProvisionalRate": true,
+    "provisionalLoadingFactor": 1.25,
+    "riderBreakdown": {
+      "excessProtector": 6250,
+      "pvt": 0,
+      "windscreen": 250000
+    },
+    "assignedStaffId": "staff-1",
+    "assignmentHistory": [
+      {
+        "staffId": "staff-1",
+        "assignedBy": "system",
+        "assignedAt": "2026-07-15T07:50:39.058Z",
+        "reason": "Initial assignment on quote calculation"
+      }
+    ]
+  },
+  {
+    "id": "quote-pers-1784096335452",
+    "timestamp": "2026-07-15T06:18:55.452Z",
+    "clientId": "client-verification",
+    "status": "draft",
+    "sumInsuredKES": 2500000,
+    "basePremiumKES": 125000,
+    "pcfLevyKES": 953,
+    "itlLevyKES": 763,
+    "stampDutyKES": 40,
+    "totalPremiumKES": 383006,
+    "category": "motor",
+    "insurerId": "jubilee",
+    "insurerName": "Jubilee Insurance",
+    "rateVersionRef": "rate-ver-jubilee-initial",
+    "vehicleUse": "commercial_goods",
+    "vehicleType": "suv",
+    "isProvisionalRate": true,
+    "provisionalLoadingFactor": 1.25
+  },
+  {
+    "id": "quote-verification-1",
+    "clientId": "client-verification",
+    "status": "draft",
+    "needsReview": true,
+    "sumInsuredKES": 1250000,
+    "basePremiumKES": 12500,
+    "pcfLevyKES": 31.25,
+    "itlLevyKES": 25,
+    "stampDutyKES": 40,
+    "totalPremiumKES": 12596.25,
+    "category": "motor",
+    "insurerId": "jubilee",
+    "insurerName": "Jubilee Insurance",
+    "assignedStaffId": "staff-1784018591758",
+    "assignmentHistory": [
+      {
+        "staffId": "staff-1784018591758",
+        "assignedBy": "system",
+        "assignedAt": "2026-07-14T08:43:17.627Z",
+        "reason": "Initial manual underwriter assignment for test verification"
+      }
+    ],
+    "rateVersionRef": "rate-ver-jubilee-1",
+    "timestamp": "2026-07-14T08:43:17.627Z"
+  }
+]
