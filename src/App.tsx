@@ -9,6 +9,7 @@ import OtherLinesQuoteView from "./components/OtherLinesQuoteView";
 import ClaimsCentreView from "./components/ClaimsCentreView";
 import PortalDashboardView from "./components/PortalDashboardView";
 import AdminPortalView from "./components/AdminPortalView";
+import StaffLoginGate from "./components/StaffLoginGate";
 
 // Lazy-like or static import for all secondary pages
 import InsuranceProductsView from "./components/InsuranceProductsView";
@@ -244,7 +245,11 @@ export default function App() {
             )}
 
             {activeTab === "admin" && (
-              <AdminPortalView setActiveTab={setActiveTab} />
+              <StaffLoginGate setActiveTab={setActiveTab}>
+                {(staff, onLogout) => (
+                  <AdminPortalView setActiveTab={setActiveTab} authenticatedStaff={staff} onLogout={onLogout} />
+                )}
+              </StaffLoginGate>
             )}
 
             {activeTab === "insurance-products" && (

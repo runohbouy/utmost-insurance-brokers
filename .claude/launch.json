@@ -9,9 +9,9 @@
       "autoPort": true
     },
     {
-      "name": "crm-dev",
+      "name": "erp-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "../CRM", "run", "dev"],
+      "runtimeArgs": ["--prefix", "../ERP", "run", "dev"],
       "port": 3100
     }
   ]

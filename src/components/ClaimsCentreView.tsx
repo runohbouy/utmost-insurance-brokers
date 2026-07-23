@@ -13,6 +13,7 @@ interface ClaimsCentreViewProps {
 
 export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: ClaimsCentreViewProps) {
   const [claimType, setClaimType] = useState<string>("Motor Accident");
+  const [claimantName, setClaimantName] = useState<string>("");
   const [policyNo, setPolicyNo] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [details, setDetails] = useState<string>("");
@@ -21,6 +22,12 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [claimResponse, setClaimResponse] = useState<ClaimSubmissionResponse | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+
+  // AI Claims Reporting Assistant - guides the user on what to photograph/gather
+  // BEFORE they submit, tailored to the selected claim type.
+  const [aiGuidance, setAiGuidance] = useState<{ photosToTake: string[]; documentsToGather: string[]; nextSteps: string[]; disclaimer: string } | null>(null);
+  const [isLoadingGuidance, setIsLoadingGuidance] = useState(false);
+  const [guidanceError, setGuidanceError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -46,6 +53,28 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
     }
   };
 
+  // AI Claims Reporting Assistant - fetches a tailored checklist for the currently selected
+  // claim type, so the customer knows what to photograph and gather before they submit.
+  const handleGetAiGuidance = async () => {
+    setIsLoadingGuidance(true);
+    setGuidanceError(null);
+    setAiGuidance(null);
+    try {
+      const res = await fetch("/api/claims-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claimType, description: details })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate guidance.");
+      setAiGuidance(data);
+    } catch (err: any) {
+      setGuidanceError(err.message || "Could not reach the AI assistant. Please try again.");
+    } finally {
+      setIsLoadingGuidance(false);
+    }
+  };
+
   // Submit Claim Incident Notification
   const handleSubmitClaim = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +95,11 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
           policyNumber: policyNo.toUpperCase(),
           claimType,
           phoneNumber: phone,
-          description: details
+          description: details,
+          claimantName: claimantName || undefined,
+          photoBase64: photoPreview || undefined,
+          photoName: selectedFile?.name,
+          photoMimeType: selectedFile?.type
         })
       });
 
@@ -197,7 +230,7 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
                   <label className="text-[10px] uppercase tracking-wider text-[#8C887D]">Claim Category Class *</label>
                   <select
                     value={claimType}
-                    onChange={(e) => setClaimType(e.target.value)}
+                    onChange={(e) => { setClaimType(e.target.value); setAiGuidance(null); }}
                     className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 font-sans font-bold uppercase tracking-wider text-xs focus:border-[#316EC9] focus:outline-none"
                   >
                     {claimCategories.map((c, i) => (
@@ -205,7 +238,7 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-[#8C887D]">Policy Number / Quote Reference *</label>
                   <input
@@ -219,7 +252,61 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
                 </div>
               </div>
 
+              {/* AI Claims Reporting Assistant */}
+              <div className="border border-[#316EC9]/30 bg-[#F0F5FC] p-4 space-y-3 rounded-none">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center space-x-1.5">
+                    <Eye className="h-3.5 w-3.5 text-[#316EC9]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#142C54]">AI Claims Reporting Assistant</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGetAiGuidance}
+                    disabled={isLoadingGuidance}
+                    className="text-[9px] font-bold uppercase tracking-wider text-white bg-[#316EC9] hover:bg-[#2059ab] px-3 py-1.5 rounded-none cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoadingGuidance ? "Thinking..." : `What should I photograph for a ${claimType}?`}
+                  </button>
+                </div>
+
+                {guidanceError && <p className="text-[11px] text-red-700">{guidanceError}</p>}
+
+                {aiGuidance && (
+                  <div className="space-y-3 text-[11px] text-slate-700 border-t border-[#316EC9]/20 pt-3">
+                    <div>
+                      <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">Photos to take</p>
+                      <ul className="space-y-1">
+                        {aiGuidance.photosToTake.map((p, i) => <li key={i} className="flex items-start"><span className="mr-1.5 text-[#316EC9] shrink-0">•</span><span>{p}</span></li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">Documents to gather</p>
+                      <ul className="space-y-1">
+                        {aiGuidance.documentsToGather.map((d, i) => <li key={i} className="flex items-start"><span className="mr-1.5 text-[#316EC9] shrink-0">•</span><span>{d}</span></li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">Next steps</p>
+                      <ul className="space-y-1">
+                        {aiGuidance.nextSteps.map((n, i) => <li key={i} className="flex items-start"><span className="mr-1.5 text-[#316EC9] shrink-0">•</span><span>{n}</span></li>)}
+                      </ul>
+                    </div>
+                    <p className="text-[9px] text-[#8C887D] italic border-t border-[#316EC9]/20 pt-2">{aiGuidance.disclaimer}</p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-wider text-[#8C887D]">Your Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. David Kiprop"
+                    value={claimantName}
+                    onChange={(e) => setClaimantName(e.target.value)}
+                    className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                  />
+                </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-wider text-[#8C887D]">Active Contact Phone *</label>
                   <input
@@ -292,7 +379,7 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
                 className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] font-bold uppercase tracking-widest py-3.5 text-xs transition-all rounded-none cursor-pointer disabled:opacity-50"
                 id="claim-claim-action-btn"
               >
-                {isSubmitting ? "Registering on CRM registry..." : "Submit Emergency Claim Notification"}
+                {isSubmitting ? "Registering on ERP registry..." : "Submit Emergency Claim Notification"}
               </button>
 
             </form>

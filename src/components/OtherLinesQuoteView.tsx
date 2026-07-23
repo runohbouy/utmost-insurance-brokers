@@ -65,6 +65,9 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
   const [insurerId, setInsurerId] = useState<string>(licensedInsurers[0]?.id || "");
 
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +97,10 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
     e.preventDefault();
     setError(null);
 
+    if (!contactName.trim() || !contactPhone.trim()) {
+      setError("Please provide your name and phone number so our team can reach you.");
+      return;
+    }
     const missing = subType.fields.filter((f) => f.required && !answers[f.id]);
     if (missing.length > 0) {
       setError(`Please complete: ${missing.map((f) => f.label).join(", ")}`);
@@ -115,7 +122,10 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
           subType: subTypeId,
           insurerId,
           answers,
-          ratingBasisValue: Number(answers[subType.ratingBasisFieldId]) || 0
+          ratingBasisValue: Number(answers[subType.ratingBasisFieldId]) || 0,
+          contactName: contactName.trim(),
+          contactPhone: contactPhone.trim(),
+          contactEmail: contactEmail.trim()
         })
       });
       const data = await response.json();
@@ -279,6 +289,40 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-[#D8E2F0] pb-4">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Your Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Phone Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. 0712 345678"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Email (optional)</label>
+                <input
+                  type="email"
+                  placeholder="e.g. name@domain.com"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {subType.fields.map(renderField)}
             </div>

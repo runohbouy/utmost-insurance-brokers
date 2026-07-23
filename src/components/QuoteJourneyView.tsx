@@ -118,9 +118,23 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
     }
   };
 
+  const notifyQuoteSelected = (action: "download" | "buy") => {
+    if (!selectedOffer) return;
+    const contactName = authForm.name || motorParams.ownerName || medicalParams.principalName;
+    const contactPhone = authForm.phone || motorParams.ownerPhone || medicalParams.principalPhone;
+    const contactEmail = authForm.email || motorParams.ownerEmail || medicalParams.principalEmail;
+    if (!contactName || !contactPhone) return;
+    fetch("/api/quote-selected", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, category, contactName, contactPhone, contactEmail, offer: selectedOffer })
+    }).catch(() => {});
+  };
+
   const executePDFExport = () => {
     if (!selectedOffer) return;
     alert(`Success: Quotation Sheet UTM-QT-${Math.floor(100000 + Math.random() * 900000)} exported as PDF. Send copy directly to ${authForm.email || motorParams.ownerEmail || medicalParams.principalEmail || "client"}`);
+    notifyQuoteSelected("download");
     onSavedOffer(selectedOffer, category);
   };
 
@@ -136,6 +150,7 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
 
   const executePlacementCheckout = () => {
     alert("Moving to Payment Checkout. Our Finance system will prompt M-Pesa STK Push sequence on your handset.");
+    notifyQuoteSelected("buy");
     setActiveTab("portal");
   };
 

@@ -627,25 +627,33 @@ export function calculateDynamicMedicalQuotes(params: MedicalQuoteParams, ratesD
 
   if (ratesDb && ratesDb.rates) {
     const levies = ratesDb.levies || { pcfRate: 0.0025, itlRate: 0.0020, stampDuty: 40 };
-    return quotes.map((q: any) => {
-      const underwriterRates = ratesDb.rates.find((r: any) => r.insurerId === q.insurerId);
-      if (!underwriterRates) return q;
+    // Publish toggle: an insurer explicitly unchecked from public quoting in the Database Rates
+    // Desk is pulled out of medical results too, not just motor. Insurers with no rate record at
+    // all are unaffected (not everything here is admin-managed - see calculateDynamicMedicalQuotes).
+    return quotes
+      .filter((q: any) => {
+        const underwriterRates = ratesDb.rates.find((r: any) => r.insurerId === q.insurerId);
+        return !underwriterRates || underwriterRates.isPublished !== false;
+      })
+      .map((q: any) => {
+        const underwriterRates = ratesDb.rates.find((r: any) => r.insurerId === q.insurerId);
+        if (!underwriterRates) return q;
 
-      const multiplier = underwriterRates.medicalMultiplier ?? 1.0;
-      const basePremium = Math.round(q.basePremium * multiplier);
-      const pcf = Math.round(basePremium * levies.pcfRate);
-      const trainingLevy = Math.round(basePremium * levies.itlRate);
-      const totalPremium = basePremium + pcf + trainingLevy + levies.stampDuty;
+        const multiplier = underwriterRates.medicalMultiplier ?? 1.0;
+        const basePremium = Math.round(q.basePremium * multiplier);
+        const pcf = Math.round(basePremium * levies.pcfRate);
+        const trainingLevy = Math.round(basePremium * levies.itlRate);
+        const totalPremium = basePremium + pcf + trainingLevy + levies.stampDuty;
 
-      return {
-        ...q,
-        basePremium,
-        pcf,
-        trainingLevy,
-        stampDuty: levies.stampDuty,
-        totalPremium
-      };
-    });
+        return {
+          ...q,
+          basePremium,
+          pcf,
+          trainingLevy,
+          stampDuty: levies.stampDuty,
+          totalPremium
+        };
+      });
   }
 
   return quotes;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { mockInsurers } from "../data/mockInsurers";
 import { EXTRA_LICENSED_CLASSES } from "../data/extraLicensedClasses";
 import { OTHER_LINE_CATEGORIES } from "../data/otherLineCategories";
+import { AuthenticatedStaff, StaffSessionBadge } from "./StaffLoginGate";
 import { ActiveTab } from "../types";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts, saveProducts } from "../data/productStore";
@@ -13,10 +14,11 @@ import {
 
 interface AdminPortalViewProps {
   setActiveTab: (tab: ActiveTab) => void;
+  authenticatedStaff: AuthenticatedStaff;
+  onLogout: () => void;
 }
 
-export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) {
-  const [adminRole, setAdminRole] = useState<string>("Underwriting and Placement");
+export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLogout }: AdminPortalViewProps) {
   const [appetiteInsurer, setAppetiteInsurer] = useState<string>("icea");
   const [isAppetiteActive, setIsAppetiteActive] = useState<boolean>(true);
   
@@ -29,6 +31,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
   const [selectedInsurerId, setSelectedInsurerId] = useState<string>("icea");
   const [activeRates, setActiveRates] = useState<any>({
     insurerName: "",
+    isPublished: true,
     motorTpoRate: 7500,
     medicalMultiplier: 1.0,
     medicalMaternityRate: 18000,
@@ -269,10 +272,6 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
     seoDescription: ""
   });
 
-  const roles = [
-    "Super Administrator", "Underwriting and Placement", "Claims", "Finance", "Compliance & Data Protection"
-  ];
-
   // Built-in carriers that already ship with the platform (hardcoded quote engine + rate defaults).
   // Anything the admin adds through the Insurer Registry appends to this list rather than replacing it.
   const BUILT_IN_INSURERS = [
@@ -365,7 +364,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
     try {
       const res = await fetch("/api/insurers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authenticatedStaff.token}` },
         body: JSON.stringify({
           id: editingInsurerId || undefined,
           name: insurerForm.name || insurerForm.tradingName,
@@ -376,8 +375,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
           claimTurnaroundDays: Number(insurerForm.claimTurnaroundDays),
           emergencyPhone: insurerForm.emergencyPhone,
           strengthReason: insurerForm.strengthReason,
-          availableProducts: insurerForm.availableProducts.split(",").map((s) => s.trim()).filter(Boolean),
-          updatedByStaffId: "staff-1"
+          availableProducts: insurerForm.availableProducts.split(",").map((s) => s.trim()).filter(Boolean)
         })
       });
       const data = await res.json();
@@ -400,8 +398,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
     try {
       const res = await fetch(`/api/insurers/${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ updatedByStaffId: "staff-1" })
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authenticatedStaff.token}` }
       });
       const data = await res.json();
       if (res.ok) {
@@ -428,6 +425,10 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
   // filling in sane defaults for any fields an older insurer record predates.
   const buildActiveRatesFromSource = (r: any, insurerId: string) => ({
     insurerName: r.insurerName || insurerId,
+    // Master switch: whether this insurer's rates are usable for live public quoting at all
+    // (motor, medical, Other Lines). Defaults to true for pre-existing data so nothing that was
+    // already live silently disappears - staff explicitly uncheck to pull an insurer down.
+    isPublished: r.isPublished !== false,
     motorTpoRate: r.motorTpoRate || 7500,
     medicalMultiplier: r.medicalMultiplier || 1.0,
     medicalMaternityRate: r.medicalMaternityRate || 18000,
@@ -464,7 +465,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
   // Fetch persisted rates from backend database
   const fetchRates = async () => {
     try {
-      const res = await fetch("/api/admin/rates");
+      const res = await fetch("/api/admin/rates", { headers: { Authorization: `Bearer ${authenticatedStaff.token}` } });
       if (res.ok) {
         const data = await res.json();
         setRatesData(data);
@@ -532,7 +533,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
       }
 
       // 4. Fetch Compliance Audit Logs
-      const logsRes = await fetch("/api/compliance-logs");
+      const logsRes = await fetch("/api/compliance-logs", { headers: { Authorization: `Bearer ${authenticatedStaff.token}` } });
       if (logsRes.ok) {
         const rawLogs = await logsRes.json();
         
@@ -604,21 +605,15 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
   const handleOverrideRateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const selectedStaffId = adminRole === "Claims" ? "staff-2"
-                            : adminRole === "Compliance & Data Protection" ? "staff-3"
-                            : adminRole === "Finance" ? "staff-4"
-                            : "staff-1";
-
       const res = await fetch("/api/admin/rates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authenticatedStaff.token}` },
         body: JSON.stringify({
           insurerId: selectedInsurerId,
           rates: activeRates,
           pcfRate: pcfRateVal / 100,
           itlRate: itlRateVal / 100,
-          stampDuty: stampDutyVal,
-          updatedByStaffId: selectedStaffId
+          stampDuty: stampDutyVal
         })
       });
 
@@ -644,21 +639,16 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
   const handleAppetiteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const updatedIns = mockInsurers.find(ins => ins.id === appetiteInsurer) || allCarrierOptions.find(ins => ins.id === appetiteInsurer);
-    const selectedStaffId = adminRole === "Claims" ? "staff-2"
-                          : adminRole === "Compliance & Data Protection" ? "staff-3"
-                          : adminRole === "Finance" ? "staff-4"
-                          : "staff-1";
 
     try {
       // Append a compliance log for appetite change directly to server
       const res = await fetch("/api/compliance-logs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authenticatedStaff.token}` },
         body: JSON.stringify({
           action: "STATUS_TRANSITION",
           entityType: "insurer_appetite",
           entityId: appetiteInsurer,
-          actorId: selectedStaffId,
           actorType: "staff",
           details: {
             carrierName: updatedIns?.tradingName || "Insurer",
@@ -835,21 +825,8 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
           </p>
         </div>
 
-        {/* WORKSPACE ROLE SELECTOR */}
-        <div className="space-y-1.5 text-left font-sans">
-          <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Broker Role Workspace</label>
-          <div>
-            <select
-              value={adminRole}
-              onChange={(e) => setAdminRole(e.target.value)}
-              className="rounded-none border border-[#D8E2F0] px-3.5 py-2.5 text-xs font-bold text-slate-700 bg-white focus:border-[#316EC9] focus:outline-none"
-            >
-              {roles.map((r, i) => (
-                <option key={i} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        {/* AUTHENTICATED STAFF SESSION */}
+        <StaffSessionBadge staff={authenticatedStaff} onLogout={onLogout} />
       </div>
 
       {/* ADMIN CONTROL TABS SEARCH BAR */}
@@ -985,7 +962,7 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
               <div className="border border-[#D8E2F0] bg-white p-5 space-y-4 rounded-none">
                 <div className="flex justify-between items-center border-b border-[#D8E2F0] pb-3">
                   <h4 className="font-serif italic text-base text-[#1A1A1A]">
-                    CRM Active Claims Registration Desk
+                    ERP Active Claims Registration Desk
                   </h4>
                   <button
                     onClick={() => handleExportCSV("claims")}
@@ -1056,6 +1033,32 @@ export default function AdminPortalView({ setActiveTab }: AdminPortalViewProps) 
                       ))}
                     </select>
                   </div>
+
+                  {/* Publish toggle - the master switch controlling whether this insurer's rates
+                      are usable for live public quoting (motor, medical, Other Lines) at all,
+                      independent of whatever rate figures are configured below. */}
+                  <label
+                    className={`flex items-center space-x-3 border p-3 max-w-sm cursor-pointer transition-colors ${
+                      activeRates.isPublished ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!activeRates.isPublished}
+                      onChange={(e) => setActiveRates({ ...activeRates, isPublished: e.target.checked })}
+                      className="h-4 w-4 accent-[#316EC9] shrink-0"
+                    />
+                    <span className="text-[11px] leading-tight">
+                      <span className={`block font-extrabold uppercase tracking-wider text-[10px] ${activeRates.isPublished ? "text-emerald-700" : "text-amber-700"}`}>
+                        {activeRates.isPublished ? "Published for Public Quoting" : "Not Published - Hidden From Quotes"}
+                      </span>
+                      <span className="text-[#8C887D] font-medium">
+                        {activeRates.isPublished
+                          ? "This carrier appears as an option whenever a customer requests a quote."
+                          : "This carrier is excluded from all customer-facing quote results until re-checked."}
+                      </span>
+                    </span>
+                  </label>
 
                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 

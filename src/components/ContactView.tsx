@@ -43,12 +43,23 @@ export default function ContactView({ setActiveTab }: ContactViewProps) {
               
               <div className="flex items-start space-x-3 text-xs">
                 <MapPin className="h-5 w-5 text-[#316EC9] shrink-0 mt-0.5" />
-                <p className="leading-relaxed text-gray-700 font-mono">
-                  <strong>Utmost Insurance Brokers Ltd</strong><br />
-                  Top Plaza Building, <span className="bg-yellow-100 px-1 font-bold text-red-950">2nd Floor</span>,<br />
-                  Kindaruma Road off Ngong Road,<br />
-                  Nairobi, Kenya
-                </p>
+                <div>
+                  <p className="leading-relaxed text-gray-700 font-mono">
+                    <strong>Utmost Insurance Brokers Ltd</strong><br />
+                    Top Plaza Building, <span className="bg-yellow-100 px-1 font-bold text-red-950">2nd Floor</span>,<br />
+                    Kindaruma Road off Ngong Road,<br />
+                    Nairobi, Kenya
+                  </p>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Top+Plaza+Building%2C+Kindaruma+Road%2C+Nairobi%2C+Kenya"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 mt-2 text-[#316EC9] hover:underline font-bold text-[10px] uppercase tracking-wider"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    <span>View on Google Maps →</span>
+                  </a>
+                </div>
               </div>
 
               <div className="flex items-center space-x-3 text-xs pt-2">
@@ -91,7 +102,7 @@ export default function ContactView({ setActiveTab }: ContactViewProps) {
                   <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
                   <p className="text-xs font-bold uppercase tracking-wider">Message Dispatched!</p>
                   <p className="text-[11px] text-gray-650 leading-relaxed">
-                    Thank you. Your message has been logged inside our placement tracking CRM. An executive officer will callback inside 2 hours.
+                    Thank you. Your message has been logged inside our placement tracking ERP. An executive officer will callback inside 2 hours.
                   </p>
                   <button 
                     onClick={() => setSubmitted(false)}

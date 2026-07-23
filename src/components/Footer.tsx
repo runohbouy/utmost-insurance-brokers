@@ -69,11 +69,16 @@ export default function Footer({ setActiveTab }: FooterProps) {
             <ul className="space-y-3 text-xs">
               <li className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 shrink-0 text-[#316EC9]" />
-                <span className="leading-relaxed text-white">
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Top+Plaza+Building%2C+Kindaruma+Road%2C+Nairobi%2C+Kenya"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="leading-relaxed text-white hover:text-[#316EC9] transition-colors underline decoration-dotted underline-offset-2"
+                >
                   Top Plaza Building, 2nd Floor,<br />
                   Kindaruma Road off Ngong Road,<br />
                   Nairobi, Kenya
-                </span>
+                </a>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 shrink-0 text-[#316EC9]" />
@@ -103,7 +108,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
             </h4>
             <div className="rounded-none bg-[#FAF9F6]/5 p-3 text-[11px] leading-relaxed text-slate-200 border border-white/10">
               <p className="font-semibold text-[#316EC9] mb-1">⚠️ Broker Disclaimer Note:</p>
-              Utmost operates strictly as an independent intermediate broker. Quotes generated are indicative and subject to final carrier insurance underwriting audits. No immediate standard binding begins until formal payment receipting and placement confirmation occurs on our CRM.
+              Utmost operates strictly as an independent intermediate broker. Quotes generated are indicative and subject to final carrier insurance underwriting audits. No immediate standard binding begins until formal payment receipting and placement confirmation occurs on our ERP.
             </div>
             <div className="text-[10px] text-slate-300 mt-2">
               Emergency Claims Support 24H Callout: <span className="text-white font-semibold">+254 732 228908</span>

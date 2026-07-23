@@ -2,8 +2,10 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import fs from "fs";
+import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
+import nodemailer from "nodemailer";
 import { calculateDynamicMedicalQuotes } from "./src/utils/medicalCalculator";
 import { mockInsurers } from "./src/data/mockInsurers";
 import { EXTRA_LICENSED_CLASSES } from "./src/data/extraLicensedClasses";
@@ -27,19 +29,19 @@ function asyncRoute(handler: (req: express.Request, res: express.Response) => Pr
 }
 
 // ----------------------------------------------------
-// crm client — the separate CRM/policy/claims/compliance service that
-// owns the database (see ../CRM). This app only generates quotes;
+// erp client — the separate ERP/policy/claims/compliance service that
+// owns the database (see ../ERP). This app only generates quotes;
 // anything past that (parties, policies, …) is proxied there.
 // ----------------------------------------------------
-const CRM_API_URL = process.env.CRM_API_URL || "http://localhost:3100";
-const CRM_API_KEY = process.env.CRM_API_KEY || "";
+const ERP_API_URL = process.env.ERP_API_URL || "http://localhost:3100";
+const ERP_API_KEY = process.env.ERP_API_KEY || "";
 
 async function crmApi(path: string, init?: RequestInit) {
-  const response = await fetch(`${CRM_API_URL}${path}`, {
+  const response = await fetch(`${ERP_API_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": CRM_API_KEY,
+      "x-api-key": ERP_API_KEY,
       ...(init?.headers || {}),
     },
   });
@@ -50,6 +52,61 @@ async function crmApi(path: string, init?: RequestInit) {
     throw error;
   }
   return body;
+}
+
+// ----------------------------------------------------
+// Outbound email: lead notifications, AI risk-analysis and claims-assistant
+// handoffs, all forwarded to LEADS_EMAIL. Configured via SMTP_* env vars -
+// see .env.example. When unset (e.g. local dev without real credentials),
+// sendLeadEmail logs what it would have sent and resolves without throwing,
+// so no feature is blocked on email delivery being configured.
+// ----------------------------------------------------
+const LEADS_EMAIL = process.env.LEADS_EMAIL || "info@utmostkenya.com";
+const SMTP_CONFIGURED = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+const mailTransporter = SMTP_CONFIGURED
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    })
+  : null;
+
+interface LeadEmailAttachment {
+  filename: string;
+  contentBase64: string; // raw base64 or a data: URL - both accepted
+  contentType?: string;
+}
+
+async function sendLeadEmail(opts: { subject: string; html: string; attachments?: LeadEmailAttachment[] }) {
+  const attachments = (opts.attachments || []).map((a) => {
+    const match = a.contentBase64.match(/^data:([^;]+);base64,(.*)$/s);
+    return {
+      filename: a.filename,
+      content: Buffer.from(match ? match[2] : a.contentBase64, "base64"),
+      contentType: a.contentType || (match ? match[1] : undefined)
+    };
+  });
+
+  if (!mailTransporter) {
+    console.log(`[email:not-configured] Would send "${opts.subject}" to ${LEADS_EMAIL} (${attachments.length} attachment(s)). Set SMTP_HOST/SMTP_USER/SMTP_PASS to enable real delivery.`);
+    return { sent: false, reason: "SMTP not configured" };
+  }
+
+  try {
+    await mailTransporter.sendMail({
+      from: process.env.SMTP_FROM || `"Utmost Insurance Brokers" <${process.env.SMTP_USER}>`,
+      to: LEADS_EMAIL,
+      subject: opts.subject,
+      html: opts.html,
+      attachments
+    });
+    return { sent: true };
+  } catch (error: any) {
+    console.error(`Error sending lead email "${opts.subject}":`, error?.message || error);
+    return { sent: false, reason: error?.message || "send failed" };
+  }
 }
 
 // Set up JSON body sizes for large base64 image uploads
@@ -383,6 +440,7 @@ function getActiveRatesList(ratesDb: any) {
       .map((v: any) => ({
         insurerId: v.insurerId,
         insurerName: v.rates.insurerName || v.insurerId,
+        isPublished: v.rates.isPublished !== false,
         motorComprehensiveRate: v.rates.motorComprehensiveRate,
         motorTpoRate: v.rates.motorTpoRate,
         medicalMultiplier: v.rates.medicalMultiplier,
@@ -490,6 +548,12 @@ app.post("/api/analyze-room", async (req, res) => {
         domesticPackageIndicativePremiumKES: 5850 // ~1.5% of total contents KES
       };
 
+      sendLeadEmail({
+        subject: `AI Risk Analysis Used - ${selectedType} (Property Scan)`,
+        html: `<h2>AI Home Risk Evaluator - Room Scan</h2><p><strong>Room type:</strong> ${selectedType}</p><p><strong>Clutter score:</strong> ${simulatedResponse.clutterScore}/10</p><p><strong>Estimated contents value:</strong> KES ${simulatedResponse.totalContentsValueKES.toLocaleString()}</p><p>See attached photo.</p>`,
+        attachments: [{ filename: `room-scan-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }]
+      }).catch(() => {});
+
       return res.json(simulatedResponse);
     }
 
@@ -592,6 +656,12 @@ app.post("/api/analyze-room", async (req, res) => {
       return res.status(400).json({ error: report.privacyViolationError });
     }
 
+    sendLeadEmail({
+      subject: `AI Risk Analysis Used - ${report.roomType || roomType || "Property Scan"}`,
+      html: `<h2>AI Home Risk Evaluator - Room Scan</h2><p><strong>Room type:</strong> ${report.roomType || roomType}</p><p><strong>Clutter score:</strong> ${report.clutterScore}/10</p><p><strong>Estimated contents value:</strong> KES ${Number(report.totalContentsValueKES || 0).toLocaleString()}</p><p><strong>Safety hazards flagged:</strong> ${(report.safetyHazards || []).length}</p><p>See attached photo.</p>`,
+      attachments: [{ filename: `room-scan-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }]
+    }).catch(() => {});
+
     return res.json(report);
 
   } catch (error: any) {
@@ -601,18 +671,248 @@ app.post("/api/analyze-room", async (req, res) => {
 });
 
 // ----------------------------------------------------
+// API 1a: General Insurance Education & Risk Analysis Assistant
+// Broader than the room-photo scanner above - answers general "how does X
+// insurance work" questions and can assess a photo of an asset/property for
+// risk factors, without being scoped to Domestic Package contents only.
+// ----------------------------------------------------
+const RISK_ADVISOR_DISCLAIMER = "This is AI-generated general guidance for educational purposes only. It is not a formal risk survey, a quote, or professional insurance advice, and it does not consider your specific policy wording. Speak to an Utmost advisor before making any insurance decision.";
+
+app.post("/api/insurance-advisor-chat", async (req, res) => {
+  try {
+    const { question, imageBase64, mimeType } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: "Please provide a question." });
+    }
+
+    const isMock = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY";
+
+    if (isMock) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      const mockAnswer = `Here's general guidance on "${question.trim()}": Kenyan insurance is regulated by the IRA and split into General (motor, fire, marine, liability, etc.), Medical, and Long-Term (life) classes. For a precise answer tailored to your situation, an Utmost advisor can review your specific circumstances - use the "Get a Quote" or advisory line to reach one directly. (Simulated response - GEMINI_API_KEY not configured.)`;
+      sendLeadEmail({
+        subject: `AI Insurance Advisor Used - Risk Analysis / Q&A`,
+        html: `<h2>AI Insurance Advisor</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${mockAnswer}</p>${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
+        attachments: imageBase64 ? [{ filename: `risk-analysis-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }] : []
+      }).catch(() => {});
+      return res.json({
+        answer: mockAnswer,
+        riskFactors: [],
+        suggestedInsuranceLines: [],
+        disclaimer: RISK_ADVISOR_DISCLAIMER
+      });
+    }
+
+    const ai = getAiClient();
+    const parts: any[] = [];
+    if (imageBase64) {
+      parts.push({ inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64.replace(/^data:image\/\w+;base64,/, "") } });
+    }
+    parts.push({
+      text: `A prospective or existing customer of Utmost Insurance Brokers (Kenya) is asking: "${question.trim()}"${imageBase64 ? " They have also attached a photo of an asset or property for risk assessment." : ""} Answer helpfully and specifically to the Kenyan insurance market. If a photo is attached, identify visible risk factors (fire, theft, structural, liability) relevant to insuring it. Respond strictly as JSON matching the schema.`
+    });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: { parts },
+      config: {
+        systemInstruction: `You are an insurance education and risk-analysis assistant for Utmost Insurance Brokers Limited, an independent Kenyan insurance intermediary. You help the public understand how insurance works (classes of cover, how premiums are calculated, what affects risk, claims processes) and give general risk-awareness observations about photos of assets or property they share.
+
+        CRITICAL PRIVACY MANDATE: if any image contains visible human faces, ID documents, or other exposed PII, do not analyze it - set privacyViolationError instead and leave other fields empty.
+
+        You are NOT a licensed financial/insurance advisor and must never: state a binding premium, guarantee coverage or claims outcomes, or tell someone not to buy insurance they may need. Keep answers factual, balanced, and always steer decisions that matter back to a qualified Utmost advisor. Answers should be genuinely useful and specific, not generic filler.`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            privacyViolationError: { type: Type.STRING },
+            answer: { type: Type.STRING },
+            riskFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
+            suggestedInsuranceLines: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["privacyViolationError", "answer", "riskFactors", "suggestedInsuranceLines"]
+        }
+      }
+    });
+
+    const aiText = response.text;
+    if (!aiText) throw new Error("Empty response received from Gemini.");
+    const report = JSON.parse(aiText.trim());
+
+    if (report.privacyViolationError && report.privacyViolationError.trim() !== "") {
+      return res.status(400).json({ error: report.privacyViolationError });
+    }
+
+    sendLeadEmail({
+      subject: `AI Insurance Advisor Used - Risk Analysis / Q&A`,
+      html: `<h2>AI Insurance Advisor</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${report.answer}</p>${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
+      attachments: imageBase64 ? [{ filename: `risk-analysis-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }] : []
+    }).catch(() => {});
+
+    return res.json({ ...report, disclaimer: RISK_ADVISOR_DISCLAIMER });
+  } catch (error: any) {
+    console.error("Error in /api/insurance-advisor-chat:", error);
+    return res.status(500).json({ error: error.message || "Failed to process your question." });
+  }
+});
+
+// ----------------------------------------------------
+// API 1c: AI Claims Reporting Assistant - guides a claimant on what evidence
+// to collect (photos, documents) for their specific type of incident before
+// they formally submit a claim. Educational guidance only, not a claims
+// decision or coverage confirmation.
+// ----------------------------------------------------
+const CLAIMS_ASSISTANT_DISCLAIMER = "This AI-generated checklist is general guidance to help you gather evidence faster. It does not confirm cover, assess liability, or guarantee any claim outcome - your claim will be reviewed by an Utmost claims officer against your actual policy terms.";
+
+app.post("/api/claims-assistant", async (req, res) => {
+  try {
+    const { claimType, description } = req.body;
+
+    if (!claimType || !claimType.trim()) {
+      return res.status(400).json({ error: "Please select or describe the type of incident." });
+    }
+
+    const isMock = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY";
+
+    if (isMock) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const mockGuidance = {
+        photosToTake: [
+          "Wide shot showing the full scene/vehicle/property from several angles",
+          "Close-ups of all visible damage with something for scale (a coin, hand, ruler)",
+          "Registration plates, serial numbers, or identifying marks",
+          "Any third-party involvement (other vehicles, injuries, surroundings)"
+        ],
+        documentsToGather: [
+          "Copy of your policy/cover note number",
+          "National ID or passport",
+          "Police abstract (if applicable)",
+          "Any receipts or proof of value for damaged/lost items"
+        ],
+        nextSteps: [
+          "Report the incident to police within 24 hours if it involves theft, an accident, or third parties",
+          "Notify Utmost as soon as possible - delays can affect your claim",
+          "Do not repair or dispose of damaged property until it has been assessed"
+        ]
+      };
+      sendLeadEmail({
+        subject: `AI Claims Assistant Used - ${claimType.trim()}`,
+        html: `<h2>AI Claims Reporting Assistant</h2><p><strong>Claim type:</strong> ${claimType.trim()}</p><p><strong>Description given:</strong> ${description || "Not provided"}</p><p>Guidance was generated to help this user prepare their claim - no submission has necessarily been made yet.</p>`
+      }).catch(() => {});
+      return res.json({ ...mockGuidance, disclaimer: CLAIMS_ASSISTANT_DISCLAIMER });
+    }
+
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: {
+        parts: [{
+          text: `A customer is about to file an insurance claim in Kenya. Incident type: "${claimType.trim()}". ${description ? `Additional details: "${description.trim()}"` : ""} Give them a specific, practical checklist of what to photograph, what documents to gather, and immediate next steps, tailored to this exact incident type. Respond strictly as JSON matching the schema.`
+        }]
+      },
+      config: {
+        systemInstruction: `You are a claims-preparation assistant for Utmost Insurance Brokers Limited, an independent Kenyan insurance intermediary. You help claimants gather the right evidence BEFORE they submit a claim, so processing is faster - you do not assess liability, confirm coverage, or estimate settlement amounts. Be specific to the incident type described (e.g. motor accident vs fire vs burglary vs medical need different evidence). Keep guidance practical and actionable, grounded in how Kenyan claims (police abstracts, IRA timelines, etc.) actually work.`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            photosToTake: { type: Type.ARRAY, items: { type: Type.STRING } },
+            documentsToGather: { type: Type.ARRAY, items: { type: Type.STRING } },
+            nextSteps: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["photosToTake", "documentsToGather", "nextSteps"]
+        }
+      }
+    });
+
+    const aiText = response.text;
+    if (!aiText) throw new Error("Empty response received from Gemini.");
+    const report = JSON.parse(aiText.trim());
+
+    sendLeadEmail({
+      subject: `AI Claims Assistant Used - ${claimType.trim()}`,
+      html: `<h2>AI Claims Reporting Assistant</h2><p><strong>Claim type:</strong> ${claimType.trim()}</p><p><strong>Description given:</strong> ${description || "Not provided"}</p><p>Guidance was generated to help this user prepare their claim - no submission has necessarily been made yet.</p>`
+    }).catch(() => {});
+
+    return res.json({ ...report, disclaimer: CLAIMS_ASSISTANT_DISCLAIMER });
+  } catch (error: any) {
+    console.error("Error in /api/claims-assistant:", error);
+    return res.status(500).json({ error: error.message || "Failed to generate claims guidance." });
+  }
+});
+
+// ----------------------------------------------------
+// Staff Authentication: Workspace Admin is internal-only. Credentials are
+// intentionally kept server-side (never shipped to the client bundle) and
+// checked against an in-memory session store - this is demo-grade auth
+// (plaintext credential list, no persistence across server restarts),
+// consistent with the rest of the app's mock-security patterns (e.g. the
+// hardcoded OTP in the customer quote journey), but it is REAL enforcement:
+// the rate/insurer-mutation endpoints below reject requests with no valid
+// session token, regardless of what the frontend UI shows or hides.
+// ----------------------------------------------------
+const STAFF_CREDENTIALS: { username: string; password: string; staffId: string; fullName: string; role: string }[] = [
+  { username: "underwriter", password: "Utmost@2026", staffId: "staff-1", fullName: "Sample Underwriter", role: "Underwriting and Placement" },
+  { username: "claims", password: "Utmost@2026", staffId: "staff-2", fullName: "Sample Supervisor A", role: "Claims" },
+  { username: "compliance", password: "Utmost@2026", staffId: "staff-3", fullName: "Sample Supervisor B", role: "Compliance & Data Protection" },
+  { username: "finance", password: "Utmost@2026", staffId: "staff-4", fullName: "Sample Accountant", role: "Finance" }
+];
+
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hour shift
+const staffSessions = new Map<string, { staffId: string; fullName: string; role: string; expiresAt: number }>();
+
+function requireStaffAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  const session = token ? staffSessions.get(token) : undefined;
+
+  if (!session || session.expiresAt < Date.now()) {
+    if (token) staffSessions.delete(token);
+    return res.status(401).json({ error: "Staff authentication required." });
+  }
+
+  (req as any).staff = session;
+  next();
+}
+
+app.post("/api/staff/login", (req, res) => {
+  const { username, password } = req.body;
+  const match = STAFF_CREDENTIALS.find((c) => c.username === username && c.password === password);
+
+  if (!match) {
+    return res.status(401).json({ error: "Invalid staff username or password." });
+  }
+
+  const token = crypto.randomBytes(24).toString("hex");
+  const expiresAt = Date.now() + SESSION_TTL_MS;
+  staffSessions.set(token, { staffId: match.staffId, fullName: match.fullName, role: match.role, expiresAt });
+
+  res.json({ token, staffId: match.staffId, fullName: match.fullName, role: match.role, expiresAt });
+});
+
+app.post("/api/staff/logout", (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (token) staffSessions.delete(token);
+  res.json({ success: true });
+});
+
+// ----------------------------------------------------
 // Admin API: Get and Update Underwriter specific rates
 // ----------------------------------------------------
-app.get("/api/admin/rates", (req, res) => {
+app.get("/api/admin/rates", requireStaffAuth, (req, res) => {
   const db = loadRatesDb();
   res.json(db);
 });
 
-app.post("/api/admin/rates", (req, res) => {
-  const { db: fullDb, levies, insurerId, rates, motorComprehensiveRate, motorTpoRate, medicalMultiplier, pcfRate, itlRate, stampDuty, updatedByStaffId } = req.body;
+app.post("/api/admin/rates", requireStaffAuth, (req, res) => {
+  const { db: fullDb, levies, insurerId, rates, motorComprehensiveRate, motorTpoRate, medicalMultiplier, pcfRate, itlRate, stampDuty } = req.body;
 
   let db = loadRatesDb();
-  const actorId = updatedByStaffId || "staff-1";
+  // Trust the authenticated session's staff identity over any client-supplied field, now that
+  // there's a real login to trust - a spoofed body could otherwise attribute changes to anyone.
+  const actorId = (req as any).staff.staffId;
 
   // If a full DB is passed, overwrite it
   if (fullDb) {
@@ -719,9 +1019,9 @@ app.get("/api/insurers", (req, res) => {
   res.json(loadDbFile(INSURER_FILE, []));
 });
 
-app.post("/api/insurers", (req, res) => {
+app.post("/api/insurers", requireStaffAuth, (req, res) => {
   const insurers = loadDbFile(INSURER_FILE, []);
-  const actorId = req.body.updatedByStaffId || "staff-1";
+  const actorId = (req as any).staff.staffId;
 
   const id = (req.body.id || req.body.tradingName || req.body.name || "")
     .toString()
@@ -782,7 +1082,7 @@ app.post("/api/insurers", (req, res) => {
   res.json({ success: true, insurer: record, insurers });
 });
 
-app.delete("/api/insurers/:id", (req, res) => {
+app.delete("/api/insurers/:id", requireStaffAuth, (req, res) => {
   const insurers = loadDbFile(INSURER_FILE, []);
   const filtered = insurers.filter((i: any) => i.id !== req.params.id);
   if (filtered.length === insurers.length) {
@@ -793,7 +1093,7 @@ app.delete("/api/insurers/:id", (req, res) => {
     action: "INSURER_DELETED",
     entityType: "insurer",
     entityId: req.params.id,
-    actorId: req.body.updatedByStaffId || "staff-1",
+    actorId: (req as any).staff.staffId,
     actorType: "staff",
     details: {}
   });
@@ -827,7 +1127,7 @@ app.get("/api/other-line-quotes", (req, res) => {
 });
 
 app.post("/api/other-line-quotes", (req, res) => {
-  const { category, subType, insurerId, answers, ratingBasisValue } = req.body;
+  const { category, subType, insurerId, answers, ratingBasisValue, contactName, contactPhone, contactEmail } = req.body;
 
   if (!category || !subType || !insurerId || !answers) {
     return res.status(400).json({ error: "Missing category, subType, insurerId, or answers." });
@@ -892,6 +1192,23 @@ app.post("/api/other-line-quotes", (req, res) => {
     details: { category, subType, insurerId, referenceNumber, status, premium }
   });
 
+  if (contactName && contactPhone) {
+    sendLeadEmail({
+      subject: `New Quote Request - ${category.charAt(0).toUpperCase() + category.slice(1)} (${contactName})`,
+      html: `
+        <h2>New Other Lines Quote Request</h2>
+        <p><strong>Name:</strong> ${contactName}</p>
+        <p><strong>Phone:</strong> ${contactPhone}</p>
+        <p><strong>Email:</strong> ${contactEmail || "Not provided"}</p>
+        <p><strong>Class:</strong> ${category} / ${subType}</p>
+        <p><strong>Underwriter requested:</strong> ${insurerId}</p>
+        <p><strong>Reference:</strong> ${referenceNumber}</p>
+        <p><strong>Status:</strong> ${status === "quoted" ? `Instant premium: KES ${premium?.toLocaleString()}` : "Pending underwriter review"}</p>
+        <p><strong>Submitted details:</strong> ${JSON.stringify(answers)}</p>
+      `
+    }).catch(() => {});
+  }
+
   res.json({ success: true, request: record });
 });
 
@@ -936,7 +1253,12 @@ app.post("/api/generate-quotes", (req, res) => {
     .filter((c: any) => ratesDb.versions?.some((v: any) => v.insurerId === c.id && v.status === "active"))
     .map((c: any) => ({ name: c.tradingName || c.name, id: c.id, rating: c.rating || "Unrated (New Carrier)" }));
 
-  const insurers = [...builtInInsurers, ...customInsurers];
+  // Publish toggle: staff can uncheck "Published for Public Quoting" per insurer in the
+  // Database Rates Desk to pull them out of live customer-facing quoting without deleting their
+  // rate configuration. Only insurers with an actual rate record on file are affected - one with
+  // no active version yet falls back to prior default behavior rather than being silently hidden.
+  const unpublishedInsurerIds = new Set(activeRates.filter((r: any) => r.isPublished === false).map((r: any) => r.insurerId));
+  const insurers = [...builtInInsurers, ...customInsurers].filter((ins) => !unpublishedInsurerIds.has(ins.id));
 
   let quotes: any[] = [];
 
@@ -1292,7 +1614,64 @@ app.post("/api/generate-quotes", (req, res) => {
     });
   }
 
+  // Forward a lead notification for every completed calculation - even before OTP verification,
+  // since the contact fields on the motor/medical forms are already required inputs at this point.
+  const contactName = category === "motor" ? params?.ownerName : params?.principalName;
+  const contactPhone = category === "motor" ? params?.ownerPhone : params?.principalPhone;
+  const contactEmail = category === "motor" ? params?.ownerEmail : params?.principalEmail;
+  if (contactName && contactPhone) {
+    const activeQuotes = quotes.filter((q: any) => !q.isDeclined);
+    const cheapest = activeQuotes.length > 0 ? activeQuotes.reduce((a: any, b: any) => (b.totalPremium < a.totalPremium ? b : a)) : null;
+    sendLeadEmail({
+      subject: `New Quote Request - ${category === "motor" ? "Motor" : "Medical"} (${contactName})`,
+      html: `
+        <h2>New ${category === "motor" ? "Motor" : "Medical"} Quote Request</h2>
+        <p><strong>Name:</strong> ${contactName}</p>
+        <p><strong>Phone:</strong> ${contactPhone}</p>
+        <p><strong>Email:</strong> ${contactEmail || "Not provided"}</p>
+        <p><strong>Quotes generated:</strong> ${activeQuotes.length} of ${quotes.length} carriers</p>
+        ${cheapest ? `<p><strong>Lowest premium:</strong> ${cheapest.insurerName} - KES ${cheapest.totalPremium.toLocaleString()}</p>` : ""}
+        <p><strong>Parameters:</strong> ${JSON.stringify(params)}</p>
+      `
+    }).catch(() => {});
+  }
+
   res.json({ quotes });
+});
+
+// Fired once a customer picks a specific carrier's offer and completes OTP verification
+// (download quote sheet or proceed to buy) - a higher-intent signal than the raw calculation
+// above, with verified contact details from the auth step.
+app.post("/api/quote-selected", (req, res) => {
+  const { action, category, contactName, contactPhone, contactEmail, offer } = req.body;
+
+  if (!contactName || !contactPhone || !offer) {
+    return res.status(400).json({ error: "Missing contactName, contactPhone, or offer." });
+  }
+
+  sendLeadEmail({
+    subject: `Quote Selected (${action === "buy" ? "Buy & Bind" : "Download"}) - ${offer.insurerName} (${contactName})`,
+    html: `
+      <h2>Quote Selected - ${action === "buy" ? "Proceeding to Buy & Bind" : "Downloaded Quotation PDF"}</h2>
+      <p><strong>Name:</strong> ${contactName}</p>
+      <p><strong>Phone:</strong> ${contactPhone}</p>
+      <p><strong>Email:</strong> ${contactEmail || "Not provided"}</p>
+      <p><strong>Category:</strong> ${category}</p>
+      <p><strong>Selected Carrier:</strong> ${offer.insurerName}</p>
+      <p><strong>Total Premium:</strong> KES ${Number(offer.totalPremium || 0).toLocaleString()}</p>
+    `
+  }).catch(() => {});
+
+  addAuditLog({
+    action: "QUOTE_SELECTED",
+    entityType: "quote",
+    entityId: offer.insurerId || "unknown",
+    actorId: "customer",
+    actorType: "customer",
+    details: { action, category, insurerName: offer.insurerName, totalPremium: offer.totalPremium }
+  });
+
+  res.json({ success: true });
 });
 
 // ----------------------------------------------------
@@ -1694,15 +2073,15 @@ app.patch("/api/premium-adjustments/:id", (req, res) => {
 });
 
 // 13. ComplianceAuditLog endpoints (append-only ledger: no PATCH or DELETE endpoint at all!)
-app.get("/api/compliance-logs", (req, res) => {
+app.get("/api/compliance-logs", requireStaffAuth, (req, res) => {
   res.json(loadDbFile(AUDIT_LOG_FILE, []));
 });
-app.post("/api/compliance-logs", (req, res) => {
-  const { action, entityType, entityId, actorId, actorType, details } = req.body;
-  if (!action || !entityType || !entityId || !actorId || !actorType) {
+app.post("/api/compliance-logs", requireStaffAuth, (req, res) => {
+  const { action, entityType, entityId, actorType, details } = req.body;
+  if (!action || !entityType || !entityId || !actorType) {
     return res.status(400).json({ error: "Missing required compliance log fields" });
   }
-  const newLog = addAuditLog({ action, entityType, entityId, actorId, actorType, details });
+  const newLog = addAuditLog({ action, entityType, entityId, actorId: (req as any).staff.staffId, actorType, details });
   res.json(newLog);
 });
 
@@ -1741,7 +2120,7 @@ app.patch("/api/room-scans/:id", (req, res) => {
 // Customer Claims Submission helper integration (Dual Support)
 // ----------------------------------------------------
 app.post("/api/submit-claim", (req, res) => {
-  const { policyNumber, claimType, phoneNumber, description } = req.body;
+  const { policyNumber, claimType, phoneNumber, description, claimantName, photoBase64, photoName, photoMimeType } = req.body;
 
   if (!policyNumber || !claimType || !phoneNumber) {
     return res.status(400).json({ error: "Required fields missing for claims notification." });
@@ -1777,6 +2156,21 @@ app.post("/api/submit-claim", (req, res) => {
     actorType: "customer",
     details: { policyNumber, claimType, phoneNumber }
   });
+
+  sendLeadEmail({
+    subject: `New Claim Submitted - ${claimType} (${claimId})`,
+    html: `
+      <h2>New Claim Notification</h2>
+      <p><strong>Claim ID:</strong> ${claimId}</p>
+      <p><strong>Claimant:</strong> ${claimantName || "Not provided"}</p>
+      <p><strong>Phone:</strong> ${phoneNumber}</p>
+      <p><strong>Policy Number:</strong> ${policyNumber}</p>
+      <p><strong>Claim Type:</strong> ${claimType}</p>
+      <p><strong>Description:</strong> ${description || "Not provided"}</p>
+      ${photoBase64 ? "<p>See attached supporting photo/document.</p>" : "<p>No supporting photo/document was attached.</p>"}
+    `,
+    attachments: photoBase64 ? [{ filename: photoName || `claim-${claimId}-attachment`, contentBase64: photoBase64, contentType: photoMimeType }] : []
+  }).catch(() => {});
 
   const responseBlob = {
     claimId,

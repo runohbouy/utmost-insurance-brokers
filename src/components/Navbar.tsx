@@ -99,20 +99,23 @@ export default function Navbar({
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full px-4 sm:px-6 lg:px-8 py-3 bg-[#FAF9F6]/20 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 bg-white/95 border border-slate-200/50 rounded-2xl shadow-lg">
-        
+    <header className="sticky top-0 z-50 w-full px-4 sm:px-6 lg:px-4 xl:px-8 py-3 bg-[#FAF9F6]/20 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 lg:px-4 xl:px-6 bg-white/95 border border-slate-200/50 rounded-2xl shadow-lg">
+
         {/* Left Side: Logo */}
-        <div 
+        <div
           onClick={() => routeTab("home")}
-          className="flex cursor-pointer items-center transition-all duration-300 hover:opacity-90"
+          className="flex cursor-pointer items-center transition-all duration-300 hover:opacity-90 shrink-0"
           id="navbar-logo-container"
         >
           <Logo variant="full" height="42" className="transition-transform duration-300 hover:scale-[1.02]" />
         </div>
 
-        {/* Center: Desktop Navigation Bar with dividers */}
-        <nav className="hidden lg:flex items-center space-x-1" id="desktop-menubar">
+        {/* Center: Desktop Navigation Bar with dividers. Padding/gaps are tighter between lg and
+            xl (1024-1279px) - that's the range where the full bar, Get a Quote, and the
+            hamburger fallback (for Support Line/Workspace Admin, hidden until xl) all have to
+            coexist without the whole header overflowing horizontally. */}
+        <nav className="hidden lg:flex items-center space-x-0.5 xl:space-x-1" id="desktop-menubar">
           
           {/* 1. Home - Icon only */}
           <button
@@ -139,7 +142,7 @@ export default function Navbar({
               type="button"
               id="navitem-desktop-general"
               onClick={() => handleSegmentClick("general")}
-              className={`flex items-center space-x-1 px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
+              className={`flex items-center space-x-1 px-2 xl:px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
                 activeMegaMenu === "general" || (activeTab === "insurance-products" && currentSegment === "general")
                   ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                   : "text-[#8C887D] hover:text-[#142C54]"
@@ -173,7 +176,7 @@ export default function Navbar({
               type="button"
               id="navitem-desktop-health"
               onClick={() => handleSegmentClick("health")}
-              className={`flex items-center space-x-1 px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
+              className={`flex items-center space-x-1 px-2 xl:px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
                 activeMegaMenu === "health" || (activeTab === "insurance-products" && currentSegment === "health")
                   ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                   : "text-[#8C887D] hover:text-[#142C54]"
@@ -207,7 +210,7 @@ export default function Navbar({
               type="button"
               id="navitem-desktop-life"
               onClick={() => handleSegmentClick("life")}
-              className={`flex items-center space-x-1 px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
+              className={`flex items-center space-x-1 px-2 xl:px-3 py-2 text-[11px] uppercase tracking-[0.14em] font-bold transition-all duration-300 cursor-pointer ${
                 activeMegaMenu === "life" || (activeTab === "insurance-products" && currentSegment === "life")
                   ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                   : "text-[#8C887D] hover:text-[#142C54]"
@@ -235,7 +238,7 @@ export default function Navbar({
           <button
             id="navitem-desktop-claims"
             onClick={() => routeTab("claims")}
-            className={`flex items-center px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
+            className={`flex items-center px-2.5 xl:px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
               activeTab === "claims"
                 ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                 : "text-[#8C887D] hover:text-[#142C54]"
@@ -251,7 +254,7 @@ export default function Navbar({
           <button
             id="navitem-desktop-portal"
             onClick={() => routeTab("portal")}
-            className={`flex items-center px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
+            className={`flex items-center px-2.5 xl:px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
               activeTab === "portal"
                 ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                 : "text-[#8C887D] hover:text-[#142C54]"
@@ -267,7 +270,7 @@ export default function Navbar({
           <button
             id="navitem-desktop-analyzer"
             onClick={() => routeTab("room-analyzer")}
-            className={`flex items-center px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
+            className={`flex items-center px-2.5 xl:px-4 py-2 text-[11px] uppercase tracking-[0.18em] font-bold transition-all duration-300 cursor-pointer ${
               activeTab === "room-analyzer"
                 ? "text-[#142C54] border-b-2 border-[#142C54] pb-1"
                 : "text-[#8C887D] hover:text-[#142C54]"
@@ -279,19 +282,22 @@ export default function Navbar({
         </nav>
 
         {/* Right Side Actions Panel (Desktop and Mobile Hams) */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-2.5 xl:space-x-3 shrink-0">
 
-          {/* Support Line - compact single-line pill, only shown once there's real room for it */}
+          {/* Support Line - icon-only chip between xl and 2xl (the full "+254 707 798701" pill
+              plus Workspace Admin plus Get a Quote don't actually fit inside the max-w-7xl header
+              at any width from 1280 up to ~1500px - verified via real overflow measurement, not
+              just eyeballing a screenshot). Full label only once there's genuine room at 2xl. */}
           <a
             href="tel:+254707798701"
-            title="24-Hour Advisory Line"
+            title="24-Hour Advisory Line: +254 707 798701"
             className="hidden xl:flex items-center space-x-1.5 text-[11px] font-bold text-[#142C54] border border-[#D8E2F0] rounded-full px-3 py-1.5 hover:border-[#316EC9] hover:text-[#316EC9] transition-colors"
           >
             <Phone className="h-3.5 w-3.5 text-[#316EC9]" />
-            <span className="font-mono tracking-wide whitespace-nowrap">+254 707 798701</span>
+            <span className="hidden 2xl:inline font-mono tracking-wide whitespace-nowrap">+254 707 798701</span>
           </a>
 
-          {/* Workplace Admin Setting Link */}
+          {/* Workplace Admin Setting Link - same icon-only-until-2xl treatment as above */}
           <button
             onClick={() => routeTab("admin")}
             title="Workplace Administration Portal"
@@ -300,23 +306,26 @@ export default function Navbar({
             }`}
           >
             <Settings className="h-3.5 w-3.5 text-[#8C887D]" />
-            <span>Workspace Admin</span>
+            <span className="hidden 2xl:inline">Workspace Admin</span>
           </button>
 
           {/* Get a Quote button - visible earlier than the rest of the CTA cluster, it's the primary action */}
           <button
             onClick={() => routeTab("get-a-quote")}
             id="header-desktop-quote-button"
-            className="hidden md:flex items-center space-x-1 bg-[#316EC9] hover:bg-[#2059ab] text-[#FAF9F6] border border-transparent px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-bold transition-all rounded-xl active:scale-95 cursor-pointer shadow-sm hover:shadow"
+            className="hidden md:flex items-center space-x-1 bg-[#316EC9] hover:bg-[#2059ab] text-[#FAF9F6] border border-transparent px-3 xl:px-4 py-2 text-[10px] uppercase tracking-[0.18em] font-bold transition-all rounded-xl active:scale-95 cursor-pointer shadow-sm hover:shadow"
           >
             <span>Get a Quote</span>
           </button>
 
-          {/* Hamburger Menu Toggle Button below the lg breakpoint, matching the desktop nav's visibility */}
+          {/* Hamburger Menu Toggle Button: kept visible through xl (not just lg) because the
+              Support Line / Workspace Admin links only render at xl:flex - between lg and xl
+              they'd otherwise be completely unreachable (no inline link, no hamburger fallback).
+              The drawer already includes a Workspace Admin entry, so this closes that gap. */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             id="mobile-hamburger-toggle"
-            className="lg:hidden flex items-center justify-center p-2 rounded-xl border border-slate-200 hover:border-slate-300 text-[#142C54] bg-white cursor-pointer shadow-sm hover:shadow-md transition-all"
+            className="xl:hidden flex items-center justify-center p-2 rounded-xl border border-slate-200 hover:border-slate-300 text-[#142C54] bg-white cursor-pointer shadow-sm hover:shadow-md transition-all"
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -336,7 +345,7 @@ export default function Navbar({
               setIsMobileMenuOpen(false);
             }
           }}
-          className="lg:hidden fixed inset-0 top-20 bg-black/50 z-40 overflow-y-auto"
+          className="xl:hidden fixed inset-0 top-20 bg-black/50 z-40 overflow-y-auto"
         >
           <div className="bg-[#FAF9F6] w-full max-h-[85vh] overflow-y-auto border-b border-[#D8E2F0] shadow-2xl px-4 py-5 space-y-6">
             

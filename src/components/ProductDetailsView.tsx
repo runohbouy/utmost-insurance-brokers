@@ -379,7 +379,7 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
                 </div>
                 <div className="pt-2 border-t border-gray-100">
                   <h4 className="text-xs font-bold text-[#142C54]">Q: How fast does the cover bind?</h4>
-                  <p className="text-[11px] text-gray-700 mt-1">A: Insurance coverage binds immediately upon formal MPESA/Bank transfer receipting and confirmation under our central broker CRM desk.</p>
+                  <p className="text-[11px] text-gray-700 mt-1">A: Insurance coverage binds immediately upon formal MPESA/Bank transfer receipting and confirmation under our central broker ERP desk.</p>
                 </div>
               </div>
             </div>

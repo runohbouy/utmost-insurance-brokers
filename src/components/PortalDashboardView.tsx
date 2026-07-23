@@ -121,7 +121,7 @@ export default function PortalDashboardView({ setActiveTab, selectedQuote, saved
             </div>
             <h3 className="text-xl font-serif italic text-[#1A1A1A]">Access Customer Workspace</h3>
             <p className="text-xs text-[#8C887D] max-w-md mx-auto leading-relaxed">
-              Confirm your verified M-Pesa registered phone coordinates on our CRM registry to recover previous quotation checklists and medical declarations.
+              Confirm your verified M-Pesa registered phone coordinates on our ERP registry to recover previous quotation checklists and medical declarations.
             </p>
           </div>
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { RoomAnalysis, ActiveTab } from "../types";
-import { 
-  Sparkles, UploadCloud, CheckCircle, AlertTriangle, Info, ShieldCheck, 
-  Trash2, Play, Eye, DollarSign, List, Award, Camera, HeartCrack, AlertCircle
+import {
+  Sparkles, UploadCloud, CheckCircle, AlertTriangle, Info, ShieldCheck,
+  Trash2, Play, Eye, DollarSign, List, Award, Camera, HeartCrack, AlertCircle, MessageCircleQuestion
 } from "lucide-react";
+import InsuranceAdvisorChat from "./InsuranceAdvisorChat";
 
 interface RoomAnalyzerViewProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -43,6 +44,7 @@ const compressImage = (
 };
 
 export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: RoomAnalyzerViewProps) {
+  const [mode, setMode] = useState<"scan" | "advisor">("scan");
   const [roomType, setRoomType] = useState<string>("Living Room");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -288,10 +290,35 @@ export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: Ro
           Home Decluttering & Property Risk AI Surveyor
         </h1>
         <p className="mt-1.5 text-xs text-[#8C887D] max-w-4xl leading-relaxed">
-          Get real-time space organization advice, identify fire, electrical and physical hazards, estimate contents replacement valuations, and comparative package quotes. Fully authorized and powered by Google Gemini.
+          Get real-time space organization advice, identify fire, electrical and physical hazards, estimate contents replacement valuations, and comparative package quotes - or ask our AI assistant any general insurance or risk question. Fully authorized and powered by Google Gemini.
         </p>
       </div>
 
+      {/* MODE SWITCHER: room-photo property scan vs general insurance/risk Q&A */}
+      <div className="flex border-b border-[#D8E2F0] bg-[#FAF9F6] p-1 max-w-lg shrink-0" id="ai-tool-mode-switcher">
+        <button
+          onClick={() => setMode("scan")}
+          className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer ${
+            mode === "scan" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
+          }`}
+        >
+          <Camera className="h-3.5 w-3.5" />
+          <span>Property Risk Scan</span>
+        </button>
+        <button
+          onClick={() => setMode("advisor")}
+          className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer ${
+            mode === "advisor" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
+          }`}
+        >
+          <MessageCircleQuestion className="h-3.5 w-3.5" />
+          <span>Ask About Insurance</span>
+        </button>
+      </div>
+
+      {mode === "advisor" && <InsuranceAdvisorChat />}
+
+      {mode === "scan" && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: CONTROLS, UPLOADER, & HISTORY LIST */}
@@ -789,6 +816,7 @@ export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: Ro
         </div>
 
       </div>
+      )}
 
     </div>
   );
