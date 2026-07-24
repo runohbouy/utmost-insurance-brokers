@@ -29,6 +29,12 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
   const [isLoadingGuidance, setIsLoadingGuidance] = useState(false);
   const [guidanceError, setGuidanceError] = useState<string | null>(null);
 
+  // AI Claims Photo Evidence Review - once a photo is attached, assesses whether
+  // it is actually useful enough to help defend the claim.
+  const [photoReview, setPhotoReview] = useState<{ evidenceQuality: string; strengths: string[]; gaps: string[]; recommendation: string; disclaimer: string } | null>(null);
+  const [isLoadingPhotoReview, setIsLoadingPhotoReview] = useState(false);
+  const [photoReviewError, setPhotoReviewError] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const triggerNotification = (type: "success" | "error" | "info", message: string) => {
@@ -45,11 +51,39 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
     if (files && files.length > 0) {
       const file = files[0];
       setSelectedFile(file);
+      setPhotoReview(null);
+      setPhotoReviewError(null);
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) setPhotoPreview(event.target.result as string);
          };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // AI Claims Photo Evidence Review - checks whether the attached photo is
+  // useful enough, on its own, to help defend the claim before submission.
+  const handleReviewPhoto = async () => {
+    if (!photoPreview || !selectedFile?.type.startsWith("image/")) {
+      setPhotoReviewError("Please attach an image (not a PDF) to run the evidence review.");
+      return;
+    }
+    setIsLoadingPhotoReview(true);
+    setPhotoReviewError(null);
+    setPhotoReview(null);
+    try {
+      const res = await fetch("/api/claims-photo-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claimType, description: details, photoBase64: photoPreview, mimeType: selectedFile.type })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to review the photo.");
+      setPhotoReview(data);
+    } catch (err: any) {
+      setPhotoReviewError(err.message || "Could not reach the AI assistant. Please try again.");
+    } finally {
+      setIsLoadingPhotoReview(false);
     }
   };
 
@@ -370,6 +404,57 @@ export default function ClaimsCentreView({ setActiveTab, onClaimSuccess }: Claim
                 )}
                 {photoPreview && (
                   <p className="text-[10px] text-emerald-700 font-bold">Preview attached.</p>
+                )}
+
+                {/* AI Claims Photo Evidence Review */}
+                {photoPreview && selectedFile?.type.startsWith("image/") && (
+                  <div className="border border-[#316EC9]/30 bg-[#F0F5FC] p-4 space-y-3 rounded-none mt-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center space-x-1.5">
+                        <Eye className="h-3.5 w-3.5 text-[#316EC9]" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#142C54]">AI Claims Photo Evidence Review</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleReviewPhoto}
+                        disabled={isLoadingPhotoReview}
+                        className="text-[9px] font-bold uppercase tracking-wider text-white bg-[#316EC9] hover:bg-[#2059ab] px-3 py-1.5 rounded-none cursor-pointer disabled:opacity-50"
+                      >
+                        {isLoadingPhotoReview ? "Analyzing..." : "Is this photo enough to defend my claim?"}
+                      </button>
+                    </div>
+
+                    {photoReviewError && <p className="text-[11px] text-red-700">{photoReviewError}</p>}
+
+                    {photoReview && (
+                      <div className="space-y-3 text-[11px] text-slate-700 border-t border-[#316EC9]/20 pt-3">
+                        <div>
+                          <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">Evidence quality: <span className="text-[#316EC9]">{photoReview.evidenceQuality}</span></p>
+                        </div>
+                        {photoReview.strengths.length > 0 && (
+                          <div>
+                            <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">What this photo shows well</p>
+                            <ul className="space-y-1">
+                              {photoReview.strengths.map((s, i) => <li key={i} className="flex items-start"><span className="mr-1.5 text-emerald-600 shrink-0">•</span><span>{s}</span></li>)}
+                            </ul>
+                          </div>
+                        )}
+                        {photoReview.gaps.length > 0 && (
+                          <div>
+                            <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">What's missing or unclear</p>
+                            <ul className="space-y-1">
+                              {photoReview.gaps.map((g, i) => <li key={i} className="flex items-start"><span className="mr-1.5 text-red-600 shrink-0">•</span><span>{g}</span></li>)}
+                            </ul>
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-[#142C54] uppercase text-[9px] tracking-wider mb-1">Recommendation</p>
+                          <p className="leading-relaxed">{photoReview.recommendation}</p>
+                        </div>
+                        <p className="text-[9px] text-[#8C887D] italic border-t border-[#316EC9]/20 pt-2">{photoReview.disclaimer}</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 

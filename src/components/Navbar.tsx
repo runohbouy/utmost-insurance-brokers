@@ -266,7 +266,7 @@ export default function Navbar({
           {/* Divider */}
           <div className="h-4 w-[1px] bg-[#D8E2F0]"></div>
 
-          {/* 5. AI Home Organizer */}
+          {/* 5. AI Risk Evaluator */}
           <button
             id="navitem-desktop-analyzer"
             onClick={() => routeTab("room-analyzer")}
@@ -276,7 +276,7 @@ export default function Navbar({
                 : "text-[#8C887D] hover:text-[#142C54]"
             }`}
           >
-            <span>AI Home Organizer</span>
+            <span>AI Risk Evaluator</span>
           </button>
 
         </nav>
@@ -608,7 +608,7 @@ export default function Navbar({
                   activeTab === "room-analyzer" ? "bg-[#142C54] text-white border-[#142C54]" : "bg-white border-[#D8E2F0] text-gray-700"
                 }`}
               >
-                AI Home Organizer
+                AI Risk Evaluator
               </button>
             </div>
 

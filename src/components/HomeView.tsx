@@ -29,7 +29,7 @@ export default function HomeView({ setActiveTab }: HomeViewProps) {
   const protectionOptions = [
     { id: "vehicle", label: "My Vehicle (Motor Private & Commercial)", tab: "motor-quotes" as ActiveTab, icon: Car, color: "text-[#021f42]" },
     { id: "health", label: "My Health & Family (Medical Schemes)", tab: "medical-quotes" as ActiveTab, icon: Heart, color: "text-rose-500" },
-    { id: "home", label: "My Home Contents (AI Decluttering & Property Risk)", tab: "room-analyzer" as ActiveTab, icon: Sparkles, color: "text-amber-500 animate-pulse" },
+    { id: "home", label: "My Assets & Property (AI Risk Evaluator)", tab: "room-analyzer" as ActiveTab, icon: Sparkles, color: "text-amber-500 animate-pulse" },
     { id: "business", label: "My Business, SME & Liability Risks", tab: "other-lines-quotes" as ActiveTab, icon: ShieldCheck, color: "text-blue-600" }
   ];
 
@@ -141,9 +141,9 @@ export default function HomeView({ setActiveTab }: HomeViewProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-serif italic text-[#142C54] font-semibold leading-snug">AI Home Risk Evaluator</h3>
+                  <h3 className="text-2xl font-serif italic text-[#142C54] font-semibold leading-snug">AI Risk Evaluator</h3>
                   <p className="text-xs text-slate-650 leading-relaxed">
-                    Reduce safety hazards and find domestic package contents quotes.
+                    Analyze any asset or property photo to flag risks and get insurance policy recommendations.
                   </p>
                 </div>
 
@@ -168,7 +168,7 @@ export default function HomeView({ setActiveTab }: HomeViewProps) {
                     id="hero-right-scanner-cta"
                     className="w-full rounded-xl bg-[#142C54] hover:bg-[#316EC9] px-4 py-3.5 text-xs uppercase tracking-wider font-bold text-white transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow-md cursor-pointer"
                   >
-                    <span>Launch AI Room Scan</span>
+                    <span>Launch AI Risk Evaluator</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>

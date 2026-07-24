@@ -9,7 +9,7 @@ export default function ResourcesView({ setActiveTab }: ResourcesViewProps) {
   const customFaqs = [
     { q: "Is Utmost an underwriter?", a: "No, we are a registered independent insurance broker. Under the Kenyan Insurance Act, an intermediate broker represents the buyer, negotiating custom corporate rebates and managing claim disputes, whereas standard agents represent the insurance carrier." },
     { q: "How much do brokerage services cost?", a: "Our advisory, quotation comparisons, and Claims Rescue services are completely free of charge to customers. We are compensated through standard regulated commission structures paid solely by underwriters." },
-    { q: "What is the AI Risk Scan?", a: "Our proprietary AI Home risk check scans space volumes to detect potential organization hazards while dynamically listing contents valuation (KES) to auto-formulate Domestic Package quotes." },
+    { q: "What is the AI Risk Evaluator?", a: "Our proprietary AI Risk Evaluator analyzes a photo of any asset or property - a vehicle, shop, equipment, home or its contents - to flag risk factors and recommend insurance policies. For rooms/homes, it also lists contents valuation (KES) to auto-formulate Domestic Package quotes." },
     { q: "How are personal data files handled?", a: "Utmost is fully registered with the Office of the Data Protection Commissioner (ODPC) Ref: 04487/2. All files, car logbooks, and clinical censuses are encrypted using standard secure protocols." }
   ];
 
@@ -36,10 +36,10 @@ export default function ResourcesView({ setActiveTab }: ResourcesViewProps) {
               <span className="text-[9px] bg-red-600/90 text-white font-mono px-2 py-0.5 font-bold uppercase tracking-wider">PROP Proprietary Asset</span>
               <h3 className="text-lg font-serif italic text-white flex items-center justify-center sm:justify-start gap-1.5">
                 <Sparkles className="h-5 w-5 text-[#316EC9]" />
-                Interactive AI Home Hazard Scan
+                Interactive AI Risk Evaluator
               </h3>
               <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-                Run our dynamic AI Home Contents Scanner. It analyzes room clutter levels, reports potential hazard nodes, lists estimated furniture values, and auto-generates comparative domestic package rates.
+                Analyze a photo of any asset or property. It flags risks, estimates values, recommends insurance policies to take up, and for homes/rooms also auto-generates comparative domestic package rates.
               </p>
             </div>
             

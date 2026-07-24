@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { 
-  InsuranceQuote, MotorQuoteParams, MedicalQuoteParams, ActiveTab 
+import {
+  InsuranceQuote, MotorQuoteParams, MedicalQuoteParams, ActiveTab
 } from "../types";
 import InsurerLogo from "./InsurerLogo";
-import { 
-  Car, Heart, ShieldCheck, HelpCircle, ArrowRight, CheckCircle, 
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  Car, Heart, ShieldCheck, HelpCircle, ArrowRight, CheckCircle,
   DownloadCloud, Mail, Phone, Lock, Sparkles, UserCheck, Calculator, AlertCircle, AlertTriangle
 } from "lucide-react";
 
@@ -51,11 +53,19 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authForm, setAuthForm] = useState({ name: "", email: "", phone: "", otp: "" });
   const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [actionAfterAuth, setActionAfterAuth] = useState<"download" | "buy">("download");
 
+  // Payment method choice - IPF is an optional alternative, never forced.
+  const [paymentMethod, setPaymentMethod] = useState<"full" | "ipf">("full");
   const [premiumFinanceMonths, setPremiumFinanceMonths] = useState<number>(3); // ipf installments
+
+  // Buy & Bind outcome - a real cover-note request reference once submitted.
+  const [isBinding, setIsBinding] = useState<boolean>(false);
+  const [coverNoteResult, setCoverNoteResult] = useState<{ coverNoteRef: string; status: string } | null>(null);
 
   // Run quotes calculation API
   const handleCalculate = async (e: React.FormEvent) => {
@@ -106,15 +116,20 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
   // Select Quote Option
   const handleSelectOffer = (offer: InsuranceQuote) => {
     setSelectedOffer(offer);
+    setPaymentMethod("full");
+    setCoverNoteResult(null);
   };
 
-  // PDF Download Trigger - requires account verification first
-  const handleDownloadQuotationPDF = (action: "download" | "buy") => {
+  // Unified trigger for both "download PDF" and "buy & bind" actions -
+  // requires OTP-verified contact details first.
+  const handleQuoteAction = (action: "download" | "buy") => {
     setActionAfterAuth(action);
     if (!isAuthenticated) {
       setShowAuthModal(true);
-    } else {
+    } else if (action === "download") {
       executePDFExport();
+    } else {
+      executeBindCoverNote();
     }
   };
 
@@ -131,63 +146,154 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
     }).catch(() => {});
   };
 
+  // Builds and downloads a real, branded comparative quotation PDF covering
+  // every carrier considered, with the selected offer and payment plan called out.
   const executePDFExport = () => {
     if (!selectedOffer) return;
-    alert(`Success: Quotation Sheet UTM-QT-${Math.floor(100000 + Math.random() * 900000)} exported as PDF. Send copy directly to ${authForm.email || motorParams.ownerEmail || medicalParams.principalEmail || "client"}`);
+    const contactName = authForm.name || motorParams.ownerName || medicalParams.principalName || "Client";
+    const contactEmail = authForm.email || motorParams.ownerEmail || medicalParams.principalEmail || "";
+    const quoteRef = `UTM-QT-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Utmost Insurance Brokers Limited", 14, 18);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Comparative Quotation Sheet", 14, 25);
+    doc.text(`Reference: ${quoteRef}`, 14, 31);
+    doc.text(`Date: ${new Date().toLocaleDateString("en-KE")}`, 14, 36);
+    doc.text(`Client: ${contactName}${contactEmail ? ` (${contactEmail})` : ""}`, 14, 41);
+    doc.text(`Category: ${category === "motor" ? "Motor Private & Commercial" : "Medical Scheme"}`, 14, 46);
+
+    const activeQuotes = quotes.filter((q) => !q.isDeclined);
+    autoTable(doc, {
+      startY: 52,
+      head: [["Insurer", "Base Premium (KES)", "Levies (KES)", "Total Premium (KES)", "Rating"]],
+      body: activeQuotes.map((q) => [
+        q.insurerName + (q.insurerId === selectedOffer.insurerId ? " (Selected)" : ""),
+        q.basePremium.toLocaleString(),
+        (q.pcf + q.trainingLevy + q.stampDuty).toLocaleString(),
+        q.totalPremium.toLocaleString(),
+        q.rating
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [20, 44, 84] }
+    });
+
+    const afterTableY = (doc as any).lastAutoTable?.finalY || 60;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`Selected Offer: ${selectedOffer.insurerName}`, 14, afterTableY + 10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Premium: KES ${selectedOffer.totalPremium.toLocaleString()}`, 14, afterTableY + 16);
+    doc.text(
+      paymentMethod === "ipf"
+        ? `Payment Plan: Insurance Premium Financing (IPF) over ${premiumFinanceMonths} months`
+        : "Payment Plan: Full / annual payment",
+      14,
+      afterTableY + 21
+    );
+    doc.setFontSize(8);
+    const disclaimer = "This is an indicative quotation subject to secondary underwriting. Final confirmation from an Utmost staff member is required to finalize and bind any cover.";
+    doc.text(doc.splitTextToSize(disclaimer, 180), 14, afterTableY + 30);
+
+    doc.save(`${quoteRef}-Utmost-Quotation.pdf`);
+
     notifyQuoteSelected("download");
     onSavedOffer(selectedOffer, category);
   };
 
-  // Secure payment checkout trigger
-  const handleBuyCheckout = () => {
-    setActionAfterAuth("buy");
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-    } else {
-      executePlacementCheckout();
+  // Buy & Bind - registers a real cover-note request with the broker and
+  // shows the resulting reference number instead of a silent alert.
+  const executeBindCoverNote = async () => {
+    if (!selectedOffer) return;
+    const contactName = authForm.name || motorParams.ownerName || medicalParams.principalName;
+    const contactPhone = authForm.phone || motorParams.ownerPhone || medicalParams.principalPhone;
+    const contactEmail = authForm.email || motorParams.ownerEmail || medicalParams.principalEmail;
+
+    setIsBinding(true);
+    try {
+      const res = await fetch("/api/cover-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category,
+          offer: selectedOffer,
+          contactName,
+          contactPhone,
+          contactEmail,
+          paymentMethod,
+          financeMonths: paymentMethod === "ipf" ? premiumFinanceMonths : undefined
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to register your cover note request.");
+      setCoverNoteResult(data);
+      notifyQuoteSelected("buy");
+      onSavedOffer(selectedOffer, category);
+    } catch (err: any) {
+      alert(err.message || "Failed to register your cover note request. Please try again or contact our claims desk.");
+    } finally {
+      setIsBinding(false);
     }
   };
 
-  const executePlacementCheckout = () => {
-    alert("Moving to Payment Checkout. Our Finance system will prompt M-Pesa STK Push sequence on your handset.");
-    notifyQuoteSelected("buy");
-    setActiveTab("portal");
-  };
-
-  // Authenticate users / check registers
-  const handleSendOtp = () => {
+  // Send a real, server-generated verification code to the customer's email.
+  const handleSendOtp = async () => {
+    setOtpError(null);
     if (!authForm.name || !authForm.email || !authForm.phone) {
-      alert("Please provide name, email, and phone before triggering OTP.");
+      setOtpError("Please provide your name, email, and phone number before requesting a code.");
       return;
     }
-    setOtpSent(true);
-    alert(`OTP Code '2456' dispatched to: +254 ${authForm.phone}. Please enter to authenticate and proceed.`);
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: authForm.name, email: authForm.email, phone: authForm.phone })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send verification code.");
+      setOtpSent(true);
+    } catch (err: any) {
+      setOtpError(err.message || "Failed to send verification code. Please try again.");
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
-  const handleVerifyOtpSubmit = (e: React.FormEvent) => {
+  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsRegistering(true);
-    setTimeout(() => {
-      if (authForm.otp === "2456" || authForm.otp === "1234") {
-        setIsAuthenticated(true);
-        setShowAuthModal(false);
-        setIsRegistering(false);
-        setOtpSent(false);
-        
-        // Save auth state globally/session for demonstration
-        localStorage.setItem("utmost_user_logged_in", "true");
-        localStorage.setItem("utmost_user_profile", JSON.stringify(authForm));
+    setOtpError(null);
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authForm.email, code: authForm.otp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Incorrect verification code.");
 
-        if (actionAfterAuth === "download") {
-          executePDFExport();
-        } else {
-          executePlacementCheckout();
-        }
+      setIsAuthenticated(true);
+      setShowAuthModal(false);
+      setOtpSent(false);
+
+      // Save auth state globally/session for demonstration
+      localStorage.setItem("utmost_user_logged_in", "true");
+      localStorage.setItem("utmost_user_profile", JSON.stringify(authForm));
+
+      if (actionAfterAuth === "download") {
+        executePDFExport();
       } else {
-        alert("Incorrect code. Please check your text messages and enter key '2456'.");
-        setIsRegistering(false);
+        executeBindCoverNote();
       }
-    }, 1200);
+    } catch (err: any) {
+      setOtpError(err.message || "Incorrect verification code.");
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
@@ -207,7 +313,7 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
       {/* COMPANION STATE TABS */}
       <div className="flex border-b border-[#D8E2F0] bg-[#FAF9F6] p-1 max-w-sm shrink-0 rounded-none font-mono">
         <button
-          onClick={() => { setCategory("motor"); setQuotes([]); setSelectedOffer(null); }}
+          onClick={() => { setCategory("motor"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
           className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
             category === "motor" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
           }`}
@@ -217,7 +323,7 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
           <span>Motor Private</span>
         </button>
         <button
-          onClick={() => { setCategory("medical"); setQuotes([]); setSelectedOffer(null); }}
+          onClick={() => { setCategory("medical"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
           className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
             category === "medical" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
           }`}
@@ -705,62 +811,93 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                 ))}
               </div>
 
-              {/* PAYMENT INSTALMENT IPF PLANNING CALCULATOR */}
-              {selectedOffer && (
-                <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-5 text-left space-y-4 rounded-none" id="ipf-instalment-widget">
+              {/* PAYMENT METHOD CHOICE - full payment vs optional IPF financing */}
+              {selectedOffer && !coverNoteResult && (
+                <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-5 text-left space-y-4 rounded-none" id="payment-method-choice">
                   <div className="flex items-center space-x-2 border-b border-[#D8E2F0] pb-2">
                     <Calculator className="h-[14px] w-[14px] text-[#316EC9]" />
-                    <h5 className="font-bold text-[#1A1A1A] text-xs uppercase tracking-wider font-mono">Insurance Premium Financing (IPF) Estimator</h5>
+                    <h5 className="font-bold text-[#1A1A1A] text-xs uppercase tracking-wider font-mono">How would you like to pay?</h5>
                   </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Finance Split Installments</label>
-                      <select
-                        value={premiumFinanceMonths}
-                        onChange={(e) => setPremiumFinanceMonths(Number(e.target.value))}
-                        className="w-full text-xs font-bold rounded-none border border-[#D8E2F0] bg-white p-2"
-                      >
-                        <option value={3}>3 Monthly Installments</option>
-                        <option value={6}>6 Monthly Installments</option>
-                        <option value={10}>10 Monthly Installments</option>
-                      </select>
-                    </div>
 
-                    <div className="text-xs">
-                      <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Estimated downpayment (1st Month):</p>
-                      <p className="text-sm font-bold text-[#1A1A1A] font-sans">
-                        KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="text-xs font-bold">
-                      <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Recurring Monthly Premium:</p>
-                      <p className="text-base font-bold text-[#316EC9] font-sans">
-                        KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()} / month
-                      </p>
-                      <span className="text-[8px] text-[#8C887D] uppercase tracking-wider italic leading-none font-sans block pt-1">
-                        * Flat 5% Financing interest fee is factored in contents.
-                      </span>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("full")}
+                      className={`text-left border p-3 rounded-none transition-all cursor-pointer ${
+                        paymentMethod === "full" ? "border-[#316EC9] bg-white ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
+                      }`}
+                      id="payment-method-full-btn"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A] font-mono block">Pay in Full</span>
+                      <span className="text-[11px] text-[#5E5A51]">Single annual premium payment, no financing fee.</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("ipf")}
+                      className={`text-left border p-3 rounded-none transition-all cursor-pointer ${
+                        paymentMethod === "ipf" ? "border-[#316EC9] bg-white ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
+                      }`}
+                      id="payment-method-ipf-btn"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A] font-mono block">Finance via IPF</span>
+                      <span className="text-[11px] text-[#5E5A51]">Split premium into monthly installments (5% financing fee).</span>
+                    </button>
                   </div>
+
+                  {paymentMethod === "ipf" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center border-t border-[#D8E2F0] pt-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Finance Split Installments</label>
+                        <select
+                          value={premiumFinanceMonths}
+                          onChange={(e) => setPremiumFinanceMonths(Number(e.target.value))}
+                          className="w-full text-xs font-bold rounded-none border border-[#D8E2F0] bg-white p-2"
+                        >
+                          <option value={3}>3 Monthly Installments</option>
+                          <option value={6}>6 Monthly Installments</option>
+                          <option value={10}>10 Monthly Installments</option>
+                        </select>
+                      </div>
+
+                      <div className="text-xs">
+                        <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Estimated downpayment (1st Month):</p>
+                        <p className="text-sm font-bold text-[#1A1A1A] font-sans">
+                          KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <div className="text-xs font-bold">
+                        <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Recurring Monthly Premium:</p>
+                        <p className="text-base font-bold text-[#316EC9] font-sans">
+                          KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()} / month
+                        </p>
+                        <span className="text-[8px] text-[#8C887D] uppercase tracking-wider italic leading-none font-sans block pt-1">
+                          * Flat 5% Financing interest fee is factored in contents.
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* FORM ACTIONS */}
-              {selectedOffer && (
+              {selectedOffer && !coverNoteResult && (
                 <div className="border border-[#D8E2F0] bg-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-none" id="quotes-offer-actions">
                   <div className="text-left space-y-1">
                     <span className="text-[9px] uppercase font-bold text-[#8C887D] tracking-wider block font-mono">Selected Underwriter</span>
                     <h4 className="font-serif italic text-lg text-[#1A1A1A]">{selectedOffer.insurerName}</h4>
                     <p className="text-xs text-[#5E5A51]">
-                      Total Due: <strong className="font-bold text-[#1A1A1A]">KES {selectedOffer.totalPremium.toLocaleString()}</strong> (Annual premium fully factored)
+                      {paymentMethod === "ipf" ? (
+                        <>Monthly Installment: <strong className="font-bold text-[#1A1A1A]">KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}</strong> over {premiumFinanceMonths} months (IPF)</>
+                      ) : (
+                        <>Total Due: <strong className="font-bold text-[#1A1A1A]">KES {selectedOffer.totalPremium.toLocaleString()}</strong> (Annual premium fully factored)</>
+                      )}
                     </p>
                   </div>
 
                   <div className="flex space-x-3 w-full sm:w-auto">
                     <button
-                      onClick={() => handleDownloadQuotationPDF("download")}
+                      onClick={() => handleQuoteAction("download")}
                       className="flex-grow sm:flex-none uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 border border-[#D8E2F0] bg-white hover:bg-[#F0F5FC] px-4 py-3 text-[10px] font-bold text-[#1A1A1A] transition-all rounded-none cursor-pointer"
                       id="quote-dl-pdf-btn"
                     >
@@ -768,13 +905,37 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                       <span>Download comparative PDF</span>
                     </button>
                     <button
-                      onClick={() => handleDownloadQuotationPDF("buy")}
-                      className="flex-grow sm:flex-none uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-5 py-3 text-[10px] font-bold transition-all rounded-none cursor-pointer"
+                      onClick={() => handleQuoteAction("buy")}
+                      disabled={isBinding}
+                      className="flex-grow sm:flex-none uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-5 py-3 text-[10px] font-bold transition-all rounded-none cursor-pointer disabled:opacity-50"
+                      id="quote-buy-bind-btn"
                     >
                       <ShieldCheck className="h-4 w-4" />
-                      <span>Buy & Bind Cover note</span>
+                      <span>{isBinding ? "Registering..." : "Buy & Bind Cover note"}</span>
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* COVER NOTE CONFIRMATION - real outcome once Buy & Bind completes */}
+              {coverNoteResult && (
+                <div className="border border-emerald-300 bg-emerald-50 p-6 space-y-3 rounded-none" id="cover-note-confirmation">
+                  <div className="flex items-center space-x-2 text-emerald-800">
+                    <CheckCircle className="h-5 w-5" />
+                    <h4 className="font-serif italic text-lg">Cover Note Request Registered</h4>
+                  </div>
+                  <p className="text-xs text-emerald-950">
+                    Reference: <strong className="font-mono">{coverNoteResult.coverNoteRef}</strong> &middot; Status: <strong>{coverNoteResult.status}</strong>
+                  </p>
+                  <p className="text-xs text-emerald-950 leading-relaxed">
+                    Our finance team will send an M-Pesa STK Push prompt to complete payment{paymentMethod === "ipf" ? ` (first installment of KES ${selectedOffer ? Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString() : ""})` : ""}. Once payment is confirmed, an Utmost underwriting staff member will issue your final cover note documents.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab("portal")}
+                    className="bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-all rounded-none cursor-pointer"
+                  >
+                    Go to Customer Portal
+                  </button>
                 </div>
               )}
 
@@ -797,7 +958,7 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                 </span>
                 <h3 className="text-lg font-serif italic text-[#1A1A1A] pt-1">Required Client Authentication</h3>
                 <p className="text-[11px] text-[#5E5A51] leading-relaxed">
-                  IRA consumer protection standards require verifying active Kenyan telephone credentials before presenting finalized comparison sheets.
+                  IRA consumer protection standards require verifying your contact details by email before presenting finalized comparison sheets.
                 </p>
               </div>
               <button 
@@ -853,11 +1014,19 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   </div>
                 </div>
 
+                {otpError && (
+                  <p className="text-[11px] text-red-700 flex items-start space-x-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>{otpError}</span>
+                  </p>
+                )}
+
                 <button
                   onClick={handleSendOtp}
-                  className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] font-bold py-3 text-[10px] uppercase tracking-widest transition-colors rounded-none cursor-pointer"
+                  disabled={isSendingOtp}
+                  className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] font-bold py-3 text-[10px] uppercase tracking-widest transition-colors rounded-none cursor-pointer disabled:opacity-50"
                 >
-                  Send OTP SMS Code
+                  {isSendingOtp ? "Sending..." : "Send Verification Code to Email"}
                 </button>
               </div>
             )}
@@ -866,17 +1035,17 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
             {otpSent && (
               <form onSubmit={handleVerifyOtpSubmit} className="space-y-4 text-xs font-semibold">
                 <div className="border border-emerald-300 bg-emerald-50 p-3 italic text-emerald-950 font-medium rounded-none text-[11px]">
-                  ✔️ SMS dispatched. Enter "2456" to instantly verify credentials.
+                  ✔️ A 6-digit verification code was emailed to {authForm.email}. Check your inbox (and spam folder) and enter it below.
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] uppercase tracking-wider text-[#8C887D]">Enter 4-Digit OTP Code *</label>
+                  <label className="text-[9px] uppercase tracking-wider text-[#8C887D]">Enter 6-Digit Email Code *</label>
                   <div className="relative">
                     <input
                       type="text"
-                      maxLength={4}
+                      maxLength={6}
                       required
-                      placeholder="e.g. 2456"
+                      placeholder="e.g. 138245"
                       value={authForm.otp}
                       onChange={(e) => setAuthForm({ ...authForm, otp: e.target.value })}
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 pl-8 text-center text-xs font-mono font-bold tracking-widest text-[#1A1A1A] focus:border-[#316EC9] focus:outline-none"
@@ -885,13 +1054,28 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   </div>
                 </div>
 
+                {otpError && (
+                  <p className="text-[11px] text-red-700 flex items-start space-x-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>{otpError}</span>
+                  </p>
+                )}
+
                 <button
                   type="submit"
                   disabled={isRegistering}
                   className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] font-bold py-3 text-[10px] uppercase tracking-widest transition-colors rounded-none cursor-pointer disabled:opacity-50"
                   id="auth-verify-btn"
                 >
-                  {isRegistering ? "Verifying..." : "Verify and Access final PDF"}
+                  {isRegistering ? "Verifying..." : "Verify and Continue"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setOtpSent(false); setOtpError(null); setAuthForm({ ...authForm, otp: "" }); }}
+                  className="w-full text-[10px] uppercase tracking-widest text-[#8C887D] hover:text-[#316EC9] font-bold py-1 cursor-pointer"
+                >
+                  Use a different email
                 </button>
               </form>
             )}

@@ -10,6 +10,7 @@ import ClaimsCentreView from "./components/ClaimsCentreView";
 import PortalDashboardView from "./components/PortalDashboardView";
 import AdminPortalView from "./components/AdminPortalView";
 import StaffLoginGate from "./components/StaffLoginGate";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 // Lazy-like or static import for all secondary pages
 import InsuranceProductsView from "./components/InsuranceProductsView";
@@ -333,6 +334,9 @@ export default function App() {
 
       {/* COMPLIANT REGULATORY FOOTER */}
       <Footer setActiveTab={setActiveTab} />
+
+      {/* Persistent WhatsApp click-to-chat - hidden on the internal admin workspace */}
+      {activeTab !== "admin" && <WhatsAppWidget />}
 
     </div>
   );

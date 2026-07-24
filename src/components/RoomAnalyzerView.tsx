@@ -285,12 +285,12 @@ export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: Ro
       
       {/* HEADER INTRODUCTION */}
       <div className="border-b border-[#D8E2F0] pb-6">
-        <p className="text-[10px] uppercase font-bold text-[#316EC9] tracking-[0.25em] mb-1">Interactive Risk Surveyor</p>
+        <p className="text-[10px] uppercase font-bold text-[#316EC9] tracking-[0.25em] mb-1">AI Risk Evaluator</p>
         <h1 className="text-3xl font-serif italic tracking-tight text-[#1A1A1A]">
-          Home Decluttering & Property Risk AI Surveyor
+          AI Risk Evaluator
         </h1>
         <p className="mt-1.5 text-xs text-[#8C887D] max-w-4xl leading-relaxed">
-          Get real-time space organization advice, identify fire, electrical and physical hazards, estimate contents replacement valuations, and comparative package quotes - or ask our AI assistant any general insurance or risk question. Fully authorized and powered by Google Gemini.
+          Analyze a photo of any asset or property - a vehicle, shop, equipment, home or its contents - to flag risks and get insurance policy recommendations, or ask our AI assistant any general insurance question. Fully authorized and powered by Google Gemini.
         </p>
       </div>
 
@@ -303,7 +303,7 @@ export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: Ro
           }`}
         >
           <Camera className="h-3.5 w-3.5" />
-          <span>Property Risk Scan</span>
+          <span>Home & Property Scan</span>
         </button>
         <button
           onClick={() => setMode("advisor")}
@@ -312,7 +312,7 @@ export default function RoomAnalyzerView({ setActiveTab, onAnalysisSuccess }: Ro
           }`}
         >
           <MessageCircleQuestion className="h-3.5 w-3.5" />
-          <span>Ask About Insurance</span>
+          <span>Any Asset Photo & Policy Advisor</span>
         </button>
       </div>
 

@@ -6,10 +6,11 @@ import { AuthenticatedStaff, StaffSessionBadge } from "./StaffLoginGate";
 import { ActiveTab } from "../types";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts, saveProducts } from "../data/productStore";
+import InsurerLogo from "./InsurerLogo";
 import {
   Settings2, Users, AlertCircle, FileText, CheckCircle, Database,
   TrendingUp, Percent, Award, Download, ShieldAlert, Sparkles, RefreshCw,
-  PlusCircle, Edit2, CheckSquare, EyeOff, LayoutGrid, Check, FolderSync, Trash2
+  PlusCircle, Edit2, CheckSquare, EyeOff, LayoutGrid, Check, FolderSync, Trash2, UploadCloud
 } from "lucide-react";
 
 interface AdminPortalViewProps {
@@ -306,6 +307,74 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     availableProducts: "" // comma-separated in the form, split into an array on submit
   });
 
+  // Underwriter Logo Manager state - uploads apply to any insurer id (built-in or custom), stored
+  // server-side in insurerLogosDb.json and served from public/logos/uploads/.
+  const [logoTargetInsurerId, setLogoTargetInsurerId] = useState<string>("icea");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [uploadedLogos, setUploadedLogos] = useState<Record<string, { src: string; uploadedAt: string }>>({});
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const fetchUploadedLogos = async () => {
+    try {
+      const res = await fetch("/api/insurer-logos");
+      if (res.ok) setUploadedLogos(await res.json());
+    } catch (err) {
+      console.error("Error fetching insurer logos:", err);
+    }
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (PNG, JPG, WEBP, or SVG).");
+      return;
+    }
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = async () => {
+    if (!logoFile || !logoPreview) {
+      alert("Please choose an image file first.");
+      return;
+    }
+    setIsUploadingLogo(true);
+    try {
+      const res = await fetch("/api/insurer-logos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authenticatedStaff.token}` },
+        body: JSON.stringify({ insurerId: logoTargetInsurerId, imageBase64: logoPreview, mimeType: logoFile.type })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to upload logo.");
+      await fetchUploadedLogos();
+      setLogoFile(null);
+      setLogoPreview(null);
+      alert(`Success: Logo updated for ${allCarrierOptions.find((i) => i.id === logoTargetInsurerId)?.tradingName || logoTargetInsurerId}.`);
+    } catch (err: any) {
+      alert(err.message || "Logo upload failed.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    if (!confirm(`Remove the uploaded logo for ${logoTargetInsurerId}? It will fall back to the default artwork.`)) return;
+    try {
+      const res = await fetch(`/api/insurer-logos/${logoTargetInsurerId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${authenticatedStaff.token}` }
+      });
+      if (res.ok) await fetchUploadedLogos();
+    } catch (err) {
+      console.error("Error removing insurer logo:", err);
+    }
+  };
+
   // mockInsurers.ts holds several profile-only carriers (Madison, Pioneer, Monarch, Capex,
   // Liberty) that never made it into BUILT_IN_INSURERS because they have no motor-engine rates
   // yet - without this they'd be invisible in this dropdown and unconfigurable entirely.
@@ -600,6 +669,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     fetchRates();
     fetchDashboardData();
     fetchCustomInsurers();
+    fetchUploadedLogos();
   }, []);
 
   const handleOverrideRateSubmit = async (e: React.FormEvent) => {
@@ -1900,6 +1970,75 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                       )}
                     </div>
                   </form>
+                </div>
+              </div>
+
+              {/* UNDERWRITER LOGO MANAGER: upload/replace a logo for any insurer, new or existing */}
+              <div className="border border-[#D8E2F0] bg-white p-5 space-y-4 rounded-none" id="logo-manager-box">
+                <h4 className="font-serif italic text-base text-[#1A1A1A] border-b border-[#D8E2F0] pb-2 flex items-center space-x-2">
+                  <Award className="h-4 w-4 text-[#316EC9]" />
+                  <span>Underwriter Logo Manager</span>
+                </h4>
+                <p className="text-[11px] text-[#8C887D] leading-relaxed">
+                  Upload or replace the brand logo shown across the platform for any underwriter - built-in or custom. Takes effect immediately everywhere that carrier's logo appears.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase tracking-wider text-[#8C887D] font-extrabold">Underwriter</label>
+                    <select
+                      value={logoTargetInsurerId}
+                      onChange={(e) => { setLogoTargetInsurerId(e.target.value); setLogoFile(null); setLogoPreview(null); }}
+                      className="w-full text-xs font-bold rounded-none border border-[#D8E2F0] bg-white p-2.5 focus:border-[#316EC9] focus:outline-none"
+                    >
+                      {allCarrierOptions.map((ins) => (
+                        <option key={ins.id} value={ins.id}>{ins.tradingName}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-16 h-10 flex items-center justify-center bg-slate-50 border border-slate-200 p-1 shrink-0">
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="Preview" className="max-w-full max-h-full object-contain" />
+                      ) : (
+                        <InsurerLogo carrierId={logoTargetInsurerId} height="24" className="max-w-full max-h-full object-contain" />
+                      )}
+                    </div>
+                    <div className="text-[9px] text-[#8C887D] leading-tight">
+                      {uploadedLogos[logoTargetInsurerId.toLowerCase().replace(/[^a-z0-9-]/g, "")] ? (
+                        <span className="text-emerald-700 font-bold">Custom logo uploaded</span>
+                      ) : (
+                        <span>Using default artwork</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="inline-flex items-center space-x-1.5 border border-[#D8E2F0] bg-white hover:bg-[#F0F5FC] px-3 py-2 text-[9px] uppercase tracking-widest font-bold text-[#1A1A1A] rounded-none transition-colors cursor-pointer">
+                    <UploadCloud className="h-3.5 w-3.5 text-[#316EC9]" />
+                    <span>Choose Image File</span>
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogoFileChange} className="hidden" />
+                  </label>
+                  {logoFile && <span className="text-[10px] text-[#5E5A51] font-mono">{logoFile.name}</span>}
+                  <button
+                    type="button"
+                    onClick={handleLogoUpload}
+                    disabled={!logoFile || isUploadingLogo}
+                    className="bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] font-bold py-2 px-4 text-[10px] uppercase tracking-widest transition-all rounded-none cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploadingLogo ? "Uploading..." : "Save Logo"}
+                  </button>
+                  {uploadedLogos[logoTargetInsurerId.toLowerCase().replace(/[^a-z0-9-]/g, "")] && (
+                    <button
+                      type="button"
+                      onClick={handleLogoRemove}
+                      className="text-[10px] uppercase tracking-widest font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                    >
+                      Remove Custom Logo
+                    </button>
+                  )}
                 </div>
               </div>
 

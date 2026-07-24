@@ -1,12 +1,18 @@
 import React, { useRef, useState } from "react";
 import { Sparkles, Send, Image as ImageIcon, X, AlertCircle, ShieldAlert } from "lucide-react";
 
+interface RecommendedPolicy {
+  policyName: string;
+  reason: string;
+}
+
 interface ChatTurn {
   question: string;
   imagePreview?: string;
   answer: string;
   riskFactors: string[];
   suggestedInsuranceLines: string[];
+  recommendedPolicies: RecommendedPolicy[];
 }
 
 export default function InsuranceAdvisorChat() {
@@ -51,7 +57,14 @@ export default function InsuranceAdvisorChat() {
 
       setHistory((prev) => [
         ...prev,
-        { question: question.trim(), imagePreview: imagePreview || undefined, answer: data.answer, riskFactors: data.riskFactors || [], suggestedInsuranceLines: data.suggestedInsuranceLines || [] }
+        {
+          question: question.trim(),
+          imagePreview: imagePreview || undefined,
+          answer: data.answer,
+          riskFactors: data.riskFactors || [],
+          suggestedInsuranceLines: data.suggestedInsuranceLines || [],
+          recommendedPolicies: data.recommendedPolicies || []
+        }
       ]);
       setDisclaimer(data.disclaimer);
       setQuestion("");
@@ -69,17 +82,17 @@ export default function InsuranceAdvisorChat() {
       <div className="border border-amber-200 bg-amber-50 p-3.5 flex items-start space-x-2.5 text-[11px] text-amber-900 rounded-none">
         <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
         <p className="leading-relaxed">
-          <strong>AI-generated guidance, not professional advice.</strong> This assistant helps you understand insurance concepts and spot general risk factors. It does not issue quotes, confirm coverage, or replace a licensed advisor - speak to an Utmost advisor before making any insurance decision.
+          <strong>AI-generated guidance, not professional advice.</strong> This assistant helps you understand insurance concepts, spot general risk factors, and see which policies may be worth considering for an asset. It does not issue quotes, confirm coverage, or replace a licensed advisor - speak to an Utmost advisor before making any insurance decision.
         </p>
       </div>
 
       <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-6 space-y-5 rounded-none">
         <h3 className="font-serif italic text-lg text-[#1A1A1A] flex items-center space-x-2 border-b border-[#D8E2F0] pb-2">
           <Sparkles className="h-4 w-4 text-[#316EC9]" />
-          <span>Ask About Insurance & Risk Analysis</span>
+          <span>Any Asset Photo & Policy Advisor</span>
         </h3>
         <p className="text-xs text-[#8C887D] leading-relaxed">
-          Ask a general question about how insurance works in Kenya, or attach a photo of an asset or property to get a general risk-awareness read.
+          Ask a general question about how insurance works in Kenya, or attach a photo of any asset or property - a vehicle, shop, equipment, home or its contents - to get risk factors and specific policy recommendations.
         </p>
 
         {history.length > 0 && (
@@ -104,6 +117,22 @@ export default function InsuranceAdvisorChat() {
                     <div>
                       <p className="text-[9px] font-bold uppercase tracking-wider text-[#8C887D]">Relevant cover types</p>
                       <p className="mt-0.5">{turn.suggestedInsuranceLines.join(", ")}</p>
+                    </div>
+                  )}
+                  {turn.recommendedPolicies.length > 0 && (
+                    <div className="border border-[#316EC9]/30 bg-[#F0F5FC] p-2.5 space-y-1.5">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#142C54] flex items-center">
+                        <Sparkles className="h-3 w-3 text-[#316EC9] mr-1 shrink-0" />
+                        Recommended Policies
+                      </p>
+                      <ul className="space-y-1.5">
+                        {turn.recommendedPolicies.map((p, j) => (
+                          <li key={j}>
+                            <p className="font-bold text-[#142C54]">{p.policyName}</p>
+                            <p className="text-slate-600 leading-relaxed">{p.reason}</p>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>

@@ -109,6 +109,28 @@ async function sendLeadEmail(opts: { subject: string; html: string; attachments?
   }
 }
 
+// Sends directly to a customer's own inbox (e.g. OTP codes) rather than to
+// LEADS_EMAIL - same "log and continue" fallback when SMTP isn't configured,
+// so the OTP flow never hard-blocks a local/demo environment.
+async function sendTransactionalEmail(to: string, subject: string, html: string) {
+  if (!mailTransporter) {
+    console.log(`[email:not-configured] Would send "${subject}" to ${to}. Set SMTP_HOST/SMTP_USER/SMTP_PASS to enable real delivery.`);
+    return { sent: false, reason: "SMTP not configured" };
+  }
+  try {
+    await mailTransporter.sendMail({
+      from: process.env.SMTP_FROM || `"Utmost Insurance Brokers" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html
+    });
+    return { sent: true };
+  } catch (error: any) {
+    console.error(`Error sending email to ${to}:`, error?.message || error);
+    return { sent: false, reason: error?.message || "send failed" };
+  }
+}
+
 // Set up JSON body sizes for large base64 image uploads
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -130,6 +152,8 @@ const AUDIT_LOG_FILE = "complianceAuditLogDb.json";
 const ROOM_SCAN_FILE = "roomScanResultDb.json";
 const INSURER_FILE = "insurersDb.json";
 const OTHER_LINE_REQUEST_FILE = "otherLineRequestsDb.json";
+const INSURER_LOGO_FILE = "insurerLogosDb.json";
+const COVER_NOTE_FILE = "coverNoteDb.json";
 
 function loadDbFile(filename: string, defaultData: any) {
   try {
@@ -691,15 +715,22 @@ app.post("/api/insurance-advisor-chat", async (req, res) => {
     if (isMock) {
       await new Promise((resolve) => setTimeout(resolve, 1200));
       const mockAnswer = `Here's general guidance on "${question.trim()}": Kenyan insurance is regulated by the IRA and split into General (motor, fire, marine, liability, etc.), Medical, and Long-Term (life) classes. For a precise answer tailored to your situation, an Utmost advisor can review your specific circumstances - use the "Get a Quote" or advisory line to reach one directly. (Simulated response - GEMINI_API_KEY not configured.)`;
+      const mockRecommendedPolicies = imageBase64
+        ? [
+            { policyName: "Fire & Perils / Domestic Package", reason: "General cover for fire, storm, and structural damage to a property or its contents (simulated - GEMINI_API_KEY not configured)." },
+            { policyName: "Burglary / Theft", reason: "Protects contents and equipment against break-in and theft (simulated response)." }
+          ]
+        : [];
       sendLeadEmail({
-        subject: `AI Insurance Advisor Used - Risk Analysis / Q&A`,
-        html: `<h2>AI Insurance Advisor</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${mockAnswer}</p>${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
+        subject: `AI Risk Evaluator Used - Risk Analysis / Policy Recommendation`,
+        html: `<h2>AI Risk Evaluator</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${mockAnswer}</p>${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
         attachments: imageBase64 ? [{ filename: `risk-analysis-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }] : []
       }).catch(() => {});
       return res.json({
         answer: mockAnswer,
         riskFactors: [],
         suggestedInsuranceLines: [],
+        recommendedPolicies: mockRecommendedPolicies,
         disclaimer: RISK_ADVISOR_DISCLAIMER
       });
     }
@@ -710,18 +741,18 @@ app.post("/api/insurance-advisor-chat", async (req, res) => {
       parts.push({ inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64.replace(/^data:image\/\w+;base64,/, "") } });
     }
     parts.push({
-      text: `A prospective or existing customer of Utmost Insurance Brokers (Kenya) is asking: "${question.trim()}"${imageBase64 ? " They have also attached a photo of an asset or property for risk assessment." : ""} Answer helpfully and specifically to the Kenyan insurance market. If a photo is attached, identify visible risk factors (fire, theft, structural, liability) relevant to insuring it. Respond strictly as JSON matching the schema.`
+      text: `A prospective or existing customer of Utmost Insurance Brokers (Kenya) is asking: "${question.trim()}"${imageBase64 ? " They have also attached a photo of an asset or property (this could be anything - a vehicle, a shop or business premises, machinery/equipment, a home or its contents, livestock, goods for transit, etc. - not just a house) and want to know what insurance they should take up for it." : ""} Answer helpfully and specifically to the Kenyan insurance market. If a photo is attached, identify what the asset/property actually is, note visible risk factors (fire, theft, structural, liability, accident, weather), and recommend the SPECIFIC named insurance policies/classes of cover most relevant to protecting it, with a short reason for each grounded in what's actually visible. Respond strictly as JSON matching the schema.`
     });
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: { parts },
       config: {
-        systemInstruction: `You are an insurance education and risk-analysis assistant for Utmost Insurance Brokers Limited, an independent Kenyan insurance intermediary. You help the public understand how insurance works (classes of cover, how premiums are calculated, what affects risk, claims processes) and give general risk-awareness observations about photos of assets or property they share.
+        systemInstruction: `You are a risk-analysis and insurance-recommendation assistant for Utmost Insurance Brokers Limited, an independent Kenyan insurance intermediary. Your job covers ANY asset or property a user asks about or photographs - not just homes: vehicles, shops, offices, machinery, construction sites, goods in transit, livestock, and personal property all apply equally. You help the public understand how insurance works and, when given a photo, recommend the SPECIFIC named insurance policies/classes of cover (e.g. "Motor Comprehensive", "Fire Industrial", "Burglary/Theft", "Goods in Transit", "Public Liability", "Machinery Breakdown", "Personal Accident") that genuinely fit what's shown, each with a concrete reason tied to a visible risk factor - not a generic list.
 
         CRITICAL PRIVACY MANDATE: if any image contains visible human faces, ID documents, or other exposed PII, do not analyze it - set privacyViolationError instead and leave other fields empty.
 
-        You are NOT a licensed financial/insurance advisor and must never: state a binding premium, guarantee coverage or claims outcomes, or tell someone not to buy insurance they may need. Keep answers factual, balanced, and always steer decisions that matter back to a qualified Utmost advisor. Answers should be genuinely useful and specific, not generic filler.`,
+        You are NOT a licensed financial/insurance advisor and must never: state a binding premium, guarantee coverage or claims outcomes, or tell someone not to buy insurance they may need. Keep answers factual, balanced, and always steer decisions that matter back to a qualified Utmost advisor. Answers should be genuinely useful and specific, not generic filler. If no image was provided, recommendedPolicies can be an empty array unless the question itself clearly asks about a specific class of cover.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -729,9 +760,20 @@ app.post("/api/insurance-advisor-chat", async (req, res) => {
             privacyViolationError: { type: Type.STRING },
             answer: { type: Type.STRING },
             riskFactors: { type: Type.ARRAY, items: { type: Type.STRING } },
-            suggestedInsuranceLines: { type: Type.ARRAY, items: { type: Type.STRING } }
+            suggestedInsuranceLines: { type: Type.ARRAY, items: { type: Type.STRING } },
+            recommendedPolicies: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  policyName: { type: Type.STRING },
+                  reason: { type: Type.STRING }
+                },
+                required: ["policyName", "reason"]
+              }
+            }
           },
-          required: ["privacyViolationError", "answer", "riskFactors", "suggestedInsuranceLines"]
+          required: ["privacyViolationError", "answer", "riskFactors", "suggestedInsuranceLines", "recommendedPolicies"]
         }
       }
     });
@@ -745,8 +787,8 @@ app.post("/api/insurance-advisor-chat", async (req, res) => {
     }
 
     sendLeadEmail({
-      subject: `AI Insurance Advisor Used - Risk Analysis / Q&A`,
-      html: `<h2>AI Insurance Advisor</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${report.answer}</p>${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
+      subject: `AI Risk Evaluator Used - Risk Analysis / Policy Recommendation`,
+      html: `<h2>AI Risk Evaluator</h2><p><strong>Question:</strong> ${question.trim()}</p><p><strong>Answer given:</strong> ${report.answer}</p>${(report.recommendedPolicies || []).length > 0 ? `<p><strong>Recommended policies:</strong> ${report.recommendedPolicies.map((p: any) => p.policyName).join(", ")}</p>` : ""}${imageBase64 ? "<p>See attached photo.</p>" : ""}`,
       attachments: imageBase64 ? [{ filename: `risk-analysis-${Date.now()}.jpg`, contentBase64: imageBase64, contentType: mimeType || "image/jpeg" }] : []
     }).catch(() => {});
 
@@ -839,6 +881,99 @@ app.post("/api/claims-assistant", async (req, res) => {
   } catch (error: any) {
     console.error("Error in /api/claims-assistant:", error);
     return res.status(500).json({ error: error.message || "Failed to generate claims guidance." });
+  }
+});
+
+// ----------------------------------------------------
+// API 1d: AI Claims Photo Evidence Review - after a claimant has taken
+// incident-scene photos (but before/at formal submission), assess whether
+// each photo is actually useful enough to help defend the claim: what it
+// shows well, what's missing or unclear, and a plain recommendation on
+// whether to retake/add more photos. This is a photo-quality/evidence
+// assessment only - it never confirms liability or a claim outcome.
+// ----------------------------------------------------
+const CLAIMS_PHOTO_REVIEW_DISCLAIMER = "This AI-generated evidence review is general guidance on photo quality and completeness only. It does not assess liability, confirm coverage, or guarantee any claim outcome - your claim will be reviewed by an Utmost claims officer against your actual policy terms and the full evidence submitted.";
+
+app.post("/api/claims-photo-review", async (req, res) => {
+  try {
+    const { claimType, description, photoBase64, mimeType } = req.body;
+
+    if (!photoBase64) {
+      return res.status(400).json({ error: "Please attach a photo of the incident/damage to review." });
+    }
+
+    const isMock = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY";
+
+    if (isMock) {
+      await new Promise((resolve) => setTimeout(resolve, 1300));
+      const mockReview = {
+        evidenceQuality: "Moderate",
+        strengths: [
+          "Shows the damaged area with reasonable clarity",
+          "Lighting is adequate to make out the extent of the damage"
+        ],
+        gaps: [
+          "No wide shot showing the full vehicle/property or scene context",
+          "No visible registration plate, serial number, or other identifying mark",
+          "No object for scale (coin, hand, ruler) to judge the size of the damage"
+        ],
+        recommendation: "This photo alone is unlikely to fully defend your claim. Add a wide establishing shot, a close-up with something for scale, and a shot of the identifying mark (plate/serial number) before you submit.",
+        disclaimer: CLAIMS_PHOTO_REVIEW_DISCLAIMER
+      };
+      sendLeadEmail({
+        subject: `AI Claims Photo Review Used - ${claimType ? claimType.trim() : "Incident"}`,
+        html: `<h2>AI Claims Photo Evidence Review</h2><p><strong>Claim type:</strong> ${claimType ? claimType.trim() : "Not specified"}</p><p><strong>Description given:</strong> ${description || "Not provided"}</p><p><strong>Evidence quality assessed:</strong> ${mockReview.evidenceQuality}</p><p>See attached photo.</p>`,
+        attachments: [{ filename: `claim-evidence-${Date.now()}.jpg`, contentBase64: photoBase64, contentType: mimeType || "image/jpeg" }]
+      }).catch(() => {});
+      return res.json(mockReview);
+    }
+
+    const ai = getAiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: {
+        parts: [
+          { inlineData: { mimeType: mimeType || "image/jpeg", data: photoBase64.replace(/^data:image\/\w+;base64,/, "") } },
+          {
+            text: `A customer is preparing to submit an insurance claim in Kenya${claimType ? ` for a "${claimType.trim()}" incident` : ""}.${description ? ` Additional details: "${description.trim()}"` : ""} They have taken this photo as evidence. Assess whether this photo, on its own, is useful enough to help defend/support the claim - what it shows well, what is missing or unclear, and whether they should take additional or better photos before submitting. Respond strictly as JSON matching the schema.`
+          }
+        ]
+      },
+      config: {
+        systemInstruction: `You are a claims-evidence quality reviewer for Utmost Insurance Brokers Limited, an independent Kenyan insurance intermediary. You assess whether a claimant's incident/damage photo is clear and complete enough to be useful evidence - you do NOT assess liability, confirm coverage, or predict the claim outcome. Be specific and practical: comment on framing, lighting, whether damage/identifying marks (plates, serial numbers) are visible, whether scale is clear, and whether scene context is shown. CRITICAL PRIVACY MANDATE: if the image contains a visible human face, a national ID/passport, or other exposed personal identifying document, do not analyze it - set privacyViolationError to a short explanation instead and leave the other fields as empty strings/arrays. You are NOT a licensed loss adjuster or claims officer; never state or imply the claim will be approved, rejected, or settled at a given amount.`,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            privacyViolationError: { type: Type.STRING },
+            evidenceQuality: { type: Type.STRING },
+            strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+            gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+            recommendation: { type: Type.STRING }
+          },
+          required: ["privacyViolationError", "evidenceQuality", "strengths", "gaps", "recommendation"]
+        }
+      }
+    });
+
+    const aiText = response.text;
+    if (!aiText) throw new Error("Empty response received from Gemini.");
+    const report = JSON.parse(aiText.trim());
+
+    if (report.privacyViolationError && report.privacyViolationError.trim() !== "") {
+      return res.status(400).json({ error: report.privacyViolationError });
+    }
+
+    sendLeadEmail({
+      subject: `AI Claims Photo Review Used - ${claimType ? claimType.trim() : "Incident"}`,
+      html: `<h2>AI Claims Photo Evidence Review</h2><p><strong>Claim type:</strong> ${claimType ? claimType.trim() : "Not specified"}</p><p><strong>Description given:</strong> ${description || "Not provided"}</p><p><strong>Evidence quality assessed:</strong> ${report.evidenceQuality}</p><p><strong>Recommendation given:</strong> ${report.recommendation}</p><p>See attached photo.</p>`,
+      attachments: [{ filename: `claim-evidence-${Date.now()}.jpg`, contentBase64: photoBase64, contentType: mimeType || "image/jpeg" }]
+    }).catch(() => {});
+
+    return res.json({ ...report, disclaimer: CLAIMS_PHOTO_REVIEW_DISCLAIMER });
+  } catch (error: any) {
+    console.error("Error in /api/claims-photo-review:", error);
+    return res.status(500).json({ error: error.message || "Failed to review the claim photo." });
   }
 });
 
@@ -1098,6 +1233,89 @@ app.delete("/api/insurers/:id", requireStaffAuth, (req, res) => {
     details: {}
   });
   res.json({ success: true, insurers: filtered });
+});
+
+// ----------------------------------------------------
+// Underwriter Logo Manager: lets staff upload/replace a carrier's logo for any
+// insurer id (built-in or admin-added custom). Uploaded files live under
+// public/logos/uploads/ so they never collide with the curated shipped assets
+// in public/logos/, and a small JSON map records which insurers have an
+// override - InsurerLogo.tsx checks this map before falling back to the
+// built-in image/SVG logos.
+// ----------------------------------------------------
+const LOGO_UPLOAD_DIR = path.join(process.cwd(), "public", "logos", "uploads");
+const MIME_TO_EXT: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/webp": "webp",
+  "image/svg+xml": "svg"
+};
+
+app.get("/api/insurer-logos", (req, res) => {
+  res.json(loadDbFile(INSURER_LOGO_FILE, {}));
+});
+
+app.post("/api/insurer-logos", requireStaffAuth, (req, res) => {
+  const { insurerId, imageBase64, mimeType } = req.body;
+
+  if (!insurerId || !imageBase64) {
+    return res.status(400).json({ error: "Missing insurerId or image data." });
+  }
+
+  const ext = MIME_TO_EXT[mimeType] || "png";
+  const match = imageBase64.match(/^data:([^;]+);base64,(.*)$/s);
+  const buffer = Buffer.from(match ? match[2] : imageBase64, "base64");
+
+  const safeId = insurerId.toString().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (!safeId) {
+    return res.status(400).json({ error: "Invalid insurerId." });
+  }
+
+  if (!fs.existsSync(LOGO_UPLOAD_DIR)) {
+    fs.mkdirSync(LOGO_UPLOAD_DIR, { recursive: true });
+  }
+  const filename = `${safeId}.${ext}`;
+  fs.writeFileSync(path.join(LOGO_UPLOAD_DIR, filename), buffer);
+
+  const logos = loadDbFile(INSURER_LOGO_FILE, {});
+  const uploadedAt = new Date().toISOString();
+  logos[safeId] = { src: `/logos/uploads/${filename}?v=${Date.now()}`, uploadedAt, uploadedByStaffId: (req as any).staff.staffId };
+  saveDbFile(INSURER_LOGO_FILE, logos);
+
+  addAuditLog({
+    action: "INSURER_LOGO_UPDATED",
+    entityType: "insurer",
+    entityId: safeId,
+    actorId: (req as any).staff.staffId,
+    actorType: "staff",
+    details: { filename }
+  });
+
+  res.json({ success: true, insurerId: safeId, src: logos[safeId].src });
+});
+
+app.delete("/api/insurer-logos/:id", requireStaffAuth, (req, res) => {
+  const logos = loadDbFile(INSURER_LOGO_FILE, {});
+  const existing = logos[req.params.id];
+  if (!existing) {
+    return res.status(404).json({ error: "No uploaded logo found for this insurer." });
+  }
+  const filePath = path.join(process.cwd(), "public", existing.src.split("?")[0]);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  delete logos[req.params.id];
+  saveDbFile(INSURER_LOGO_FILE, logos);
+
+  addAuditLog({
+    action: "INSURER_LOGO_REMOVED",
+    entityType: "insurer",
+    entityId: req.params.id,
+    actorId: (req as any).staff.staffId,
+    actorType: "staff",
+    details: {}
+  });
+
+  res.json({ success: true });
 });
 
 // ----------------------------------------------------
@@ -1672,6 +1890,129 @@ app.post("/api/quote-selected", (req, res) => {
   });
 
   res.json({ success: true });
+});
+
+// ----------------------------------------------------
+// Email OTP verification - used to confirm a prospective customer's contact
+// details before releasing a final quotation PDF or proceeding to buy/bind.
+// Codes are generated and checked server-side (in-memory, 10-minute expiry)
+// and delivered by email via the same SMTP infra as lead notifications -
+// nothing is ever echoed back to the client in the API response.
+// ----------------------------------------------------
+interface OtpEntry { code: string; expiresAt: number; }
+const otpStore = new Map<string, OtpEntry>();
+
+function generateOtpCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+app.post("/api/auth/send-otp", async (req, res) => {
+  try {
+    const { name, email, phone } = req.body;
+    if (!name || !email || !phone) {
+      return res.status(400).json({ error: "Please provide your name, email, and phone number." });
+    }
+    const code = generateOtpCode();
+    const key = String(email).trim().toLowerCase();
+    otpStore.set(key, { code, expiresAt: Date.now() + 10 * 60 * 1000 });
+
+    const result = await sendTransactionalEmail(
+      email,
+      "Your Utmost Insurance Brokers verification code",
+      `<p>Hello ${name},</p><p>Your verification code is:</p><h2 style="letter-spacing:4px;">${code}</h2><p>This code expires in 10 minutes. If you did not request this, you can safely ignore this email.</p>`
+    );
+    if (!result.sent) {
+      console.log(`[otp:dev-fallback] Verification code for ${email}: ${code}`);
+    }
+    return res.json({ sent: true, emailConfigured: SMTP_CONFIGURED });
+  } catch (error: any) {
+    console.error("Error in /api/auth/send-otp:", error);
+    return res.status(500).json({ error: error.message || "Failed to send verification code." });
+  }
+});
+
+app.post("/api/auth/verify-otp", (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: "Missing email or verification code." });
+  }
+  const key = String(email).trim().toLowerCase();
+  const entry = otpStore.get(key);
+  if (!entry) {
+    return res.status(400).json({ error: "No verification code was requested for this email. Please request a new one." });
+  }
+  if (Date.now() > entry.expiresAt) {
+    otpStore.delete(key);
+    return res.status(400).json({ error: "This code has expired. Please request a new one." });
+  }
+  if (entry.code !== String(code).trim()) {
+    return res.status(400).json({ error: "Incorrect verification code." });
+  }
+  otpStore.delete(key);
+  return res.json({ verified: true });
+});
+
+// ----------------------------------------------------
+// Buy & Bind - registers a real cover-note request once a customer picks an
+// offer and completes OTP verification. This is a broker-side placeholder
+// record (not a bound policy): it captures the request, assigns a reference
+// number, and notifies the claims/underwriting desk by email so a staff
+// member can follow up on payment and formal cover note issuance.
+// ----------------------------------------------------
+app.post("/api/cover-notes", (req, res) => {
+  try {
+    const { category, offer, contactName, contactPhone, contactEmail, paymentMethod, financeMonths } = req.body;
+    if (!offer || !contactName || !contactPhone) {
+      return res.status(400).json({ error: "Missing contact details or selected offer." });
+    }
+
+    const list = loadDbFile(COVER_NOTE_FILE, []);
+    const coverNoteRef = `UTM-CVN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newItem = {
+      id: coverNoteRef,
+      timestamp: new Date().toISOString(),
+      status: "Pending Payment Confirmation",
+      category,
+      insurerId: offer.insurerId,
+      insurerName: offer.insurerName,
+      totalPremium: offer.totalPremium,
+      paymentMethod: paymentMethod === "ipf" ? "ipf" : "full",
+      financeMonths: paymentMethod === "ipf" ? financeMonths : undefined,
+      contactName,
+      contactPhone,
+      contactEmail
+    };
+    list.unshift(newItem);
+    saveDbFile(COVER_NOTE_FILE, list);
+
+    addAuditLog({
+      action: "COVER_NOTE_REQUESTED",
+      entityType: "cover_note",
+      entityId: coverNoteRef,
+      actorId: "customer",
+      actorType: "customer",
+      details: { insurerName: newItem.insurerName, totalPremium: newItem.totalPremium, paymentMethod: newItem.paymentMethod }
+    });
+
+    sendLeadEmail({
+      subject: `Buy & Bind Cover Note Requested - ${coverNoteRef}`,
+      html: `
+        <h2>Cover Note Requested</h2>
+        <p><strong>Reference:</strong> ${coverNoteRef}</p>
+        <p><strong>Client:</strong> ${contactName} (${contactPhone}${contactEmail ? `, ${contactEmail}` : ""})</p>
+        <p><strong>Category:</strong> ${category}</p>
+        <p><strong>Insurer:</strong> ${newItem.insurerName}</p>
+        <p><strong>Total Premium:</strong> KES ${Number(newItem.totalPremium || 0).toLocaleString()}</p>
+        <p><strong>Payment method:</strong> ${newItem.paymentMethod === "ipf" ? `IPF financed over ${newItem.financeMonths} months` : "Full / annual payment"}</p>
+        <p>Awaiting M-Pesa STK push payment confirmation and finance/underwriting follow-up to issue the final cover note documents.</p>
+      `
+    }).catch(() => {});
+
+    return res.json({ coverNoteRef, status: newItem.status });
+  } catch (error: any) {
+    console.error("Error in /api/cover-notes:", error);
+    return res.status(500).json({ error: error.message || "Failed to register the cover note request." });
+  }
 });
 
 // ----------------------------------------------------

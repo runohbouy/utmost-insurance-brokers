@@ -1,10 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface InsurerLogoProps {
   carrierId: string;
   className?: string;
   height?: number | string;
   style?: React.CSSProperties;
+}
+
+// Staff-uploaded logo overrides (Underwriter Logo Manager in Workspace Admin) take priority over
+// everything below, for both built-in and admin-added custom insurers. Fetched once and shared
+// across every InsurerLogo instance on the page via a module-level cache, rather than each of the
+// (sometimes dozens of) logo instances on a comparison grid issuing its own request.
+type UploadedLogoMap = Record<string, { src: string }>;
+let uploadedLogosCache: UploadedLogoMap | null = null;
+let uploadedLogosPromise: Promise<UploadedLogoMap> | null = null;
+
+function useUploadedLogos(): UploadedLogoMap {
+  const [logos, setLogos] = useState<UploadedLogoMap>(uploadedLogosCache || {});
+
+  useEffect(() => {
+    if (uploadedLogosCache) return;
+    if (!uploadedLogosPromise) {
+      uploadedLogosPromise = fetch("/api/insurer-logos")
+        .then((r) => (r.ok ? r.json() : {}))
+        .then((data) => {
+          uploadedLogosCache = data;
+          return data;
+        })
+        .catch(() => ({}));
+    }
+    uploadedLogosPromise.then(setLogos);
+  }, []);
+
+  return logos;
 }
 
 // Real brand logo assets, supplied as image files (in public/logos) rather than
@@ -17,11 +45,27 @@ const IMAGE_LOGOS: Record<string, { src: string; alt: string }> = {
   monarch: { src: "/logos/monarch.jpeg", alt: "The Monarch Insurance" },
   geminia: { src: "/logos/geminia.png", alt: "Geminia Insurance Company Limited" },
   stardiscover: { src: "/logos/stardiscover.png", alt: "Star Discover Insurance Limited" },
-  oldmutual: { src: "/logos/oldmutual.png", alt: "Old Mutual General Insurance Kenya Limited" }
+  oldmutual: { src: "/logos/oldmutual.png", alt: "Old Mutual General Insurance Kenya Limited" },
+  icea: { src: "/logos/icea.png", alt: "ICEA LION General Insurance Company Limited" },
+  icealion: { src: "/logos/icea.png", alt: "ICEA LION General Insurance Company Limited" },
+  icealiongeneral: { src: "/logos/icea.png", alt: "ICEA LION General Insurance Company Limited" }
 };
 
 export default function InsurerLogo({ carrierId, className = "", height = "32", style = {} }: InsurerLogoProps) {
   const normId = carrierId.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const uploadedLogos = useUploadedLogos();
+
+  if (uploadedLogos[normId]) {
+    return (
+      <img
+        src={uploadedLogos[normId].src}
+        alt={carrierId}
+        height={height}
+        className={`inline-block select-none object-contain ${className}`}
+        style={{ maxWidth: "100%", height, ...style }}
+      />
+    );
+  }
 
   if (IMAGE_LOGOS[normId]) {
     const { src, alt } = IMAGE_LOGOS[normId];
@@ -213,58 +257,6 @@ export default function InsurerLogo({ carrierId, className = "", height = "32", 
             fill="#5C6F84"
           >
             A member of the LIBERTY Group
-          </text>
-        </g>
-      </svg>
-    );
-  }
-
-  // ICEA LION Group logo representation
-  if (normId === "icea" || normId === "icealion" || normId === "icealiongeneral") {
-    return (
-      <svg
-        viewBox="0 0 190 60"
-        height={height}
-        className={`inline-block select-none ${className}`}
-        style={{ maxWidth: "100%", ...style }}
-        id="logo-carrier-icealion"
-      >
-        <g transform="translate(5, 5)">
-          {/* Golden Shield & Lion Badge */}
-          <path
-            d="M4,12 C4,12 16,6 22,6 C28,6 40,12 40,12 C40,24 32,36 22,40 C12,36 4,24 4,12 Z"
-            fill="#C59E3F"
-          />
-          {/* Inside Crest silhouette of a noble lion */}
-          <path
-            d="M16,24 C16,20 18,17 21,15 C23,14 26,14 28,16 C27,18 26,19 26,21 C28,21 29,22 29,24 C29,26 27,27 25,27 L25,32 L22,32 L22,27 C20,27 18,26 17,25 Z"
-            fill="#FFFFFF"
-          />
-          <circle cx="22" cy="12" r="2" fill="#FFFFFF" />
-
-          {/* Text block */}
-          <text
-            x="48"
-            y="24"
-            fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif"
-            fontWeight="900"
-            fontSize="19"
-            letterSpacing="0.2"
-            fill="#0F2C59"
-          >
-            ICEA LION
-          </text>
-          
-          <text
-            x="49"
-            y="37"
-            fontFamily="'Inter', system-ui, sans-serif"
-            fontWeight="700"
-            fontSize="10"
-            letterSpacing="3"
-            fill="#C59E3F"
-          >
-            GROUP
           </text>
         </g>
       </svg>

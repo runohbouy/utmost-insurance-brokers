@@ -41,7 +41,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
             <ul className="space-y-2 text-xs">
               {[
                 { label: "Comparative Overview", tab: "home" as ActiveTab },
-                { label: "AI Room Decluttering & Hazards Assessment", tab: "room-analyzer" as ActiveTab },
+                { label: "AI Risk Evaluator (Any Asset or Property)", tab: "room-analyzer" as ActiveTab },
                 { label: "Motor Private & Commercial Quote Tool", tab: "motor-quotes" as ActiveTab },
                 { label: "Medical Family Plan Estimates", tab: "medical-quotes" as ActiveTab },
                 { label: "Liability, Engineering & Specialty Covers", tab: "other-lines-quotes" as ActiveTab },
