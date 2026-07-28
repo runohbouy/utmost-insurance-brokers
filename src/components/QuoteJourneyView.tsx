@@ -389,8 +389,8 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                       type="number"
                       min={2000}
                       max={2026}
-                      value={motorParams.mfgYear}
-                      onChange={(e) => setMotorParams({ ...motorParams, mfgYear: Number(e.target.value) })}
+                      value={motorParams.mfgYear || ""}
+                      onChange={(e) => setMotorParams({ ...motorParams, mfgYear: e.target.value === "" ? 0 : Number(e.target.value) })}
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     />
                   </div>
@@ -444,9 +444,9 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   <input
                     type="number"
                     min={200000}
-                    step={50000}
-                    value={motorParams.vehicleValue}
-                    onChange={(e) => setMotorParams({ ...motorParams, vehicleValue: Number(e.target.value) })}
+                    step="any"
+                    value={motorParams.vehicleValue || ""}
+                    onChange={(e) => setMotorParams({ ...motorParams, vehicleValue: e.target.value === "" ? 0 : Number(e.target.value) })}
                     className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 font-mono text-xs font-bold text-[#316EC9] focus:border-[#316EC9] focus:outline-none"
                   />
                   <p className="text-[9px] text-[#8C887D]">Subject to post-quote physical audit surveyor inspections.</p>
@@ -546,8 +546,8 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                       required
                       min={18}
                       max={85}
-                      value={medicalParams.principalAge}
-                      onChange={(e) => setMedicalParams({ ...medicalParams, principalAge: Number(e.target.value) })}
+                      value={medicalParams.principalAge || ""}
+                      onChange={(e) => setMedicalParams({ ...medicalParams, principalAge: e.target.value === "" ? 0 : Number(e.target.value) })}
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     />
                   </div>

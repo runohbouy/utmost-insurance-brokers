@@ -1613,6 +1613,18 @@ app.post("/api/generate-quotes", (req, res) => {
           declineReason = `Comprehensive cover declined by underwriter: ${vTypeConfig.typeName} is excluded under their risk guidelines.`;
         }
 
+        // 1b. Check vehicle age against this underwriter's own maximum age for
+        // automated comprehensive rating (staff-configurable per insurer in the
+        // rates desk; defaults to 15 years when the underwriter hasn't set one).
+        if (!isDeclined && typeof params.mfgYear === "number" && params.mfgYear > 1900) {
+          const maxVehicleAge = typeof underwriterRates.maxVehicleAgeComprehensive === "number" ? underwriterRates.maxVehicleAgeComprehensive : 15;
+          const vehicleAge = new Date().getFullYear() - params.mfgYear;
+          if (vehicleAge > maxVehicleAge) {
+            isDeclined = true;
+            declineReason = `Comprehensive cover declined: vehicle manufactured in ${params.mfgYear} (${vehicleAge} years old) exceeds this underwriter's maximum age of ${maxVehicleAge} years for automated comprehensive rating.`;
+          }
+        }
+
         if (!isDeclined) {
           // 2. Resolve rating: specific vehicle body type rating takes precedence, falling back to sumInsuredBands if not defined
           if (hasSpecificCommercialRate) {

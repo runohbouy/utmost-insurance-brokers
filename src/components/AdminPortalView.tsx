@@ -1228,8 +1228,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                 type="number"
                                 step="any"
                                 min="0"
-                                value={activeRates.vehicleTypes?.[0]?.minPremium || 0}
-                                onChange={(e) => updatePrivateMinPremiumAll(Number(e.target.value))}
+                                value={activeRates.vehicleTypes?.[0]?.minPremium || ""}
+                                onChange={(e) => updatePrivateMinPremiumAll(e.target.value === "" ? 0 : Number(e.target.value))}
                                 className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
                               />
                             </>
@@ -1242,8 +1242,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                 type="number"
                                 step="any"
                                 min="0"
-                                value={getClassMinPremium(activeRates, selectedRateClass) || 0}
-                                onChange={(e) => updateClassMinPremium(selectedRateClass, Number(e.target.value))}
+                                value={getClassMinPremium(activeRates, selectedRateClass) || ""}
+                                onChange={(e) => updateClassMinPremium(selectedRateClass, e.target.value === "" ? 0 : Number(e.target.value))}
                                 className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
                               />
                             </>
@@ -1279,8 +1279,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       type="number"
                                       step="any"
                                       min="0"
-                                      value={band.min ?? 0}
-                                      onChange={(e) => updateClassBand(selectedRateClass, index, "min", Number(e.target.value))}
+                                      value={band.min || ""}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "min", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className={`w-full text-[10px] font-mono font-bold p-1 border bg-white ${
                                         bandOverlaps.has(index) ? "border-red-400 bg-red-50" : "border-slate-200"
                                       }`}
@@ -1291,8 +1291,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       type="number"
                                       step="any"
                                       min="0"
-                                      value={band.max ?? 0}
-                                      onChange={(e) => updateClassBand(selectedRateClass, index, "max", Number(e.target.value))}
+                                      value={band.max || ""}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "max", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className={`w-full text-[10px] font-mono font-bold p-1 border bg-white ${
                                         bandOverlaps.has(index) ? "border-red-400 bg-red-50" : "border-slate-200"
                                       }`}
@@ -1304,8 +1304,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       step="any"
                                       min="0"
                                       max="15"
-                                      value={band.rate ?? 0}
-                                      onChange={(e) => updateClassBand(selectedRateClass, index, "rate", Number(e.target.value))}
+                                      value={band.rate || ""}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-16 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </td>
@@ -1343,6 +1343,24 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                         <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
                           Controls which body types qualify for comprehensive cover. Leave "Legacy Rate" at 0 for insurers (like MUA/Cannon) that rate purely by sum insured band above - a non-zero legacy rate here overrides the band lookup for that body type only.
                         </p>
+
+                        {/* Max Vehicle Age for Comprehensive - per-insurer, defaults to 15 years when unset */}
+                        <div className="max-w-xs mb-3 border border-slate-100 p-2 bg-slate-50/50">
+                          <label className="text-[8px] text-[#8C887D] uppercase block">Max Vehicle Age for Comprehensive (Years)</label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="1"
+                            max="50"
+                            value={activeRates.maxVehicleAgeComprehensive || ""}
+                            placeholder="15 (default)"
+                            onChange={(e) => setActiveRates({ ...activeRates, maxVehicleAgeComprehensive: e.target.value === "" ? undefined : Number(e.target.value) })}
+                            className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
+                          />
+                          <p className="text-[8px] text-[#8C887D] leading-tight mt-1">
+                            Vehicles older than this are declined for automated comprehensive quoting with this underwriter. Leave blank to use the platform default of 15 years.
+                          </p>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {activeRates.vehicleTypes?.map((vt: any) => (
                             <div key={vt.typeId} className="border border-slate-100 p-2 space-y-1.5 bg-slate-50/50">
@@ -1364,11 +1382,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Legacy Rate (%)</label>
                                     <input
                                       type="number"
-                                      step="0.01"
+                                      step="any"
                                       min="0"
                                       max="15.0"
-                                      value={vt.rate || 0}
-                                      onChange={(e) => updateVehicleType(vt.typeId, "rate", Number(e.target.value))}
+                                      value={vt.rate || ""}
+                                      onChange={(e) => updateVehicleType(vt.typeId, "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1376,10 +1394,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Min Premium (KES)</label>
                                     <input
                                       type="number"
-                                      step="500"
+                                      step="any"
                                       min="1000"
-                                      value={vt.minPremium || 0}
-                                      onChange={(e) => updateVehicleType(vt.typeId, "minPremium", Number(e.target.value))}
+                                      value={vt.minPremium || ""}
+                                      onChange={(e) => updateVehicleType(vt.typeId, "minPremium", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1414,10 +1432,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               </label>
                               <input
                                 type="number"
-                                step="100"
+                                step="any"
                                 min="1000"
-                                value={(activeRates.tpoRates && activeRates.tpoRates[u.id]) || 0}
-                                onChange={(e) => updateTpoRate(u.id, Number(e.target.value))}
+                                value={(activeRates.tpoRates && activeRates.tpoRates[u.id]) || ""}
+                                onChange={(e) => updateTpoRate(u.id, e.target.value === "" ? 0 : Number(e.target.value))}
                                 className="w-full text-[11px] font-mono font-bold p-1 border border-[#D8E2F0] bg-white focus:outline-none focus:border-[#316EC9]"
                               />
                             </div>
@@ -1462,11 +1480,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       <label className="text-[8px] text-[#8C887D] uppercase block">Rate (% of SI)</label>
                                       <input
                                         type="number"
-                                        step="0.01"
+                                        step="any"
                                         min="0"
                                         max="2.0"
-                                        value={rider.rate ?? 0.25}
-                                        onChange={(e) => updateRiderField("excess_protector", "Excess Protector", "rate", Number(e.target.value))}
+                                        value={rider.rate || ""}
+                                        onChange={(e) => updateRiderField("excess_protector", "Excess Protector", "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                         className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                       />
                                     </div>
@@ -1474,10 +1492,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       <label className="text-[8px] text-[#8C887D] uppercase block">Min Premium (KES)</label>
                                       <input
                                         type="number"
-                                        step="500"
+                                        step="any"
                                         min="0"
-                                        value={rider.minPremium ?? 2500}
-                                        onChange={(e) => updateRiderField("excess_protector", "Excess Protector", "minPremium", Number(e.target.value))}
+                                        value={rider.minPremium || ""}
+                                        onChange={(e) => updateRiderField("excess_protector", "Excess Protector", "minPremium", e.target.value === "" ? 0 : Number(e.target.value))}
                                         className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                       />
                                     </div>
@@ -1510,11 +1528,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       <label className="text-[8px] text-[#8C887D] uppercase block">Rate (% of SI)</label>
                                       <input
                                         type="number"
-                                        step="0.01"
+                                        step="any"
                                         min="0"
                                         max="2.0"
-                                        value={rider.rate ?? 0.25}
-                                        onChange={(e) => updateRiderField("pvt", "Political Violence & Terrorism", "rate", Number(e.target.value))}
+                                        value={rider.rate || ""}
+                                        onChange={(e) => updateRiderField("pvt", "Political Violence & Terrorism", "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                         className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                       />
                                     </div>
@@ -1522,10 +1540,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       <label className="text-[8px] text-[#8C887D] uppercase block">Min Premium (KES)</label>
                                       <input
                                         type="number"
-                                        step="500"
+                                        step="any"
                                         min="0"
-                                        value={rider.minPremium ?? 2000}
-                                        onChange={(e) => updateRiderField("pvt", "Political Violence & Terrorism", "minPremium", Number(e.target.value))}
+                                        value={rider.minPremium || ""}
+                                        onChange={(e) => updateRiderField("pvt", "Political Violence & Terrorism", "minPremium", e.target.value === "" ? 0 : Number(e.target.value))}
                                         className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                       />
                                     </div>
@@ -1545,11 +1563,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                   <label className="text-[8px] text-[#8C887D] uppercase block">Rate Above Free Limit (%)</label>
                                   <input
                                     type="number"
-                                    step="0.5"
+                                    step="any"
                                     min="0"
                                     max="20"
-                                    value={rider.rate ?? 10}
-                                    onChange={(e) => updateRiderField("windscreen", "Windscreen Cover", "rate", Number(e.target.value))}
+                                    value={rider.rate || ""}
+                                    onChange={(e) => updateRiderField("windscreen", "Windscreen Cover", "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                     className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                   />
                                 </div>
@@ -1560,10 +1578,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       <label className="text-[8px] text-slate-500 block leading-none">{vt.typeName.split(" / ")[0]}</label>
                                       <input
                                         type="number"
-                                        step="5000"
+                                        step="any"
                                         min="0"
-                                        value={rider.limits?.[vt.typeId] || 50000}
-                                        onChange={(e) => updateWindscreenLimit(vt.typeId, Number(e.target.value))}
+                                        value={rider.limits?.[vt.typeId] || ""}
+                                        onChange={(e) => updateWindscreenLimit(vt.typeId, e.target.value === "" ? 0 : Number(e.target.value))}
                                         className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                       />
                                     </div>
@@ -1584,10 +1602,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Free Limit (KES)</label>
                                     <input
                                       type="number"
-                                      step="5000"
+                                      step="any"
                                       min="0"
-                                      value={rider.freeLimit ?? 50000}
-                                      onChange={(e) => updateRiderField("radio", "Radio & Entertainment Unit", "freeLimit", Number(e.target.value))}
+                                      value={rider.freeLimit || ""}
+                                      onChange={(e) => updateRiderField("radio", "Radio & Entertainment Unit", "freeLimit", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1595,11 +1613,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Rate Above Limit (%)</label>
                                     <input
                                       type="number"
-                                      step="0.5"
+                                      step="any"
                                       min="0"
                                       max="20"
-                                      value={rider.rate ?? 0}
-                                      onChange={(e) => updateRiderField("radio", "Radio & Entertainment Unit", "rate", Number(e.target.value))}
+                                      value={rider.rate || ""}
+                                      onChange={(e) => updateRiderField("radio", "Radio & Entertainment Unit", "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1620,10 +1638,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Rate/Day (KES)</label>
                                     <input
                                       type="number"
-                                      step="500"
+                                      step="any"
                                       min="0"
-                                      value={rider.ratePerDay ?? 3000}
-                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "ratePerDay", Number(e.target.value))}
+                                      value={rider.ratePerDay || ""}
+                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "ratePerDay", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1631,10 +1649,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Max Days</label>
                                     <input
                                       type="number"
-                                      step="1"
+                                      step="any"
                                       min="1"
-                                      value={rider.maxDays ?? 10}
-                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "maxDays", Number(e.target.value))}
+                                      value={rider.maxDays || ""}
+                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "maxDays", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1642,10 +1660,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                     <label className="text-[8px] text-[#8C887D] uppercase block">Waiting Days</label>
                                     <input
                                       type="number"
-                                      step="1"
+                                      step="any"
                                       min="0"
-                                      value={rider.waitingDays ?? 3}
-                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "waitingDays", Number(e.target.value))}
+                                      value={rider.waitingDays || ""}
+                                      onChange={(e) => updateRiderField("courtesy_car", "Courtesy Car / Loss of Use", "waitingDays", e.target.value === "" ? 0 : Number(e.target.value))}
                                       className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </div>
@@ -1668,11 +1686,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               <label className="text-[8px] text-[#8C887D] uppercase block">Medical Multiplier</label>
                               <input
                                 type="number"
-                                step="0.01"
+                                step="any"
                                 min="0.5"
                                 max="2.0"
-                                value={activeRates.medicalMultiplier || 1.0}
-                                onChange={(e) => setActiveRates({ ...activeRates, medicalMultiplier: Number(e.target.value) })}
+                                value={activeRates.medicalMultiplier || ""}
+                                onChange={(e) => setActiveRates({ ...activeRates, medicalMultiplier: e.target.value === "" ? 0 : Number(e.target.value) })}
                                 className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                               />
                             </div>
@@ -1680,10 +1698,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               <label className="text-[8px] text-[#8C887D] uppercase block">Maternity Plan Base</label>
                               <input
                                 type="number"
-                                step="500"
+                                step="any"
                                 min="1000"
-                                value={activeRates.medicalMaternityRate || 18000}
-                                onChange={(e) => setActiveRates({ ...activeRates, medicalMaternityRate: Number(e.target.value) })}
+                                value={activeRates.medicalMaternityRate || ""}
+                                onChange={(e) => setActiveRates({ ...activeRates, medicalMaternityRate: e.target.value === "" ? 0 : Number(e.target.value) })}
                                 className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                               />
                             </div>
@@ -1692,10 +1710,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             <label className="text-[8px] text-[#8C887D] uppercase block">Dental/Opt Base</label>
                             <input
                               type="number"
-                              step="500"
+                              step="any"
                               min="1000"
-                              value={activeRates.medicalDentalOptRate || 8500}
-                              onChange={(e) => setActiveRates({ ...activeRates, medicalDentalOptRate: Number(e.target.value) })}
+                              value={activeRates.medicalDentalOptRate || ""}
+                              onChange={(e) => setActiveRates({ ...activeRates, medicalDentalOptRate: e.target.value === "" ? 0 : Number(e.target.value) })}
                               className="w-full text-[11px] font-mono font-bold p-1 border border-slate-200 bg-white"
                             />
                           </div>
@@ -1711,11 +1729,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             <label className="text-[8px] uppercase tracking-wider text-[#8C887D]">PCF Rate (%)</label>
                             <input
                               type="number"
-                              step="0.01"
+                              step="any"
                               min="0.1"
                               max="1.0"
-                              value={pcfRateVal}
-                              onChange={(e) => setPcfRateVal(Number(e.target.value))}
+                              value={pcfRateVal || ""}
+                              onChange={(e) => setPcfRateVal(e.target.value === "" ? 0 : Number(e.target.value))}
                               className="w-full text-xs font-semibold rounded-none border border-[#D8E2F0] p-1.5 font-mono text-slate-800 bg-white focus:border-[#316EC9] focus:outline-none"
                             />
                           </div>
@@ -1723,11 +1741,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             <label className="text-[8px] uppercase tracking-wider text-[#8C887D]">ITL Rate (%)</label>
                             <input
                               type="number"
-                              step="0.01"
+                              step="any"
                               min="0.1"
                               max="1.0"
-                              value={itlRateVal}
-                              onChange={(e) => setItlRateVal(Number(e.target.value))}
+                              value={itlRateVal || ""}
+                              onChange={(e) => setItlRateVal(e.target.value === "" ? 0 : Number(e.target.value))}
                               className="w-full text-xs font-semibold rounded-none border border-[#D8E2F0] p-1.5 font-mono text-slate-800 bg-white focus:border-[#316EC9] focus:outline-none"
                             />
                           </div>
@@ -1737,11 +1755,11 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           <label className="text-[8px] uppercase tracking-wider text-[#8C887D]">Stamp Duty (KES)</label>
                           <input
                             type="number"
-                            step="10"
+                            step="any"
                             min="10"
                             max="200"
-                            value={stampDutyVal}
-                            onChange={(e) => setStampDutyVal(Number(e.target.value))}
+                            value={stampDutyVal || ""}
+                            onChange={(e) => setStampDutyVal(e.target.value === "" ? 0 : Number(e.target.value))}
                             className="w-full text-xs font-semibold rounded-none border border-[#D8E2F0] p-1.5 font-mono text-slate-800 bg-white focus:border-[#316EC9] focus:outline-none"
                           />
                         </div>
@@ -1798,10 +1816,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                       </label>
                       <input
                         type="number"
-                        step="500"
+                        step="any"
                         min="0"
-                        value={getOtherLine(selectedOtherLine).minPremium || 0}
-                        onChange={(e) => updateOtherLineMinPremium(selectedOtherLine, Number(e.target.value))}
+                        value={getOtherLine(selectedOtherLine).minPremium || ""}
+                        onChange={(e) => updateOtherLineMinPremium(selectedOtherLine, e.target.value === "" ? 0 : Number(e.target.value))}
                         className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
                       />
                     </div>
@@ -1841,10 +1859,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               <td className="p-1">
                                 <input
                                   type="number"
-                                  step="0.01"
+                                  step="any"
                                   min="0"
-                                  value={item.rate ?? 0}
-                                  onChange={(e) => updateOtherLineItem(selectedOtherLine, index, "rate", Number(e.target.value))}
+                                  value={item.rate || ""}
+                                  onChange={(e) => updateOtherLineItem(selectedOtherLine, index, "rate", e.target.value === "" ? 0 : Number(e.target.value))}
                                   className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                 />
                               </td>
@@ -1986,8 +2004,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                         <label className="text-[8px] text-[#8C887D] uppercase block">Established</label>
                         <input
                           type="number"
-                          value={insurerForm.established}
-                          onChange={(e) => setInsurerForm({ ...insurerForm, established: Number(e.target.value) })}
+                          value={insurerForm.established || ""}
+                          onChange={(e) => setInsurerForm({ ...insurerForm, established: e.target.value === "" ? 0 : Number(e.target.value) })}
                           className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
                         />
                       </div>
@@ -1995,8 +2013,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                         <label className="text-[8px] text-[#8C887D] uppercase block">Claim Turnaround (Days)</label>
                         <input
                           type="number"
-                          value={insurerForm.claimTurnaroundDays}
-                          onChange={(e) => setInsurerForm({ ...insurerForm, claimTurnaroundDays: Number(e.target.value) })}
+                          value={insurerForm.claimTurnaroundDays || ""}
+                          onChange={(e) => setInsurerForm({ ...insurerForm, claimTurnaroundDays: e.target.value === "" ? 0 : Number(e.target.value) })}
                           className="w-full text-[11px] font-mono font-bold p-1.5 border border-slate-200 bg-white"
                         />
                       </div>
