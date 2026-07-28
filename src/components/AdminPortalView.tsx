@@ -8,7 +8,7 @@ import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts, saveProducts } from "../data/productStore";
 import InsurerLogo from "./InsurerLogo";
 import {
-  Settings2, Users, AlertCircle, FileText, CheckCircle, Database,
+  Settings2, Users, AlertCircle, AlertTriangle, FileText, CheckCircle, Database,
   TrendingUp, Percent, Award, Download, ShieldAlert, Sparkles, RefreshCw,
   PlusCircle, Edit2, CheckSquare, EyeOff, LayoutGrid, Check, FolderSync, Trash2, UploadCloud
 } from "lucide-react";
@@ -148,6 +148,53 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
 
   const getClassMinPremium = (rates: any, classId: string): number | null =>
     classId === "private" ? null : (rates.commercialRates?.[classId]?.minPremium ?? 0);
+
+  // A vehicle's sum insured must fall into exactly one band, so ranges within the same
+  // class must never overlap (e.g. 0-1,000,000 then 1,000,001-2,000,000, not 1,000,000-2,000,000).
+  // Returns the indices (within the given band list) that overlap with another band or are
+  // internally invalid (min > max), for inline highlighting and pre-save validation.
+  const findOverlappingBandIndices = (bands: any[]): Set<number> => {
+    const overlapping = new Set<number>();
+    for (let i = 0; i < bands.length; i++) {
+      const a = bands[i];
+      if (typeof a.min !== "number" || typeof a.max !== "number" || a.min > a.max) {
+        overlapping.add(i);
+        continue;
+      }
+      for (let j = 0; j < bands.length; j++) {
+        if (i === j) continue;
+        const b = bands[j];
+        if (typeof b.min !== "number" || typeof b.max !== "number") continue;
+        if (a.min <= b.max && b.min <= a.max) {
+          overlapping.add(i);
+          overlapping.add(j);
+        }
+      }
+    }
+    return overlapping;
+  };
+
+  // Checks every motor class's band list (private + all commercial classes) for overlaps,
+  // returning a list of human-readable descriptions of each conflict found.
+  const findAllBandOverlapErrors = (rates: any): string[] => {
+    const errors: string[] = [];
+    const classesToCheck: { id: string; label: string; bands: any[] }[] = [
+      { id: "private", label: "Motor Private", bands: rates.sumInsuredBands || [] },
+      ...RATE_CLASSES.filter((c) => c.id !== "private").map((c) => ({
+        id: c.id,
+        label: c.label,
+        bands: rates.commercialRates?.[c.id]?.bands || []
+      }))
+    ];
+    classesToCheck.forEach(({ label, bands }) => {
+      const overlapping = findOverlappingBandIndices(bands);
+      overlapping.forEach((idx) => {
+        const b = bands[idx];
+        errors.push(`${label}: range KES ${(b.min ?? 0).toLocaleString()} - ${(b.max ?? 0).toLocaleString()} conflicts with another range`);
+      });
+    });
+    return errors;
+  };
 
   const updateClassBand = (classId: string, index: number, field: string, value: any) => {
     setActiveRates((prev: any) => {
@@ -674,6 +721,13 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
 
   const handleOverrideRateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const overlapErrors = findAllBandOverlapErrors(activeRates);
+    if (overlapErrors.length > 0) {
+      alert(`Cannot save - sum insured ranges overlap or are invalid:\n\n${overlapErrors.join("\n")}\n\nEach range must pick up immediately after the previous one ends (e.g. 0 - 1,000,000 then 1,000,001 - 2,000,000) with no gaps or overlaps.`);
+      return;
+    }
+
     try {
       const res = await fetch("/api/admin/rates", {
         method: "POST",
@@ -1136,6 +1190,9 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                     <div className="xl:col-span-2 space-y-5">
 
                       {/* SECTION 1: Sum Insured Rate Bands by Motor Class - tabular editor */}
+                      {(() => {
+                        const bandOverlaps = findOverlappingBandIndices(getClassBands(activeRates, selectedRateClass));
+                        return (
                       <div className="border-t border-[#D8E2F0] pt-3">
                         <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
                           Sum Insured Rate Bands by Motor Class
@@ -1169,7 +1226,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               <label className="text-[8px] text-[#8C887D] uppercase block">Min Premium - All Body Types (KES)</label>
                               <input
                                 type="number"
-                                step="500"
+                                step="any"
                                 min="0"
                                 value={activeRates.vehicleTypes?.[0]?.minPremium || 0}
                                 onChange={(e) => updatePrivateMinPremiumAll(Number(e.target.value))}
@@ -1183,7 +1240,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                               </label>
                               <input
                                 type="number"
-                                step="500"
+                                step="any"
                                 min="0"
                                 value={getClassMinPremium(activeRates, selectedRateClass) || 0}
                                 onChange={(e) => updateClassMinPremium(selectedRateClass, Number(e.target.value))}
@@ -1220,27 +1277,31 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                   <td className="p-1">
                                     <input
                                       type="number"
-                                      step="50000"
+                                      step="any"
                                       min="0"
                                       value={band.min ?? 0}
                                       onChange={(e) => updateClassBand(selectedRateClass, index, "min", Number(e.target.value))}
-                                      className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                      className={`w-full text-[10px] font-mono font-bold p-1 border bg-white ${
+                                        bandOverlaps.has(index) ? "border-red-400 bg-red-50" : "border-slate-200"
+                                      }`}
                                     />
                                   </td>
                                   <td className="p-1">
                                     <input
                                       type="number"
-                                      step="50000"
+                                      step="any"
                                       min="0"
                                       value={band.max ?? 0}
                                       onChange={(e) => updateClassBand(selectedRateClass, index, "max", Number(e.target.value))}
-                                      className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                      className={`w-full text-[10px] font-mono font-bold p-1 border bg-white ${
+                                        bandOverlaps.has(index) ? "border-red-400 bg-red-50" : "border-slate-200"
+                                      }`}
                                     />
                                   </td>
                                   <td className="p-1">
                                     <input
                                       type="number"
-                                      step="0.05"
+                                      step="any"
                                       min="0"
                                       max="15"
                                       value={band.rate ?? 0}
@@ -1264,7 +1325,15 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             </tbody>
                           </table>
                         </div>
+                        {bandOverlaps.size > 0 && (
+                          <p className="text-[9px] text-red-700 font-bold mt-1.5 flex items-start gap-1">
+                            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                            <span>Highlighted ranges overlap or are invalid (min greater than max). Adjust so each range picks up immediately after the previous one ends, e.g. 0 - 1,000,000 then 1,000,001 - 2,000,000.</span>
+                          </p>
+                        )}
                       </div>
+                        );
+                      })()}
 
                       {/* SECTION 2: Vehicle Type Eligibility & legacy body-type rates */}
                       <div className="border-t border-[#D8E2F0] pt-3">

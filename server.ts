@@ -1546,6 +1546,12 @@ app.post("/api/generate-quotes", (req, res) => {
       let pvtCost = 0;
       let windscreenCost = 0;
       let windscreenLimit = 50000;
+      // "included": bundled free into this underwriter's base rate regardless of selection.
+      // "selected": customer opted in and the underwriter charged an additional premium for it.
+      // "available": underwriter offers it at additional cost but the customer did not opt in.
+      // "unavailable": underwriter doesn't publish this rider at all.
+      let excessProtectorStatus: "included" | "selected" | "available" | "unavailable" = "unavailable";
+      let pvtStatus: "included" | "selected" | "available" | "unavailable" = "unavailable";
 
       const levies = ratesDb.levies || { pcfRate: 0.0025, itlRate: 0.002, stampDuty: 40 };
 
@@ -1649,31 +1655,44 @@ app.post("/api/generate-quotes", (req, res) => {
               }
             }
 
-            // 5. Riders calculation if checkboxes checked
+            // 5. Riders calculation - inclusive riders are bundled free into the base
+            // rate regardless of whether the customer opted in (they have no choice
+            // in the matter and already get the benefit); non-inclusive riders only
+            // cost extra when the customer explicitly opts in via the checkbox.
             if (underwriterRates.riders) {
-              if (params.excessProtector) {
-                const rConfig = underwriterRates.riders.find((r: any) => r.riderId === "excess_protector");
-                if (rConfig) {
-                  if (rConfig.isInclusive || rConfig.status === "unsourced_fully_inclusive") {
-                    excessProtectorCost = 0;
-                  } else if (typeof rConfig.minPremium !== "number" || typeof rConfig.rate !== "number") {
+              const epConfig = underwriterRates.riders.find((r: any) => r.riderId === "excess_protector");
+              if (epConfig) {
+                if (epConfig.isInclusive || epConfig.status === "unsourced_fully_inclusive") {
+                  excessProtectorStatus = "included";
+                  excessProtectorCost = 0;
+                } else if (params.excessProtector) {
+                  if (typeof epConfig.minPremium !== "number" || typeof epConfig.rate !== "number") {
                     isDeclined = true;
                     declineReason = "Excess protector rate or minimum premium not configured for this underwriter";
                   } else {
-                    excessProtectorCost = Math.max(Math.round(val * (rConfig.rate / 100)), rConfig.minPremium);
+                    excessProtectorCost = Math.max(Math.round(val * (epConfig.rate / 100)), epConfig.minPremium);
+                    excessProtectorStatus = "selected";
                   }
+                } else {
+                  excessProtectorStatus = "available";
                 }
               }
-              if (params.pvt && !isDeclined) {
-                const rConfig = underwriterRates.riders.find((r: any) => r.riderId === "pvt");
-                if (rConfig) {
-                  if (rConfig.isInclusive || rConfig.status === "unsourced_fully_inclusive") {
+              if (!isDeclined) {
+                const pvtConfig = underwriterRates.riders.find((r: any) => r.riderId === "pvt");
+                if (pvtConfig) {
+                  if (pvtConfig.isInclusive || pvtConfig.status === "unsourced_fully_inclusive") {
+                    pvtStatus = "included";
                     pvtCost = 0;
-                  } else if (typeof rConfig.minPremium !== "number" || typeof rConfig.rate !== "number") {
-                    isDeclined = true;
-                    declineReason = "Political Violence & Terrorism rate or minimum premium not configured for this underwriter";
+                  } else if (params.pvt) {
+                    if (typeof pvtConfig.minPremium !== "number" || typeof pvtConfig.rate !== "number") {
+                      isDeclined = true;
+                      declineReason = "Political Violence & Terrorism rate or minimum premium not configured for this underwriter";
+                    } else {
+                      pvtCost = Math.max(Math.round(val * (pvtConfig.rate / 100)), pvtConfig.minPremium);
+                      pvtStatus = "selected";
+                    }
                   } else {
-                    pvtCost = Math.max(Math.round(val * (rConfig.rate / 100)), rConfig.minPremium);
+                    pvtStatus = "available";
                   }
                 }
               }
@@ -1783,18 +1802,40 @@ app.post("/api/generate-quotes", (req, res) => {
           pvt: isDeclined ? 0 : pvtCost,
           windscreen: isDeclined ? 0 : windscreenCost
         },
-        excessTerms: isDeclined 
+        riderStatus: isDeclined || !isComp ? undefined : {
+          excessProtector: excessProtectorStatus,
+          pvt: pvtStatus
+        },
+        excessTerms: isDeclined
           ? "Not applicable (Quote declined)"
-          : (isComp 
-              ? `Non-Standard: 2.5% of value (Min KES 15,000). Excess Protector option (${params.excessProtector ? "ACTIVE" : "INACTIVE"}) cuts general road excess to NIL.` 
+          : (isComp
+              ? `Non-Standard: 2.5% of value (Min KES 15,000). ${
+                  excessProtectorStatus === "included"
+                    ? "Excess Protector is included at no extra cost and cuts general road excess to NIL."
+                    : excessProtectorStatus === "selected"
+                    ? "Excess Protector rider (ACTIVE) cuts general road excess to NIL."
+                    : excessProtectorStatus === "available"
+                    ? "Excess Protector available as an optional rider (not selected) to cut general road excess to NIL."
+                    : "Excess Protector rider not offered by this underwriter."
+                }`
               : "No excess applicable to third-party only policies."),
-        mainBenefits: isDeclined 
-          ? [] 
-          : (isComp 
+        mainBenefits: isDeclined
+          ? []
+          : (isComp
               ? [
                   `Windscreen Extension Limit: KES ${params.windscreen ? windscreenLimit.toLocaleString() : "50,000 included"}`,
-                  `Excess Protector Protection: ${params.excessProtector ? "YES (Nil excess on own damage)" : "No (Subject to standard deductibles)"}`,
-                  `Political Violence & PVT: ${params.pvt ? "YES (Fully Covered)" : "No (Excluded)"}`,
+                  `Excess Protector Protection: ${
+                    excessProtectorStatus === "included" ? "YES - Included at no extra cost (Nil excess on own damage)" :
+                    excessProtectorStatus === "selected" ? "YES - Added as rider (Nil excess on own damage)" :
+                    excessProtectorStatus === "available" ? "Available as optional add-on (not selected)" :
+                    "Not offered by this underwriter"
+                  }`,
+                  `Political Violence & PVT: ${
+                    pvtStatus === "included" ? "YES - Included at no extra cost" :
+                    pvtStatus === "selected" ? "YES - Added as rider (Fully covered)" :
+                    pvtStatus === "available" ? "Available as optional add-on (not selected)" :
+                    "Not offered by this underwriter"
+                  }`,
                   "Authorized Medical Expense up to KES 50,000",
                   "24-Hour Accident Towing rescue"
                 ]

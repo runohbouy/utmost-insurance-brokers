@@ -452,6 +452,40 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   <p className="text-[9px] text-[#8C887D]">Subject to post-quote physical audit surveyor inspections.</p>
                 </div>
 
+                {/* Optional comprehensive riders - some underwriters bundle these free */}
+                {motorParams.coverType === "comprehensive" && (
+                  <div className="space-y-2 border-t border-[#D8E2F0] pt-3" id="motor-rider-selection">
+                    <label className="text-[#8C887D] uppercase text-[9px] tracking-widest font-extrabold mb-1 block">Optional Cover Extensions</label>
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="rider-excess-protector"
+                        checked={!!motorParams.excessProtector}
+                        onChange={(e) => setMotorParams({ ...motorParams, excessProtector: e.target.checked })}
+                        className="rounded-none border-[#D8E2F0] accent-[#316EC9] mt-0.5"
+                      />
+                      <label htmlFor="rider-excess-protector" className="text-[11px] text-[#5E5A51] font-medium cursor-pointer">
+                        Add Excess Protector (Nil excess on own-damage claims)
+                      </label>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <input
+                        type="checkbox"
+                        id="rider-pvt"
+                        checked={!!motorParams.pvt}
+                        onChange={(e) => setMotorParams({ ...motorParams, pvt: e.target.checked })}
+                        className="rounded-none border-[#D8E2F0] accent-[#316EC9] mt-0.5"
+                      />
+                      <label htmlFor="rider-pvt" className="text-[11px] text-[#5E5A51] font-medium cursor-pointer">
+                        Add Political Violence & Terrorism (PVT) cover
+                      </label>
+                    </div>
+                    <p className="text-[9px] text-[#8C887D] leading-relaxed">
+                      Some underwriters include these at no extra cost in their comprehensive rate - where that's the case, you'll see it marked "Included" on the quote regardless of this selection. Where it isn't included, ticking the box adds it for an extra premium.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Owner's Name (Principal) *</label>
                   <input
@@ -739,6 +773,41 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                             <p className="text-[9px]">Levies: KES {(offer.pcf + offer.trainingLevy + offer.stampDuty).toLocaleString()}</p>
                           </div>
                         </div>
+
+                        {/* Rider inclusion badges - scannable at-a-glance comparison of which
+                            underwriters bundle Excess Protector / PVT free vs charge extra */}
+                        {offer.riderStatus && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {(["excessProtector", "pvt"] as const).map((riderKey) => {
+                              const status = offer.riderStatus![riderKey];
+                              const label = riderKey === "excessProtector" ? "Excess Protector" : "PVT";
+                              if (status === "included") {
+                                return (
+                                  <span key={riderKey} className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                    <CheckCircle className="h-3 w-3" />
+                                    <span>{label} Included Free</span>
+                                  </span>
+                                );
+                              }
+                              if (status === "selected") {
+                                return (
+                                  <span key={riderKey} className="inline-flex items-center gap-1 border border-[#316EC9]/30 bg-[#F0F5FC] text-[#316EC9] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                    <CheckCircle className="h-3 w-3" />
+                                    <span>{label} Added (Extra Premium)</span>
+                                  </span>
+                                );
+                              }
+                              if (status === "available") {
+                                return (
+                                  <span key={riderKey} className="inline-flex items-center gap-1 border border-[#D8E2F0] bg-white text-[#8C887D] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                    <span>{label} Available (Not Selected)</span>
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        )}
 
                         {/* Provisional Rate warning alert */}
                         {offer.isProvisionalRate && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts } from "../data/productStore";
+import { getCategoryDetailContent } from "../data/categoryDetailContent";
 import { 
   Building, UserCheck, ShieldCheck, AlertCircle, FileText, Sparkles, 
   HelpCircle, ChevronRight, PhoneCall, ArrowLeft, Send, CheckSquare, 
@@ -55,6 +56,12 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
   }
 
   const categoryInfo = PRODUCT_CATEGORIES.find(c => c.id === product.category);
+
+  // Covers/exclusions/claims-step content is class-specific (Motor Comprehensive
+  // vs TPO, Home vs Industrial Fire, WIBA vs voluntary Personal Accident all
+  // carry materially different benefits and exclusions) - resolved centrally so
+  // this page never shows a benefit or exclusion that doesn't apply to the class.
+  const detailContent = getCategoryDetailContent(product);
 
   // Filter valid related products
   const relatedList = allProducts.filter(p => product.relatedProducts?.includes(p.id) && p.id !== product.id);
@@ -304,21 +311,15 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
                 Main Policy Covers & Optional Benefits
               </h3>
               <p className="text-xs text-gray-700 leading-relaxed mb-4">
-                Underwritten by A+ IRA approved carriers, this policy encompasses highly structured default safeguards:
+                {detailContent.coversIntro}
               </p>
               <ul className="space-y-2 text-xs text-gray-700">
-                <li className="flex items-start">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mr-2 mt-0.5" />
-                  <span><strong>Accidental Loss or Harm:</strong> Protection against sudden environmental physical crashes, water damage, or collapse.</span>
-                </li>
-                <li className="flex items-start">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mr-2 mt-0.5" />
-                  <span><strong>Third Party Civil Shield:</strong> Covering legal claims arising out of third party property damages up to statutory standards KES 3,000,000.</span>
-                </li>
-                <li className="flex items-start">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mr-2 mt-0.5" />
-                  <span><strong>Custom Add-on Extensions:</strong> Options for excessive claims waivers, natural perils extensions, and active regional COMESA cards.</span>
-                </li>
+                {detailContent.covers.map((cover, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mr-2 mt-0.5" />
+                    <span><strong>{cover.title}:</strong> {cover.description}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -328,13 +329,12 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
                 Common Exclusions
               </h3>
               <p className="text-xs text-gray-700 leading-relaxed mb-2">
-                Please note that standard policies do not cover damages resulting from:
+                {detailContent.exclusionsIntro}
               </p>
               <ul className="space-y-1.5 text-xs text-gray-750 list-disc list-inside">
-                <li>Pre-existing physical damage prior to initial payment receipting</li>
-                <li>Willful, fraudulent, or gross negligence operation of assets</li>
-                <li>Active nuclear, chemical, political war or unapproved civil uprising risk structures</li>
-                <li>Commercial wear-and-tear or gradual depreciation processes under standard terms</li>
+                {detailContent.exclusions.map((exclusion, idx) => (
+                  <li key={idx}>{exclusion}</li>
+                ))}
               </ul>
             </div>
 
@@ -361,7 +361,7 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
                 <ol className="text-xs text-gray-700 space-y-1.5 list-decimal list-inside leading-relaxed">
                   <li>Keep assets undisturbed and secure immediate pictures.</li>
                   <li>Register the claim on our 24H Claims Centre.</li>
-                  <li>Utmost Claims specialists negotiate repairs approval in under 3 days.</li>
+                  <li>{detailContent.claimsStep}</li>
                 </ol>
               </div>
             </div>

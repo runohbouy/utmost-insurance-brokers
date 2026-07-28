@@ -47,6 +47,10 @@ export interface InsuranceQuote {
     pvt: number;
     windscreen: number;
   };
+  riderStatus?: {
+    excessProtector: "included" | "selected" | "available" | "unavailable";
+    pvt: "included" | "selected" | "available" | "unavailable";
+  };
 }
 
 export interface ClaimTimelineStep {
