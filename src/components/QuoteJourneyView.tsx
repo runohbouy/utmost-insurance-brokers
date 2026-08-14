@@ -2,22 +2,63 @@ import React, { useState } from "react";
 import {
   InsuranceQuote, MotorQuoteParams, MedicalQuoteParams, ActiveTab
 } from "../types";
+import { VEHICLE_MAKES, VEHICLE_MAKES_MODELS } from "../data/vehicleModels";
 import InsurerLogo from "./InsurerLogo";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   Car, Heart, ShieldCheck, HelpCircle, ArrowRight, CheckCircle,
-  DownloadCloud, Mail, Phone, Lock, Sparkles, UserCheck, Calculator, AlertCircle, AlertTriangle
+  DownloadCloud, Mail, Phone, Lock, Sparkles, UserCheck, Calculator, AlertCircle, AlertTriangle, X
 } from "lucide-react";
 
 interface QuoteJourneyViewProps {
   initialCategory: "motor" | "medical";
+  initialProductId?: string | null;
   setActiveTab: (tab: ActiveTab) => void;
   onSavedOffer: (quote: InsuranceQuote, category: "motor" | "medical") => void;
 }
 
-export default function QuoteJourneyView({ initialCategory, setActiveTab, onSavedOffer }: QuoteJourneyViewProps) {
+// Several distinct product pages (private comprehensive, private TPO, motorcycle,
+// commercial own-goods, taxi/ride-hailing) all route into this one shared quote
+// engine. Without this, every one of them silently defaulted to private
+// comprehensive/saloon and the customer had to manually re-select cover type and
+// vehicle use - e.g. clicking "Get Quote" on the TPO product page still opened
+// on Comprehensive. This maps each product id to the params it should start on.
+const MOTOR_PRODUCT_DEFAULTS: Record<string, Partial<MotorQuoteParams>> = {
+  "private-motor-comprehensive": { coverType: "comprehensive", vehicleUse: "private", vehicleType: "saloon" },
+  "private-motor-third-party": { coverType: "third_party", vehicleUse: "private", vehicleType: "saloon" },
+  "private-motorcycle": { coverType: "comprehensive", vehicleUse: "motorcycle", vehicleType: "saloon" },
+  "commercial-motor-own-goods": { coverType: "comprehensive", vehicleUse: "commercial_goods", vehicleType: "pickup" },
+  "taxi-ride-hailing": { coverType: "comprehensive", vehicleUse: "psv_chaufeur", vehicleType: "saloon" },
+};
+
+// Display names for the header when a customer arrives via a specific product's
+// "Get Quote" button, so the page reads as e.g. "Private Motorcycle" rather than
+// the generic "Motor Private" label that was previously shown regardless of which
+// of these five distinct products the customer actually came from.
+const PRODUCT_DISPLAY_NAMES: Record<string, string> = {
+  "private-motor-comprehensive": "Private Motor Comprehensive",
+  "private-motor-third-party": "Private Motor Third Party",
+  "private-motorcycle": "Private Motorcycle",
+  "commercial-motor-own-goods": "Commercial Motor Own Goods",
+  "taxi-ride-hailing": "Taxi and Ride-Hailing Insurance",
+  "individual-medical": "Individual Medical Insurance",
+  "family-medical": "Family Medical Insurance",
+  "micro-health": "Micro Health Insurance",
+  "sme-medical": "SME Medical Insurance",
+};
+
+export default function QuoteJourneyView({ initialCategory, initialProductId, setActiveTab, onSavedOffer }: QuoteJourneyViewProps) {
   const [category, setCategory] = useState<"motor" | "medical">(initialCategory);
+  // A customer who arrived from a specific product page (e.g. clicked "Get Quote"
+  // on Private Motorcycle) came here for that product only - showing an unrelated
+  // Medical Schemes tab alongside it, or a generic "Motor Private" label that
+  // doesn't reflect motorcycle/commercial/taxi products, is misleading. The
+  // category switcher and generic label are only shown for the true generic
+  // entry points (Home tile, Footer link) that have no specific product in mind.
+  const productDisplayName = initialProductId ? PRODUCT_DISPLAY_NAMES[initialProductId] : undefined;
+  const isProductSpecific = !!productDisplayName;
+  const motorDefaults = (initialProductId && MOTOR_PRODUCT_DEFAULTS[initialProductId]) || {};
   const [motorParams, setMotorParams] = useState<MotorQuoteParams>({
     vehicleReg: "",
     vehicleMake: "",
@@ -29,8 +70,15 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
     vehicleType: "saloon",
     ownerName: "",
     ownerEmail: "",
-    ownerPhone: ""
+    ownerPhone: "",
+    ...motorDefaults
   });
+
+  // Make/Model use a dropdown by default (needed so quotes can be matched deterministically
+  // against each underwriter's high-exposure unit list - free text can't be matched reliably),
+  // but fall back to manual entry for the long tail of vehicles not in VEHICLE_MAKES_MODELS.
+  const [isMakeOther, setIsMakeOther] = useState<boolean>(false);
+  const [isModelOther, setIsModelOther] = useState<boolean>(false);
 
   const [medicalParams, setMedicalParams] = useState<MedicalQuoteParams>({
     principalName: "",
@@ -39,6 +87,7 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
     principalEmail: "",
     principalCounty: "Nairobi",
     dependantsCount: 0,
+    dependants: [],
     inpatientLimit: 1000000,
     outpatientLimit: 100000,
     maternityCover: false,
@@ -301,7 +350,9 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
       
       {/* SECTION HEADER */}
       <div className="border-b border-[#D8E2F0] pb-6">
-        <p className="text-[10px] uppercase font-bold text-[#316EC9] tracking-[0.25em] mb-1 font-mono">Comparative Calculator</p>
+        <p className="text-[10px] uppercase font-bold text-[#316EC9] tracking-[0.25em] mb-1 font-mono">
+          {isProductSpecific ? productDisplayName : "Comparative Calculator"}
+        </p>
         <h1 className="text-3xl font-serif italic tracking-tight text-[#1A1A1A]">
           Comparative Quotes & Intermediate Advisory Options
         </h1>
@@ -310,29 +361,33 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
         </p>
       </div>
 
-      {/* COMPANION STATE TABS */}
-      <div className="flex border-b border-[#D8E2F0] bg-[#FAF9F6] p-1 max-w-sm shrink-0 rounded-none font-mono">
-        <button
-          onClick={() => { setCategory("motor"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
-          className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
-            category === "motor" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
-          }`}
-          id="tab-select-motor"
-        >
-          <Car className="h-3.5 w-3.5" />
-          <span>Motor Private</span>
-        </button>
-        <button
-          onClick={() => { setCategory("medical"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
-          className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
-            category === "medical" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
-          }`}
-          id="tab-select-medical"
-        >
-          <Heart className="h-3.5 w-3.5" />
-          <span>Medical Schemes</span>
-        </button>
-      </div>
+      {/* COMPANION STATE TABS - only shown for the generic calculator entry points;
+          a customer arriving from a specific product's "Get Quote" button came for
+          that product only, so switching category here would be a non-sequitur. */}
+      {!isProductSpecific && (
+        <div className="flex border-b border-[#D8E2F0] bg-[#FAF9F6] p-1 max-w-sm shrink-0 rounded-none font-mono">
+          <button
+            onClick={() => { setCategory("motor"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
+            className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
+              category === "motor" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
+            }`}
+            id="tab-select-motor"
+          >
+            <Car className="h-3.5 w-3.5" />
+            <span>Motor Insurance</span>
+          </button>
+          <button
+            onClick={() => { setCategory("medical"); setQuotes([]); setSelectedOffer(null); setCoverNoteResult(null); }}
+            className={`flex-grow flex items-center justify-center space-x-2 py-3 text-[10px] uppercase tracking-wider font-bold rounded-none transition-all cursor-pointer ${
+              category === "medical" ? "bg-[#142C54] text-white" : "text-[#8C887D] hover:text-[#316EC9]"
+            }`}
+            id="tab-select-medical"
+          >
+            <Heart className="h-3.5 w-3.5" />
+            <span>Medical Schemes</span>
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
@@ -362,23 +417,72 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Make</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Toyota"
-                      value={motorParams.vehicleMake}
-                      onChange={(e) => setMotorParams({ ...motorParams, vehicleMake: e.target.value })}
-                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                    />
+                    {isMakeOther ? (
+                      <input
+                        type="text"
+                        placeholder="e.g. Toyota"
+                        value={motorParams.vehicleMake}
+                        onChange={(e) => setMotorParams({ ...motorParams, vehicleMake: e.target.value })}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                    ) : (
+                      <select
+                        value={motorParams.vehicleMake}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "__other__") {
+                            setIsMakeOther(true);
+                            setIsModelOther(true);
+                            setMotorParams({ ...motorParams, vehicleMake: "", vehicleModel: "" });
+                          } else {
+                            // Model list depends on Make, so switching Make resets Model
+                            // back to its own dropdown rather than keeping a stale value.
+                            setIsModelOther(false);
+                            setMotorParams({ ...motorParams, vehicleMake: value, vehicleModel: "" });
+                          }
+                        }}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      >
+                        <option value="">-- Select Make --</option>
+                        {VEHICLE_MAKES.map((make) => (
+                          <option key={make} value={make}>{make}</option>
+                        ))}
+                        <option value="__other__">Other / Not Listed</option>
+                      </select>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Model</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Harrier / DX"
-                      value={motorParams.vehicleModel}
-                      onChange={(e) => setMotorParams({ ...motorParams, vehicleModel: e.target.value })}
-                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                    />
+                    {isModelOther ? (
+                      <input
+                        type="text"
+                        placeholder="e.g. Harrier / DX"
+                        value={motorParams.vehicleModel}
+                        onChange={(e) => setMotorParams({ ...motorParams, vehicleModel: e.target.value })}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                    ) : (
+                      <select
+                        value={motorParams.vehicleModel}
+                        disabled={!motorParams.vehicleMake}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "__other__") {
+                            setIsModelOther(true);
+                            setMotorParams({ ...motorParams, vehicleModel: "" });
+                          } else {
+                            setMotorParams({ ...motorParams, vehicleModel: value });
+                          }
+                        }}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+                      >
+                        <option value="">{motorParams.vehicleMake ? "-- Select Model --" : "Select a Make first"}</option>
+                        {(VEHICLE_MAKES_MODELS[motorParams.vehicleMake] || []).map((model) => (
+                          <option key={model} value={model}>{model}</option>
+                        ))}
+                        {motorParams.vehicleMake && <option value="__other__">Other / Not Listed</option>}
+                      </select>
+                    )}
                   </div>
                 </div>
 
@@ -387,7 +491,12 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Manufacturing Year</label>
                     <input
                       type="number"
-                      min={2000}
+                      // 1900 matches the server-side floor in server.ts's age-decline
+                      // check (params.mfgYear > 1900) - older/classic vehicles should
+                      // still be enterable here; TPO doesn't age-gate at all, and
+                      // comprehensive's real age cutoff is the per-insurer max vehicle
+                      // age check, not an arbitrary input-level year restriction.
+                      min={1900}
                       max={2026}
                       value={motorParams.mfgYear || ""}
                       onChange={(e) => setMotorParams({ ...motorParams, mfgYear: e.target.value === "" ? 0 : Number(e.target.value) })}
@@ -398,10 +507,16 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Cover Type *</label>
                     <select
                       value={motorParams.coverType}
-                      onChange={(e) => setMotorParams({ ...motorParams, coverType: e.target.value as any })}
+                      onChange={(e) => {
+                        const coverType = e.target.value as "comprehensive" | "third_party";
+                        // TPO is a flat rate by usage class - vehicle value plays no part in
+                        // pricing it, so clear it to avoid a stale figure surfacing later as a
+                        // misleading "Sum Insured" on a TPO quote (e.g. in the customer portal).
+                        setMotorParams({ ...motorParams, coverType, vehicleValue: coverType === "third_party" ? 0 : motorParams.vehicleValue });
+                      }}
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     >
-                      <option value="comprehensive">Comprehensive Third & Own Damage</option>
+                      <option value="comprehensive">Comprehensive</option>
                       <option value="third_party">Third Party Only (TPO)</option>
                     </select>
                   </div>
@@ -439,18 +554,42 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Current Market Value (KES) *</label>
-                  <input
-                    type="number"
-                    min={200000}
-                    step="any"
-                    value={motorParams.vehicleValue || ""}
-                    onChange={(e) => setMotorParams({ ...motorParams, vehicleValue: e.target.value === "" ? 0 : Number(e.target.value) })}
-                    className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 font-mono text-xs font-bold text-[#316EC9] focus:border-[#316EC9] focus:outline-none"
-                  />
-                  <p className="text-[9px] text-[#8C887D]">Subject to post-quote physical audit surveyor inspections.</p>
-                </div>
+                {/* Tonnage is how underwriters actually tier commercial goods/cartage rates
+                    (both comprehensive and TPO) - e.g. up to 3 tonnes vs 3-8 tonnes vs 8-20
+                    tonnes carry different rates/premiums per binder terms. Only asked for the
+                    two usage classes it applies to; other classes don't use it. */}
+                {(motorParams.vehicleUse === "commercial_goods" || motorParams.vehicleUse === "commercial_general_cartage") && (
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Tonnage (Tons) *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min={0}
+                      placeholder="e.g. 3"
+                      value={motorParams.vehicleTonnage || ""}
+                      onChange={(e) => setMotorParams({ ...motorParams, vehicleTonnage: e.target.value === "" ? undefined : Number(e.target.value) })}
+                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                    />
+                    <p className="text-[9px] text-[#8C887D]">Gross vehicle tonnage - underwriters price this class in tonnage brackets, not just by value.</p>
+                  </div>
+                )}
+
+                {/* Market value only drives pricing for Comprehensive - TPO is a flat rate by
+                    usage class regardless of vehicle value, so this isn't asked for TPO. */}
+                {motorParams.coverType === "comprehensive" && (
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Current Market Value (KES) *</label>
+                    <input
+                      type="number"
+                      min={200000}
+                      step="any"
+                      value={motorParams.vehicleValue || ""}
+                      onChange={(e) => setMotorParams({ ...motorParams, vehicleValue: e.target.value === "" ? 0 : Number(e.target.value) })}
+                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 font-mono text-xs font-bold text-[#316EC9] focus:border-[#316EC9] focus:outline-none"
+                    />
+                    <p className="text-[9px] text-[#8C887D]">Subject to post-quote physical audit surveyor inspections.</p>
+                  </div>
+                )}
 
                 {/* Optional comprehensive riders - some underwriters bundle these free */}
                 {motorParams.coverType === "comprehensive" && (
@@ -563,34 +702,77 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Number of Dependants</label>
-                    <select
-                      value={medicalParams.dependantsCount}
-                      onChange={(e) => setMedicalParams({ ...medicalParams, dependantsCount: Number(e.target.value) })}
-                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Inpatient Care Limit *</label>
+                  <select
+                    value={medicalParams.inpatientLimit}
+                    onChange={(e) => setMedicalParams({ ...medicalParams, inpatientLimit: Number(e.target.value) })}
+                    className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                  >
+                    <option value="500000">KES 500,000</option>
+                    <option value="1000000">KES 1,000,000</option>
+                    <option value="2000000">KES 2,000,000</option>
+                    <option value="5000000">KES 5,000,000</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Family Members (Dependants)</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextDependants = [...(medicalParams.dependants || []), { relationship: "spouse" as const, age: 30 }];
+                        setMedicalParams({ ...medicalParams, dependants: nextDependants, dependantsCount: nextDependants.length });
+                      }}
+                      className="text-[9px] font-bold text-[#316EC9] hover:text-[#142C54] uppercase tracking-wider cursor-pointer"
                     >
-                      <option value="0">M + 0 (Only Myself)</option>
-                      <option value="1">M + 1 (Spouse / 1 Child)</option>
-                      <option value="2">M + 2 (Spouse & 1 Child)</option>
-                      <option value="3">M + 3 (Spouse & 2 Children)</option>
-                      <option value="4">M + 4 (Spouse & 3 Children)</option>
-                    </select>
+                      + Add Member
+                    </button>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Inpatient Care Limit *</label>
-                    <select
-                      value={medicalParams.inpatientLimit}
-                      onChange={(e) => setMedicalParams({ ...medicalParams, inpatientLimit: Number(e.target.value) })}
-                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                    >
-                      <option value="500000">KES 500,000</option>
-                      <option value="1000000">KES 1,000,000</option>
-                      <option value="2000000">KES 2,000,000</option>
-                      <option value="5000000">KES 5,000,000</option>
-                    </select>
-                  </div>
+                  <p className="text-[9px] text-[#8C887D]">
+                    Some insurers (e.g. Jubilee J-Care) price each family member individually by their own age - add each dependant's relationship and age for the most accurate quote.
+                  </p>
+                  {(medicalParams.dependants || []).length === 0 && (
+                    <p className="text-[10px] text-slate-500 italic">No dependants added - quoting for principal member only.</p>
+                  )}
+                  {(medicalParams.dependants || []).map((dep, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <select
+                        value={dep.relationship}
+                        onChange={(e) => {
+                          const nextDependants = (medicalParams.dependants || []).map((d, i) => (i === idx ? { ...d, relationship: e.target.value as "spouse" | "child" } : d));
+                          setMedicalParams({ ...medicalParams, dependants: nextDependants });
+                        }}
+                        className="flex-1 bg-white rounded-none border border-[#D8E2F0] p-2 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      >
+                        <option value="spouse">Spouse</option>
+                        <option value="child">Child</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        max="120"
+                        placeholder="Age"
+                        value={dep.age || ""}
+                        onChange={(e) => {
+                          const nextDependants = (medicalParams.dependants || []).map((d, i) => (i === idx ? { ...d, age: e.target.value === "" ? 0 : Number(e.target.value) } : d));
+                          setMedicalParams({ ...medicalParams, dependants: nextDependants });
+                        }}
+                        className="w-20 bg-white rounded-none border border-[#D8E2F0] p-2 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextDependants = (medicalParams.dependants || []).filter((_, i) => i !== idx);
+                          setMedicalParams({ ...medicalParams, dependants: nextDependants, dependantsCount: nextDependants.length });
+                        }}
+                        className="text-red-500 hover:text-red-700 cursor-pointer px-1"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -815,6 +997,26 @@ export default function QuoteJourneyView({ initialCategory, setActiveTab, onSave
                             <AlertCircle className="h-3.5 w-3.5 text-[#F5B041] shrink-0 mt-0.5" />
                             <span>
                               <strong>Provisional Rate:</strong> No usage-specific rates exist yet in database. A provisional loading factor of <strong>{offer.provisionalLoadingFactor}x</strong> was applied.
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Tonnage-tiered rate notice */}
+                        {offer.isTonnageRated && (
+                          <div className="bg-[#F0F5FC] text-[#316EC9] px-3 py-2.5 border border-[#D8E2F0] text-[10px] leading-snug rounded-none flex items-start space-x-1.5 font-sans">
+                            <AlertCircle className="h-3.5 w-3.5 text-[#316EC9] shrink-0 mt-0.5" />
+                            <span>
+                              <strong>Tonnage-Tiered Rate:</strong> This underwriter prices {offer.vehicleUse === "commercial_general_cartage" ? "general cartage" : "own goods"} vehicles by tonnage bracket rather than value alone - the rate shown reflects the {motorParams.vehicleTonnage} tonne bracket.
+                            </span>
+                          </div>
+                        )}
+
+                        {/* High-exposure unit override notice */}
+                        {offer.isHighExposureApplied && (
+                          <div className="bg-[#FDEEEE] text-[#B03A2E] px-3 py-2.5 border border-[#F5B7B1] text-[10px] leading-snug rounded-none flex items-start space-x-1.5 font-sans">
+                            <AlertTriangle className="h-3.5 w-3.5 text-[#B03A2E] shrink-0 mt-0.5" />
+                            <span>
+                              <strong>High-Exposure Unit Rate:</strong> {offer.highExposureNote}
                             </span>
                           </div>
                         )}

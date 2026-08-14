@@ -20,26 +20,23 @@ const LIVE_CATEGORIES = OTHER_LINE_CATEGORIES.filter((c) => OTHER_LINE_LIVE_CATE
 const EXTRA_INSURER_NAMES: Record<string, string> = {
   stardiscover: "Star Discover Insurance Limited",
   aar: "AAR Insurance (Kenya) Limited",
-  oldmutual: "Old Mutual General Insurance Kenya Limited"
+  oldmutual: "Old Mutual General Insurance Kenya Limited",
+  apa: "APA Insurance Limited"
 };
-
-function getLicensedGeneralClasses(insurerId: string): string[] | undefined {
-  const profile = mockInsurers.find((m) => m.id === insurerId);
-  if (profile) return profile.licensedGeneralClasses;
-  return EXTRA_LICENSED_CLASSES[insurerId]?.general;
-}
 
 // Only surface carriers with verified IRA licensing data for the selected class - unlike the
 // admin rate editor (which defaults to "show everything" when license data is unverified), the
 // customer-facing flow errs strict so nobody is quoted against an insurer that isn't actually
-// authorised for that class.
-function getLicensedInsurersForCategory(categoryCode: string) {
+// authorised for that class. `kind` picks whether to check licensedGeneralClasses or
+// licensedLifeClasses - Life-kind categories (life_assurance, investment, etc.) must check the
+// life list, not general, or no insurer would ever qualify for them.
+function getLicensedInsurersForCategory(categoryCode: string, kind: "general" | "life") {
   return mockInsurers
-    .filter((m) => (m.licensedGeneralClasses || []).includes(categoryCode))
+    .filter((m) => ((kind === "life" ? m.licensedLifeClasses : m.licensedGeneralClasses) || []).includes(categoryCode))
     .map((m) => ({ id: m.id, name: m.tradingName || m.name }))
     .concat(
       Object.entries(EXTRA_LICENSED_CLASSES)
-        .filter(([, v]) => (v.general || []).includes(categoryCode))
+        .filter(([, v]) => ((kind === "life" ? v.life : v.general) || []).includes(categoryCode))
         .map(([id]) => ({ id, name: EXTRA_INSURER_NAMES[id] || id }))
     );
 }
@@ -61,7 +58,7 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
   const [subTypeId, setSubTypeId] = useState<string>(validInitialSubType);
   const subType = categoryFormDef.subTypes.find((s) => s.id === subTypeId) || categoryFormDef.subTypes[0];
 
-  const licensedInsurers = useMemo(() => getLicensedInsurersForCategory(category.code), [category.code]);
+  const licensedInsurers = useMemo(() => getLicensedInsurersForCategory(category.code, category.kind), [category.code, category.kind]);
   const [insurerId, setInsurerId] = useState<string>(licensedInsurers[0]?.id || "");
 
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -76,7 +73,8 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
     setCategoryId(id);
     const def = OTHER_LINE_FORM_DEFS[id];
     setSubTypeId(def.subTypes[0].id);
-    const insurers = getLicensedInsurersForCategory(OTHER_LINE_CATEGORIES.find((c) => c.id === id)!.code);
+    const newCategory = OTHER_LINE_CATEGORIES.find((c) => c.id === id)!;
+    const insurers = getLicensedInsurersForCategory(newCategory.code, newCategory.kind);
     setInsurerId(insurers[0]?.id || "");
     setAnswers({});
     setResult(null);
@@ -148,9 +146,12 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
   const renderField = (field: OtherLineFieldDef) => {
     const value = answers[field.id] ?? (field.type === "boolean" ? false : "");
     const label = (
-      <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">
-        {field.label} {field.required && "*"} {field.unit && <span className="text-[#316EC9]">({field.unit})</span>}
-      </label>
+      <div className="space-y-1">
+        <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider block">
+          {field.label} {field.required && "*"} {field.unit && <span className="text-[#316EC9]">({field.unit})</span>}
+        </label>
+        {field.helpText && <p className="text-[9px] text-[#8C887D]/80 font-normal leading-relaxed">{field.helpText}</p>}
+      </div>
     );
 
     if (field.type === "boolean") {

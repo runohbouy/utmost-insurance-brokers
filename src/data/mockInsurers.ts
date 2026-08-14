@@ -63,7 +63,7 @@ export const mockInsurers: InsurerProfile[] = [
     // Motor/Domestic Package/Group Life removed from availableProducts and the live quote
     // engines (server.ts motor list, RoomAnalyzerView Domestic Package carriers).
     name: "Jubilee Health Insurance Limited",
-    tradingName: "Jubilee Insurance",
+    tradingName: "Jubilee Health Insurance",
     logoEmoji: "🌍",
     established: 1937,
     licenseYear: 2026,
@@ -176,8 +176,14 @@ export const mockInsurers: InsurerProfile[] = [
   },
   {
     id: "madison",
+    // Split from a single blended "Madison" profile into the two real, separately-licensed
+    // entities (matching the Jubilee precedent above): this one is the General arm - motor,
+    // medical, fire etc. - and does NOT sell life products. See "madison-life" below for the
+    // Long-Term arm. Previously this single entry was branded "Madison Life Assurance" while
+    // actually offering Motor Private/SME Medical/Burglary/Crop Insurance - a life-branded
+    // name showing general products, which is exactly the kind of mismatch being corrected.
     name: "Madison General Insurance Kenya Limited",
-    tradingName: "Madison Life Assurance",
+    tradingName: "Madison General Insurance",
     logoEmoji: "🏢",
     established: 1988,
     licenseYear: 2026,
@@ -187,15 +193,34 @@ export const mockInsurers: InsurerProfile[] = [
     odpcRegistered: true,
     memberOfAibk: true,
     rating: "BBB+ Rated (Highly responsive retail insurer)",
-    strengthReason: "Pioneers in high-value group life plans, flexible school fees educational policies, and fast claims approval.",
+    strengthReason: "Strong SME and retail general insurance book with fast claims approval across motor, medical and property lines.",
     availableProducts: ["Motor Private", "SME Medical schemes", "Burglary & Perils", "Crop Insurance"],
-    // Per IRA notice: Madison General Insurance Kenya Limited is licensed 02-12 & 14 (no Aviation/01);
-    // Madison Life Assurance Kenya Limited (separate entity, matching this profile's trading name)
-    // covers the life side. Blended here since the app treats "Madison" as one combined brand entry.
+    // Per IRA notice: Madison General Insurance Kenya Limited is licensed 02-12 & 14 (no Aviation/01).
     licensedGeneralClasses: ["02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "14"],
-    licensedLifeClasses: ["31", "33a", "33b", "34", "35", "37a", "37b"],
     claimTurnaroundDays: 5,
     emergencyPhone: "+254 709 922000"
+  },
+  {
+    id: "madison-life",
+    name: "Madison Life Assurance Kenya Limited",
+    tradingName: "Madison Life",
+    logoEmoji: "🏢",
+    established: 1988,
+    licenseYear: 2026,
+    licenseStatus: "Active",
+    iraLicenseMotor: "Not Licensed (Long Term Insurer only - no General class authorisation)",
+    iraLicenseMedical: "Not Licensed (Long Term Insurer only - no General class authorisation)",
+    odpcRegistered: true,
+    memberOfAibk: true,
+    rating: "BBB+ Rated (Established long-term underwriter)",
+    strengthReason: "Pioneers in high-value group life plans and flexible school fees educational policies, with fast claims approval.",
+    availableProducts: ["Life Assurance", "Group Life Schemes", "Personal Pension", "Deposit Administration", "Group Credit Life"],
+    // Per IRA notice: Madison Life Assurance Kenya Limited is a separate Long-Term-only entity,
+    // licensed for classes 31, 33a, 33b, 34, 35, 37a, 37b - no General class authorisation, so it
+    // must never appear as an option for motor, medical, or any other general-class product.
+    licensedLifeClasses: ["31", "33a", "33b", "34", "35", "37a", "37b"],
+    claimTurnaroundDays: 6,
+    emergencyPhone: "+254 709 922010"
   },
   {
     id: "kenindia",
@@ -381,5 +406,53 @@ export const mockInsurers: InsurerProfile[] = [
     licensedLifeClasses: ["31", "32", "33a", "33b", "34", "35", "37a", "37b"],
     claimTurnaroundDays: 9,
     emergencyPhone: "+254 020 2894000"
+  },
+  {
+    id: "ncba",
+    // New onboarding, added from binder rate documents (MOTOR RATING 2025 - NCBAIG.pdf and the
+    // AIG-NCBA motor raters). Legal name and "subsidiary of NCBA Group PLC, regulated by the
+    // Insurance Regulatory Authority" per the binder's own letterhead footer.
+    name: "NCBA Insurance Company Limited",
+    tradingName: "NCBA-AIG Insurance",
+    logoEmoji: "🏦",
+    established: 1962,
+    licenseYear: 2026,
+    licenseStatus: "Active",
+    // Not yet cross-checked against the IRA Licensed Entities 2026 notice by name (unlike the
+    // profiles above, which cite it directly) - licensed class codes below are inferred from
+    // the binder covering full private/commercial motor and TPO, not sourced from the notice.
+    iraLicenseMotor: "Not yet verified against IRA notice - binder confirms Motor Private & Commercial",
+    iraLicenseMedical: "Not offered per binder (motor lines only)",
+    odpcRegistered: true,
+    memberOfAibk: true,
+    rating: "Unrated (pending verification)",
+    strengthReason: "Formerly AIG Kenya Insurance Company Limited, now a subsidiary of NCBA Group PLC - broad private and commercial motor rating including fleet, institutional and PSV/tonnage-tiered TPO.",
+    availableProducts: ["Motor Private", "Motor Commercial Own Goods", "Motor Commercial General Cartage", "Institutional Group Motor", "Motorcycle"],
+    licensedGeneralClasses: ["07", "08"],
+    claimTurnaroundDays: 7,
+    emergencyPhone: "+254 20 3676000"
+  },
+  {
+    id: "directline",
+    // New onboarding, added from binder rate document (MOTOR TERMS 2025-DIRECTLINE.pdf).
+    name: "Directline Assurance Company Limited",
+    tradingName: "Directline Assurance",
+    logoEmoji: "🚦",
+    established: 2011,
+    licenseYear: 2026,
+    licenseStatus: "Active",
+    // Not yet cross-checked against the IRA Licensed Entities 2026 notice by name - licensed
+    // class codes below are inferred from the binder covering full private/commercial motor,
+    // not sourced from the notice.
+    iraLicenseMotor: "Not yet verified against IRA notice - binder confirms Motor Private & Commercial",
+    iraLicenseMedical: "Not offered per binder (motor lines only)",
+    odpcRegistered: true,
+    memberOfAibk: true,
+    rating: "Unrated (pending verification)",
+    strengthReason: "Motor-focused underwriter with own goods, general cartage, institutional/school bus and PSV/matatu terms.",
+    availableProducts: ["Motor Private", "Motor Commercial Own Goods", "Motor Commercial General Cartage", "Institutional Group Motor", "PSV Motor Asset"],
+    licensedGeneralClasses: ["07", "08"],
+    claimTurnaroundDays: 7,
+    emergencyPhone: "+254 20 4443364"
   }
 ];

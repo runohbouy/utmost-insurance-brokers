@@ -42,6 +42,9 @@ export interface InsuranceQuote {
   isProvisionalRate?: boolean;
   provisionalLoadingFactor?: number;
   rateVersionId?: string;
+  isHighExposureApplied?: boolean;
+  highExposureNote?: string;
+  isTonnageRated?: boolean;
   riderBreakdown?: {
     excessProtector: number;
     pvt: number;
@@ -102,12 +105,20 @@ export interface MotorQuoteParams {
   coverType: "comprehensive" | "third_party";
   vehicleUse: "private" | "commercial_goods" | "psv_chaufeur" | "commercial_general_cartage" | "institutional" | "motorcycle" | "tricycle";
   vehicleType?: "saloon" | "suv" | "pickup" | "sports";
+  // Tonnage is how underwriters actually tier commercial goods/cartage rates (both
+  // comprehensive and TPO) - only meaningful for commercial_goods/commercial_general_cartage.
+  vehicleTonnage?: number;
   excessProtector?: boolean;
   pvt?: boolean;
   windscreen?: boolean;
   ownerName: string;
   ownerEmail: string;
   ownerPhone: string;
+}
+
+export interface MedicalDependant {
+  relationship: "spouse" | "child";
+  age: number;
 }
 
 export interface MedicalQuoteParams {
@@ -117,6 +128,11 @@ export interface MedicalQuoteParams {
   principalEmail: string;
   principalCounty: string;
   dependantsCount: number;
+  // Per-member breakdown (relationship + own age) - drives insurers whose real rate cards
+  // price each family member individually by age (e.g. Jubilee J-Care), rather than a single
+  // family-size lookup. Optional so older callers/insurers that only need the headcount keep
+  // working off dependantsCount unchanged.
+  dependants?: MedicalDependant[];
   inpatientLimit: number;
   outpatientLimit: number;
   maternityCover: boolean;

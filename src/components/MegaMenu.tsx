@@ -286,8 +286,11 @@ export default function MegaMenu({ isOpen, onClose, onSelectProduct, onSelectCat
                         </button>
                       </div>
 
-                      {/* Display products in 2-column sub-grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-1">
+                      {/* Compact one-line list (M3 list pattern) - full cards with description
+                          + quote-method badge per item made this pane too dense to scan when a
+                          category has many products (Motor alone has 17); name + icon is enough
+                          to pick from here, full detail lives on the product page itself. */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 pr-1">
                         {activeCatProducts.map((prod) => (
                           <div
                             key={prod.id}
@@ -295,27 +298,18 @@ export default function MegaMenu({ isOpen, onClose, onSelectProduct, onSelectCat
                               onSelectProduct(prod.id);
                               onClose();
                             }}
-                            className="group p-2.5 border border-[#D8E2F0] bg-white hover:border-[#142C54] transition-all cursor-pointer flex flex-col justify-between"
+                            className="group flex items-center justify-between gap-2 px-2 py-2 border-b border-[#D8E2F0] hover:bg-[#D8E2F0]/30 cursor-pointer transition-colors"
                           >
-                            <div className="text-left">
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="text-[11px] font-bold text-[#142C54] font-mono group-hover:text-[#316EC9] transition-colors leading-tight">
-                                  {prod.name}
-                                </span>
-                                {prod.featured && (
-                                  <span className="text-[8px] bg-amber-100 text-amber-800 px-1 py-0.5 font-bold uppercase">HOT</span>
-                                )}
-                              </div>
-                              <p className="text-[10px] text-[#8C887D] line-clamp-1 mt-0.5 leading-relaxed group-hover:text-[#142C54] transition-all">
-                                {prod.shortDesc}
-                              </p>
-                            </div>
-                            <div className="mt-2 pt-1.5 border-t border-gray-50 flex items-center justify-between gap-2">
-                              <span className={getMethodBadgeClass(prod.quotationMethod)}>
-                                {prod.quotationMethod}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm shrink-0">{prod.icon}</span>
+                              <span className="text-[11px] font-bold text-[#142C54] font-mono group-hover:text-[#316EC9] transition-colors truncate">
+                                {prod.name}
                               </span>
-                              <ChevronRight className="h-3 w-3 text-[#8C887D] group-hover:text-[#316EC9] group-hover:translate-x-0.5 transition-transform" />
+                              {prod.featured && (
+                                <span className="text-[8px] bg-amber-100 text-amber-800 px-1 py-0.5 font-bold uppercase shrink-0">HOT</span>
+                              )}
                             </div>
+                            <ChevronRight className="h-3 w-3 text-[#8C887D] group-hover:text-[#316EC9] group-hover:translate-x-0.5 transition-transform shrink-0" />
                           </div>
                         ))}
                       </div>

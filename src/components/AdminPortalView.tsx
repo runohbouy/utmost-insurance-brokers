@@ -6,6 +6,8 @@ import { AuthenticatedStaff, StaffSessionBadge } from "./StaffLoginGate";
 import { ActiveTab } from "../types";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts, saveProducts } from "../data/productStore";
+import { VEHICLE_MAKES, VEHICLE_MAKES_MODELS } from "../data/vehicleModels";
+import { MEMBER_AGE_BANDS, OUTPATIENT_AGE_BANDS } from "../utils/medicalCalculator";
 import InsurerLogo from "./InsurerLogo";
 import {
   Settings2, Users, AlertCircle, AlertTriangle, FileText, CheckCircle, Database,
@@ -50,7 +52,10 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     { id: "private", label: "Motor Private" },
     { id: "commercial_goods", label: "Commercial Own Goods" },
     { id: "commercial_general_cartage", label: "Commercial General Cartage" },
-    { id: "institutional", label: "Institutional / School Bus" }
+    { id: "institutional", label: "Institutional / School Bus" },
+    { id: "psv_chaufeur", label: "PSV / Chauffeur" },
+    { id: "motorcycle", label: "Motorcycle" },
+    { id: "tricycle", label: "Tricycle / Tuk Tuk" }
   ];
   const [selectedRateClass, setSelectedRateClass] = useState<string>("private");
 
@@ -83,6 +88,25 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     });
   })();
 
+  // Gates the Sum Insured Bands / TPO Flat Rates / Comprehensive Motor Riders sections below -
+  // those are motor-only content, and previously rendered (fully editable) regardless of which
+  // insurer was selected. A medical-only carrier like Jubilee Health Insurance (class 12 only,
+  // no 07/08) should never show a configurable motor rating desk at all, since it has no
+  // licensing basis to underwrite motor in the first place. Unrestricted (no license data) still
+  // shows motor by default, same fallback behavior as visibleOtherLineCategories above.
+  const isMotorLicensed = (() => {
+    const licensed = getLicensedClasses(selectedInsurerId);
+    if (!licensed.general) return true;
+    return licensed.general.includes("07") || licensed.general.includes("08");
+  })();
+
+  // Gates the Medical Rate Table section (class 12/Health) - same fallback rule as motor above.
+  const isMedicalLicensed = (() => {
+    const licensed = getLicensedClasses(selectedInsurerId);
+    if (!licensed.general) return true;
+    return licensed.general.includes("12");
+  })();
+
   const [pcfRateVal, setPcfRateVal] = useState<number>(0.25);
   const [itlRateVal, setItlRateVal] = useState<number>(0.20);
   const [stampDutyVal, setStampDutyVal] = useState<number>(40);
@@ -97,6 +121,103 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
         return vt;
       });
       return { ...prev, vehicleTypes: updatedTypes };
+    });
+  };
+
+  // High-exposure units - specific make/model combinations this insurer rates differently
+  // from their standard sum-insured schedule (e.g. certain high-theft or high-claims models).
+  // Each entry overrides the rate (and optionally minPremium) at quote time - see server.ts's
+  // highExposureUnits matching, which takes precedence over every other rate source.
+  const addHighExposureUnit = () => {
+    setActiveRates((prev: any) => ({
+      ...prev,
+      // Defaults to whichever motor class tab is active when "Add Unit" is clicked - each entry
+      // is scoped to one class only (see server.ts), it no longer silently applies everywhere.
+      highExposureUnits: [...(prev.highExposureUnits || []), { make: "", model: "", rate: 6, minPremium: 0, vehicleClass: selectedRateClass }]
+    }));
+  };
+
+  const updateHighExposureUnit = (index: number, field: string, value: any) => {
+    setActiveRates((prev: any) => ({
+      ...prev,
+      // Model list depends on Make, so changing Make resets Model back to "All Models"
+      // rather than keeping a value that belonged to the previous Make.
+      highExposureUnits: (prev.highExposureUnits || []).map((u: any, i: number) =>
+        i === index ? (field === "make" ? { ...u, make: value, model: "" } : { ...u, [field]: value }) : u
+      )
+    }));
+  };
+
+  const removeHighExposureUnit = (index: number) => {
+    setActiveRates((prev: any) => ({
+      ...prev,
+      highExposureUnits: (prev.highExposureUnits || []).filter((_: any, i: number) => i !== index)
+    }));
+  };
+
+  // Medical benefit-limit bands (Age-Bracket & Benefit Limit Rate Table) - each band's premium
+  // row is indexed by family size (Principal, +1 ... +5 dependants); age itself is layered on
+  // top uniformly via the shared age-factor multiplier in medicalCalculator.ts, not per-band.
+  const addMedicalBand = (tableKey: "inpatientBands" | "outpatientBands") => {
+    setActiveRates((prev: any) => {
+      const table = prev.medicalRateTable || { inpatientBands: [], outpatientBands: [] };
+      const existing = table[tableKey] || [];
+      const newBand = { label: "New Band", maxLimit: 0, ratesByFamilySize: [0, 0, 0, 0, 0, 0] };
+      return { ...prev, medicalRateTable: { ...table, [tableKey]: [...existing, newBand] } };
+    });
+  };
+
+  const updateMedicalBand = (tableKey: "inpatientBands" | "outpatientBands", index: number, field: "label" | "maxLimit", value: any) => {
+    setActiveRates((prev: any) => {
+      const table = prev.medicalRateTable || { inpatientBands: [], outpatientBands: [] };
+      const bands = (table[tableKey] || []).map((b: any, i: number) => (i === index ? { ...b, [field]: value } : b));
+      return { ...prev, medicalRateTable: { ...table, [tableKey]: bands } };
+    });
+  };
+
+  const updateMedicalBandFamilyRate = (tableKey: "inpatientBands" | "outpatientBands", index: number, familyIdx: number, value: number) => {
+    setActiveRates((prev: any) => {
+      const table = prev.medicalRateTable || { inpatientBands: [], outpatientBands: [] };
+      const bands = (table[tableKey] || []).map((b: any, i: number) => {
+        if (i !== index) return b;
+        const rates = [...(b.ratesByFamilySize || [0, 0, 0, 0, 0, 0])];
+        rates[familyIdx] = value;
+        return { ...b, ratesByFamilySize: rates };
+      });
+      return { ...prev, medicalRateTable: { ...table, [tableKey]: bands } };
+    });
+  };
+
+  const removeMedicalBand = (tableKey: "inpatientBands" | "outpatientBands", index: number) => {
+    setActiveRates((prev: any) => {
+      const table = prev.medicalRateTable || { inpatientBands: [], outpatientBands: [] };
+      return { ...prev, medicalRateTable: { ...table, [tableKey]: (table[tableKey] || []).filter((_: any, i: number) => i !== index) } };
+    });
+  };
+
+  // Per-member rate grid (Principal/Spouse/Outpatient rider) - a 2D [tier][ageBand] array, tier
+  // index aligned with medicalRateTable.inpatientBands so the two tables share the same columns.
+  const EMPTY_MEMBER_TABLE = { principal: [], spouse: [], child: [], outpatient: [], maternity: [], dental: [], optical: [] };
+  const updateMemberGridRate = (field: "principal" | "spouse" | "outpatient", tierIdx: number, ageIdx: number, value: number, rowLength: number) => {
+    setActiveRates((prev: any) => {
+      const mrt = prev.memberRateTable || EMPTY_MEMBER_TABLE;
+      const grid = [...(mrt[field] || [])];
+      while (grid.length <= tierIdx) grid.push(new Array(rowLength).fill(0));
+      const row = [...(grid[tierIdx] || new Array(rowLength).fill(0))];
+      row[ageIdx] = value;
+      grid[tierIdx] = row;
+      return { ...prev, memberRateTable: { ...mrt, [field]: grid } };
+    });
+  };
+
+  // Flat-per-tier rider rates (Child - no age variance per J-Care terms - plus Maternity/Dental/Optical).
+  const updateMemberFlatRate = (field: "child" | "maternity" | "dental" | "optical", tierIdx: number, value: number) => {
+    setActiveRates((prev: any) => {
+      const mrt = prev.memberRateTable || EMPTY_MEMBER_TABLE;
+      const arr = [...(mrt[field] || [])];
+      while (arr.length <= tierIdx) arr.push(0);
+      arr[tierIdx] = value;
+      return { ...prev, memberRateTable: { ...mrt, [field]: arr } };
     });
   };
 
@@ -214,7 +335,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
       const currentBands = classId === "private" ? (prev.sumInsuredBands || []) : (prev.commercialRates?.[classId]?.bands || []);
       const lastBand = currentBands[currentBands.length - 1];
       const newMin = lastBand ? lastBand.max + 1 : 0;
-      const newBand = { min: newMin, max: newMin + 1000000, rate: lastBand?.rate ?? 4.0 };
+      const newBand: any = { min: newMin, max: newMin + 1000000, rate: lastBand?.rate ?? 4.0 };
+      if (typeof lastBand?.minPremium === "number") newBand.minPremium = lastBand.minPremium;
 
       if (classId === "private") {
         return { ...prev, sumInsuredBands: [...currentBands, newBand] };
@@ -233,6 +355,63 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
       const cr = prev.commercialRates || {};
       const cls = cr[classId] || { bands: [], minPremium: 0 };
       return { ...prev, commercialRates: { ...cr, [classId]: { ...cls, bands: cls.bands.filter((_: any, idx: number) => idx !== index) } } };
+    });
+  };
+
+  // Tonnage bands (comprehensive) - only meaningful for commercial_goods/commercial_general_cartage.
+  // Takes precedence over the sum-insured bands above when the customer supplies a tonnage.
+  const addTonnageBand = (classId: string) => {
+    setActiveRates((prev: any) => {
+      const cr = prev.commercialRates || {};
+      const cls = cr[classId] || { bands: [], minPremium: 0, tonnageBands: [] };
+      const existing = cls.tonnageBands || [];
+      const last = existing[existing.length - 1];
+      const newBand = { minTons: last ? last.maxTons : 0, maxTons: (last ? last.maxTons : 0) + 5, rate: last?.rate ?? 5, minPremium: last?.minPremium ?? 50000 };
+      return { ...prev, commercialRates: { ...cr, [classId]: { ...cls, tonnageBands: [...existing, newBand] } } };
+    });
+  };
+
+  const updateTonnageBand = (classId: string, index: number, field: string, value: any) => {
+    setActiveRates((prev: any) => {
+      const cr = prev.commercialRates || {};
+      const cls = cr[classId] || { bands: [], minPremium: 0, tonnageBands: [] };
+      const tonnageBands = (cls.tonnageBands || []).map((b: any, i: number) => (i === index ? { ...b, [field]: value } : b));
+      return { ...prev, commercialRates: { ...cr, [classId]: { ...cls, tonnageBands } } };
+    });
+  };
+
+  const removeTonnageBand = (classId: string, index: number) => {
+    setActiveRates((prev: any) => {
+      const cr = prev.commercialRates || {};
+      const cls = cr[classId] || { bands: [], minPremium: 0, tonnageBands: [] };
+      return { ...prev, commercialRates: { ...cr, [classId]: { ...cls, tonnageBands: (cls.tonnageBands || []).filter((_: any, i: number) => i !== index) } } };
+    });
+  };
+
+  // TPO tonnage tiers - a flat premium per tonnage bracket, takes precedence over the flat
+  // TPO Rates by Usage Class figure below for commercial_goods/commercial_general_cartage.
+  const addTpoTonnageTier = (classId: string) => {
+    setActiveRates((prev: any) => {
+      const ttr = prev.tpoTonnageRates || {};
+      const existing = ttr[classId] || [];
+      const last = existing[existing.length - 1];
+      const newTier = { minTons: last ? last.maxTons : 0, maxTons: (last ? last.maxTons : 0) + 5, premium: last?.premium ?? 15000 };
+      return { ...prev, tpoTonnageRates: { ...ttr, [classId]: [...existing, newTier] } };
+    });
+  };
+
+  const updateTpoTonnageTier = (classId: string, index: number, field: string, value: any) => {
+    setActiveRates((prev: any) => {
+      const ttr = prev.tpoTonnageRates || {};
+      const tiers = (ttr[classId] || []).map((t: any, i: number) => (i === index ? { ...t, [field]: value } : t));
+      return { ...prev, tpoTonnageRates: { ...ttr, [classId]: tiers } };
+    });
+  };
+
+  const removeTpoTonnageTier = (classId: string, index: number) => {
+    setActiveRates((prev: any) => {
+      const ttr = prev.tpoTonnageRates || {};
+      return { ...prev, tpoTonnageRates: { ...ttr, [classId]: (ttr[classId] || []).filter((_: any, i: number) => i !== index) } };
     });
   };
 
@@ -323,7 +502,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
   // Built-in carriers that already ship with the platform (hardcoded quote engine + rate defaults).
   // Anything the admin adds through the Insurer Registry appends to this list rather than replacing it.
   const BUILT_IN_INSURERS = [
-    { id: "jubilee", tradingName: "Jubilee Insurance" },
+    { id: "jubilee", tradingName: "Jubilee Health Insurance" },
     { id: "icea", tradingName: "ICEA LION" },
     { id: "heritage", tradingName: "Heritage Insurance" },
     { id: "cic", tradingName: "CIC General Insurance" },
@@ -331,6 +510,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     { id: "stardiscover", tradingName: "Star Discover Insurance Limited" },
     { id: "britam", tradingName: "Britam Insurance" },
     { id: "aar", tradingName: "AAR Insurance (Kenya) Limited" },
+    { id: "apa", tradingName: "APA Insurance Limited" },
     { id: "oldmutual", tradingName: "Old Mutual General Insurance Kenya Limited" },
     { id: "geminia", tradingName: "Geminia Insurance" },
     { id: "mua", tradingName: "MUA Insurance" },
@@ -434,6 +614,19 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     ...profileOnlyInsurers,
     ...customInsurers.map((c) => ({ id: c.id, tradingName: c.tradingName || c.name }))
   ];
+
+  // The Database Rates Desk configures motor (sum-insured bands, TPO) and medical rates
+  // together per carrier - a Long-Term-only insurer (Liberty, Capex, Madison Life) has no
+  // General class authorisation for either, so letting staff pick one here would let a
+  // life-only carrier start appearing in live motor/medical quotes. Logo Manager and the
+  // Appetite Register aren't restricted - those apply regardless of which classes a carrier
+  // is licensed for.
+  const generalLicensedCarrierIds = new Set(
+    mockInsurers.filter((m) => (m.licensedGeneralClasses || []).length > 0).map((m) => m.id)
+  );
+  const ratesDeskCarrierOptions = allCarrierOptions.filter(
+    (ins) => !mockInsurers.some((m) => m.id === ins.id) || generalLicensedCarrierIds.has(ins.id)
+  );
 
   const fetchCustomInsurers = async () => {
     try {
@@ -575,7 +768,23 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
     },
     // Non-motor product lines (Domestic Package, Fire & Perils, Health/Medical) - empty
     // by default for insurers that haven't been configured with any yet.
-    otherLines: r.otherLines || {}
+    otherLines: r.otherLines || {},
+    // These three were previously omitted from this whitelist, so every reload (including the
+    // one triggered right after a successful save) silently stripped them from state - making a
+    // save look like it wiped the data, and a subsequent save actually did.
+    highExposureUnits: r.highExposureUnits || [],
+    tpoTonnageRates: r.tpoTonnageRates || {},
+    maxVehicleAgeComprehensive: r.maxVehicleAgeComprehensive,
+    // Per-class Comprehensive/TPO publish toggles (e.g. disable Directline Motor Private
+    // Comprehensive without touching its TPO or any other class) - keyed by vehicleUse.
+    classPublishStatus: r.classPublishStatus || {},
+    // Age-bracket-rated medical benefit-limit bands (Jubilee J-Care and similar) - empty by
+    // default, which falls back to medicalCalculator.ts's hardcoded schedule for that insurer.
+    medicalRateTable: r.medicalRateTable || { inpatientBands: [], outpatientBands: [] },
+    // Per-member rate grid (Principal/Spouse/Child, each priced by their own age band) - index
+    // aligned with medicalRateTable.inpatientBands, i.e. principal[i] is that tier's column.
+    // Absent/empty means this insurer still uses the family-size lookup above instead.
+    memberRateTable: r.memberRateTable || { principal: [], spouse: [], child: [], outpatient: [], maternity: [], dental: [], optical: [] }
   });
 
   // Fetch persisted rates from backend database
@@ -1116,7 +1325,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             <td className="p-3 font-mono font-bold text-red-600 text-xs">{claimKey}</td>
                             <td className="p-3 font-serif italic text-[#1A1A1A] text-xs">{clm.client || "David Kiprop"}</td>
                             <td className="p-3 text-xs">{clm.claimType || clm.type || "Motor Private Accident"}</td>
-                            <td className="p-3 text-xs">{clm.insurer || "Jubilee Insurance"}</td>
+                            <td className="p-3 text-xs">{clm.insurer || "Jubilee Health Insurance"}</td>
                             <td className="p-3 text-right">
                               <span className={`px-2 py-0.5 border text-[9px] font-bold uppercase tracking-wider rounded-none ${
                                 clm.status === "Submitted to insurer" ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-mono" : "border-amber-300 bg-amber-50 text-amber-800"
@@ -1152,7 +1361,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                       onChange={(e) => setSelectedInsurerId(e.target.value)}
                       className="w-full text-xs font-bold rounded-none border border-[#D8E2F0] bg-white p-2 focus:border-[#316EC9] focus:outline-none"
                     >
-                      {allCarrierOptions.map((ins) => (
+                      {ratesDeskCarrierOptions.map((ins) => (
                         <option key={ins.id} value={ins.id}>{ins.tradingName}</option>
                       ))}
                     </select>
@@ -1184,10 +1393,198 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                     </span>
                   </label>
 
+                  {/* Medical Rate Table (Age Bracket & Benefit Limit) - defined once, shared between
+                      two placements below: the wide main column for medical-only carriers (Jubilee)
+                      where it replaces the motor sections entirely, or the narrow side column for
+                      carriers licensed for both motor and medical (e.g. Heritage), where it sits
+                      alongside the motor riders/levies instead. */}
+                  {(() => {
+                    const medicalRateTableSection = !isMedicalLicensed ? null : (
+                      <div className="border-t border-[#D8E2F0] pt-3">
+                        <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
+                          Medical Rate Table (Age Bracket &amp; Benefit Limit)
+                        </h5>
+                        <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
+                          Real medical products (e.g. J-Care) are priced by two factors: the benefit limit band chosen (rows below, with a premium per family size) and the customer's age bracket, applied uniformly on top via the shared age-factor multiplier (0.90x for 18-29 up to 2.65x for 66+). Leave a table empty to fall back to this platform's default schedule for that class.
+                        </p>
+                        {(["inpatientBands", "outpatientBands"] as const).map((tableKey) => {
+                          const bands = activeRates.medicalRateTable?.[tableKey] || [];
+                          const label = tableKey === "inpatientBands" ? "Inpatient Limit Bands" : "Outpatient Limit Bands";
+                          return (
+                            <div key={tableKey} className="mb-3 border border-slate-100 p-2 bg-slate-50/50">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-bold text-slate-800 uppercase tracking-wider">{label}</span>
+                                <button type="button" onClick={() => addMedicalBand(tableKey)} className="text-[8px] font-bold text-[#316EC9] hover:text-[#142C54] flex items-center gap-0.5 uppercase cursor-pointer">
+                                  <PlusCircle className="h-2.5 w-2.5" /><span>Add Band</span>
+                                </button>
+                              </div>
+                              <div className="overflow-x-auto border border-slate-100 bg-white">
+                                <table className="w-full text-[9px]">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-[#8C887D] uppercase text-[7px]">
+                                      <th className="p-1 text-left font-bold">Band Label</th>
+                                      <th className="p-1 text-left font-bold">Max Limit (KES)</th>
+                                      <th className="p-1 text-left font-bold">Principal</th>
+                                      <th className="p-1 text-left font-bold">+1</th>
+                                      <th className="p-1 text-left font-bold">+2</th>
+                                      <th className="p-1 text-left font-bold">+3</th>
+                                      <th className="p-1 text-left font-bold">+4</th>
+                                      <th className="p-1 text-left font-bold">+5</th>
+                                      <th className="p-1 w-5"></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {bands.map((b: any, i: number) => (
+                                      <tr key={i} className="border-t border-slate-100">
+                                        <td className="p-0.5"><input type="text" value={b.label ?? ""} onChange={(e) => updateMedicalBand(tableKey, i, "label", e.target.value)} className="w-16 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={b.maxLimit ?? ""} onChange={(e) => updateMedicalBand(tableKey, i, "maxLimit", e.target.value === "" ? 0 : Number(e.target.value))} className="w-20 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        {[0, 1, 2, 3, 4, 5].map((familyIdx) => (
+                                          <td className="p-0.5" key={familyIdx}>
+                                            <input
+                                              type="number"
+                                              step="any"
+                                              min="0"
+                                              value={b.ratesByFamilySize?.[familyIdx] ?? ""}
+                                              onChange={(e) => updateMedicalBandFamilyRate(tableKey, i, familyIdx, e.target.value === "" ? 0 : Number(e.target.value))}
+                                              className="w-16 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                            />
+                                          </td>
+                                        ))}
+                                        <td className="p-0.5">
+                                          <button type="button" onClick={() => removeMedicalBand(tableKey, i)} className="text-red-500 hover:text-red-700 cursor-pointer">
+                                            <Trash2 className="h-3 w-3" />
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                    {bands.length === 0 && (
+                                      <tr>
+                                        <td colSpan={9} className="p-2 text-center text-[8px] text-[#8C887D] italic">No bands configured - using platform default schedule.</td>
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Per-member rate grid - real J-Care structure: Principal, Spouse and
+                            Outpatient are each rated by the member's own age; Child/Maternity/
+                            Dental/Optical are flat per tier. Columns follow the Inpatient Limit
+                            Bands above 1:1 - configure those first. When populated, this takes
+                            over pricing entirely for this insurer (see medicalCalculator.ts). */}
+                        {(() => {
+                          const tierLabels = (activeRates.medicalRateTable?.inpatientBands || []).map((b: any) => b.label || "?");
+
+                          const renderGrid = (title: string, field: "principal" | "spouse" | "outpatient", ageBands: { min: number; max: number }[]) => (
+                            <div className="mb-3 border border-slate-100 p-2 bg-slate-50/50">
+                              <span className="text-[9px] font-bold text-slate-800 uppercase tracking-wider block mb-1">{title}</span>
+                              <div className="overflow-x-auto border border-slate-100 bg-white">
+                                <table className="w-full text-[9px]">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-[#8C887D] uppercase text-[7px]">
+                                      <th className="p-1 text-left font-bold">Age Band</th>
+                                      {tierLabels.map((t: string, ti: number) => (<th key={ti} className="p-1 text-left font-bold">{t}</th>))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {ageBands.map((band, ageIdx) => (
+                                      <tr key={ageIdx} className="border-t border-slate-100">
+                                        <td className="p-1 text-[9px] font-bold text-slate-600 whitespace-nowrap">{band.min}-{band.max}</td>
+                                        {tierLabels.map((_: string, tierIdx: number) => (
+                                          <td className="p-0.5" key={tierIdx}>
+                                            <input
+                                              type="number"
+                                              step="any"
+                                              min="0"
+                                              value={activeRates.memberRateTable?.[field]?.[tierIdx]?.[ageIdx] ?? ""}
+                                              onChange={(e) => updateMemberGridRate(field, tierIdx, ageIdx, e.target.value === "" ? 0 : Number(e.target.value), ageBands.length)}
+                                              className="w-20 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                            />
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+
+                          const renderFlatRow = (title: string, field: "child" | "maternity" | "dental" | "optical") => (
+                            <div className="mb-3 border border-slate-100 p-2 bg-slate-50/50">
+                              <span className="text-[9px] font-bold text-slate-800 uppercase tracking-wider block mb-1">{title}</span>
+                              <div className="overflow-x-auto border border-slate-100 bg-white">
+                                <table className="w-full text-[9px]">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-[#8C887D] uppercase text-[7px]">
+                                      {tierLabels.map((t: string, ti: number) => (<th key={ti} className="p-1 text-left font-bold">{t}</th>))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      {tierLabels.map((_: string, tierIdx: number) => (
+                                        <td className="p-0.5" key={tierIdx}>
+                                          <input
+                                            type="number"
+                                            step="any"
+                                            min="0"
+                                            value={activeRates.memberRateTable?.[field]?.[tierIdx] ?? ""}
+                                            onChange={(e) => updateMemberFlatRate(field, tierIdx, e.target.value === "" ? 0 : Number(e.target.value))}
+                                            className="w-20 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                          />
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+
+                          return (
+                            <div className="mt-4 pt-3 border-t border-dashed border-[#D8E2F0]">
+                              <span className="text-[9px] font-extrabold uppercase text-[#142C54] tracking-wider block mb-1">Per-Member Age-Banded Rates (Optional)</span>
+                              <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
+                                For insurers whose real rate card prices each family member individually (e.g. Jubilee J-Care) rather than a single family-size lookup. Columns follow the Inpatient Limit Bands above 1:1 - populate those first. Principal/Spouse/Outpatient vary by the member's own age; Child/Maternity/Dental/Optical are flat per tier. Leave empty to keep using the family-size table above instead.
+                              </p>
+                              {tierLabels.length === 0 ? (
+                                <p className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1">Add at least one Inpatient Limit Band above first - this grid's columns follow those tiers.</p>
+                              ) : (
+                                <>
+                                  {renderGrid("Principal (by own age)", "principal", activeRates.memberRateTable?.ageBands?.length ? activeRates.memberRateTable.ageBands : MEMBER_AGE_BANDS)}
+                                  {renderGrid("Spouse (by own age)", "spouse", activeRates.memberRateTable?.ageBands?.length ? activeRates.memberRateTable.ageBands : MEMBER_AGE_BANDS)}
+                                  {renderFlatRow("Child (flat, any age)", "child")}
+                                  {renderGrid("Outpatient Rider (per person, by own age)", "outpatient", activeRates.memberRateTable?.outpatientAgeBands?.length ? activeRates.memberRateTable.outpatientAgeBands : OUTPATIENT_AGE_BANDS)}
+                                  {renderFlatRow("Maternity (per principal/spouse)", "maternity")}
+                                  {renderFlatRow("Dental (per person)", "dental")}
+                                  {renderFlatRow("Optical (per person)", "optical")}
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+
+                    return (
                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-                    {/* MAIN COLUMN: rate bands by motor class, vehicle eligibility, TPO */}
+                    {/* MAIN COLUMN: rate bands by motor class, vehicle eligibility, TPO - or, for a
+                        carrier with no motor license (e.g. Jubilee Health), the Medical Rate Table
+                        takes this slot instead so the space isn't dominated by a "not licensed" notice. */}
                     <div className="xl:col-span-2 space-y-5">
+                    {!isMotorLicensed ? (
+                      isMedicalLicensed ? (
+                        <>{medicalRateTableSection}</>
+                      ) : (
+                        <div className="border border-slate-200 bg-slate-50 p-4 text-[11px] text-slate-600 leading-relaxed">
+                          <strong className="block uppercase tracking-wider text-[10px] mb-1 text-[#142C54]">Not Licensed for Motor</strong>
+                          {ratesDeskCarrierOptions.find((c) => c.id === selectedInsurerId)?.tradingName || selectedInsurerId} holds no General class 07/08 (Motor Private/Commercial) authorisation, so sum-insured bands, vehicle eligibility, and TPO flat rates aren't configurable for this carrier. Use the Other Product Lines editor below for this carrier's actual licensed classes.
+                        </div>
+                      )
+                    ) : (<>
 
                       {/* SECTION 1: Sum Insured Rate Bands by Motor Class - tabular editor */}
                       {(() => {
@@ -1198,7 +1595,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           Sum Insured Rate Bands by Motor Class
                         </h5>
                         <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
-                          Primary rate lookup used to generate comprehensive quotes for this class, sourced from underwriter binder terms. Switch class, then add, remove or resize ranges and adjust each band's rate.
+                          Primary rate lookup used to generate comprehensive quotes for this class, sourced from underwriter binder terms. Switch class, then add, remove or resize ranges and adjust each band's rate. "EP Free"/"PVT Free" bundle that rider in at no extra charge for vehicles whose sum insured falls in that specific range - some underwriters (e.g. Geminia) only waive these below a threshold and charge for them above it.
                         </p>
 
                         {/* Class tabs */}
@@ -1219,11 +1616,52 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           ))}
                         </div>
 
-                        {/* Min premium for the selected class */}
+                        {/* Per-class publish toggles - unlike the insurer-wide "Published for Public
+                            Quoting" switch above (which hides every class at once), these let staff
+                            disable just Comprehensive or just TPO for the class selected above, e.g.
+                            pausing Directline Motor Private Comprehensive without touching its TPO
+                            quotes or any other class. Defaults to published (true) when unset. */}
+                        <div className="flex flex-wrap gap-3 mb-3">
+                          {(["comprehensive", "tpo"] as const).map((coverKey) => {
+                            const isClassPublished = activeRates.classPublishStatus?.[selectedRateClass]?.[coverKey] !== false;
+                            return (
+                              <label
+                                key={coverKey}
+                                className={`flex items-center space-x-2 border p-2 cursor-pointer transition-colors ${
+                                  isClassPublished ? "border-slate-200 bg-white" : "border-amber-300 bg-amber-50"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isClassPublished}
+                                  onChange={(e) =>
+                                    setActiveRates((prev: any) => {
+                                      const cps = prev.classPublishStatus || {};
+                                      const cls = cps[selectedRateClass] || {};
+                                      return { ...prev, classPublishStatus: { ...cps, [selectedRateClass]: { ...cls, [coverKey]: e.target.checked } } };
+                                    })
+                                  }
+                                  className="h-3.5 w-3.5 accent-[#316EC9] shrink-0"
+                                />
+                                <span className="text-[9px] leading-tight">
+                                  <span className={`block font-bold uppercase tracking-wider ${isClassPublished ? "text-slate-700" : "text-amber-700"}`}>
+                                    {coverKey === "comprehensive" ? "Comprehensive" : "TPO"} Published
+                                  </span>
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+
+                        {/* Fallback min premium for the selected class - only takes effect for a
+                            sum-insured range below that hasn't been given its own Min Premium.
+                            Underwriters typically charge a different minimum per bracket (e.g.
+                            Heritage: Kshs 50,000 min under 1M, Kshs 87,500 min above 3M) - set that
+                            per-range in the table below rather than relying on one flat figure here. */}
                         <div className="max-w-xs mb-3">
                           {selectedRateClass === "private" ? (
                             <>
-                              <label className="text-[8px] text-[#8C887D] uppercase block">Min Premium - All Body Types (KES)</label>
+                              <label className="text-[8px] text-[#8C887D] uppercase block">Fallback Min Premium - All Ranges (KES)</label>
                               <input
                                 type="number"
                                 step="any"
@@ -1236,7 +1674,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           ) : (
                             <>
                               <label className="text-[8px] text-[#8C887D] uppercase block">
-                                Min Premium - {RATE_CLASSES.find((c) => c.id === selectedRateClass)?.label} (KES)
+                                Fallback Min Premium - {RATE_CLASSES.find((c) => c.id === selectedRateClass)?.label} (KES)
                               </label>
                               <input
                                 type="number"
@@ -1268,6 +1706,9 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                 <th className="p-1.5 text-left font-bold">Min SI (KES)</th>
                                 <th className="p-1.5 text-left font-bold">Max SI (KES)</th>
                                 <th className="p-1.5 text-left font-bold">Rate (%)</th>
+                                <th className="p-1.5 text-left font-bold">Min Premium (KES)</th>
+                                <th className="p-1.5 text-center font-bold" title="Excess Protector is bundled free for vehicles in this sum-insured range">EP Free</th>
+                                <th className="p-1.5 text-center font-bold" title="PVT is bundled free for vehicles in this sum-insured range">PVT Free</th>
                                 <th className="p-1.5 w-6"></th>
                               </tr>
                             </thead>
@@ -1309,6 +1750,38 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                                       className="w-16 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
                                     />
                                   </td>
+                                  <td className="p-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      value={band.minPremium || ""}
+                                      placeholder={String(
+                                        selectedRateClass === "private"
+                                          ? activeRates.vehicleTypes?.[0]?.minPremium || ""
+                                          : getClassMinPremium(activeRates, selectedRateClass) || ""
+                                      )}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "minPremium", e.target.value === "" ? undefined : Number(e.target.value))}
+                                      className="w-24 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                      title="Leave blank to use the fallback min premium above"
+                                    />
+                                  </td>
+                                  <td className="p-1 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!band.isExcessProtectorInclusive}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "isExcessProtectorInclusive", e.target.checked)}
+                                      className="h-3.5 w-3.5 rounded-none border-slate-300 text-[#316EC9] focus:ring-[#316EC9] cursor-pointer"
+                                    />
+                                  </td>
+                                  <td className="p-1 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!band.isPvtInclusive}
+                                      onChange={(e) => updateClassBand(selectedRateClass, index, "isPvtInclusive", e.target.checked)}
+                                      className="h-3.5 w-3.5 rounded-none border-slate-300 text-[#316EC9] focus:ring-[#316EC9] cursor-pointer"
+                                    />
+                                  </td>
                                   <td className="p-1 text-center">
                                     <button
                                       type="button"
@@ -1335,18 +1808,15 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                         );
                       })()}
 
-                      {/* SECTION 2: Vehicle Type Eligibility & legacy body-type rates */}
+                      {/* SECTION 2: Max Vehicle Age - a global per-insurer setting that applies to
+                          comprehensive quoting across every class, so it stays visible on every tab
+                          (unlike the body-type eligibility grid below, which is Private-only). */}
                       <div className="border-t border-[#D8E2F0] pt-3">
                         <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
-                          Vehicle Type Eligibility (Motor Private)
+                          Max Vehicle Age for Comprehensive
                         </h5>
-                        <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
-                          Controls which body types qualify for comprehensive cover. Leave "Legacy Rate" at 0 for insurers (like MUA/Cannon) that rate purely by sum insured band above - a non-zero legacy rate here overrides the band lookup for that body type only.
-                        </p>
-
-                        {/* Max Vehicle Age for Comprehensive - per-insurer, defaults to 15 years when unset */}
-                        <div className="max-w-xs mb-3 border border-slate-100 p-2 bg-slate-50/50">
-                          <label className="text-[8px] text-[#8C887D] uppercase block">Max Vehicle Age for Comprehensive (Years)</label>
+                        <div className="max-w-xs border border-slate-100 p-2 bg-slate-50/50">
+                          <label className="text-[8px] text-[#8C887D] uppercase block">Years (All Classes)</label>
                           <input
                             type="number"
                             step="any"
@@ -1361,6 +1831,19 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                             Vehicles older than this are declined for automated comprehensive quoting with this underwriter. Leave blank to use the platform default of 15 years.
                           </p>
                         </div>
+                      </div>
+
+                      {/* SECTION 2b: Vehicle Type Eligibility & legacy body-type rates - Private
+                          only, since body-type eligibility isn't a concept this schema applies to
+                          commercial/PSV/motorcycle/tricycle classes. */}
+                      {selectedRateClass === "private" && (
+                      <div className="border-t border-[#D8E2F0] pt-3">
+                        <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
+                          Vehicle Type Eligibility (Motor Private)
+                        </h5>
+                        <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
+                          Controls which body types qualify for comprehensive cover. Leave "Legacy Rate" at 0 for insurers (like MUA/Cannon) that rate purely by sum insured band above - a non-zero legacy rate here overrides the band lookup for that body type only.
+                        </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {activeRates.vehicleTypes?.map((vt: any) => (
                             <div key={vt.typeId} className="border border-slate-100 p-2 space-y-1.5 bg-slate-50/50">
@@ -1407,47 +1890,254 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           ))}
                         </div>
                       </div>
+                      )}
 
-                      {/* SECTION 3: TPO Flat Rates Matrix */}
+                      {/* SECTION 2c: High-Exposure Units - named make/model overrides */}
                       <div className="border-t border-[#D8E2F0] pt-3">
                         <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
-                          TPO Flat Rates by Usage Class
+                          High-Exposure Units
                         </h5>
                         <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
-                          New non-private classes are marked as Provisional (Subject to Underwriter Confirmation).
+                          Specific make/model combinations this underwriter rates differently from their standard sum-insured schedule (e.g. certain high-theft or high-claims models). "All Models" applies to every model of that Make. Min/Max SI are optional - leave blank to apply at any value. Matched case-insensitively against the customer's selection and takes precedence over every other rate on this page. Each unit is scoped to the Motor Class selected on its row - it does NOT apply across every class automatically.
                         </p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {[
-                            { id: "private", label: "Private Cars", isProvisional: false },
-                            { id: "commercial_goods", label: "Commercial Goods", isProvisional: true },
-                            { id: "psv_chaufeur", label: "PSV Chauffeur", isProvisional: true },
-                            { id: "motorcycle", label: "Motorcycle", isProvisional: true },
-                            { id: "tricycle", label: "Tricycle", isProvisional: true },
-                            { id: "commercial_general_cartage", label: "General Cartage", isProvisional: true },
-                            { id: "institutional", label: "Institutional", isProvisional: true }
-                          ].map((u) => (
-                            <div key={u.id} className="space-y-1">
-                              <label className="text-[8px] uppercase tracking-wider text-slate-700 block leading-none">
-                                {u.label} {u.isProvisional && <span className="text-[8px] text-amber-600 font-bold font-sans">(Est)</span>}
-                              </label>
-                              <input
-                                type="number"
-                                step="any"
-                                min="1000"
-                                value={(activeRates.tpoRates && activeRates.tpoRates[u.id]) || ""}
-                                onChange={(e) => updateTpoRate(u.id, e.target.value === "" ? 0 : Number(e.target.value))}
-                                className="w-full text-[11px] font-mono font-bold p-1 border border-[#D8E2F0] bg-white focus:outline-none focus:border-[#316EC9]"
-                              />
-                            </div>
-                          ))}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[9px] text-[#8C887D]">{(activeRates.highExposureUnits || []).length} unit(s) configured</span>
+                          <button
+                            type="button"
+                            onClick={addHighExposureUnit}
+                            className="text-[9px] font-bold text-[#316EC9] hover:text-[#142C54] flex items-center gap-0.5 uppercase tracking-wider cursor-pointer"
+                          >
+                            <PlusCircle className="h-3 w-3" />
+                            <span>Add Unit</span>
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto border border-slate-100">
+                          <table className="w-full text-[10px]">
+                            <thead>
+                              <tr className="bg-slate-50 text-[#8C887D] uppercase tracking-wider text-[8px]">
+                                <th className="p-1.5 text-left font-bold">Motor Class</th>
+                                <th className="p-1.5 text-left font-bold">Make</th>
+                                <th className="p-1.5 text-left font-bold">Model</th>
+                                <th className="p-1.5 text-left font-bold">Rate (%)</th>
+                                <th className="p-1.5 text-left font-bold">Min Premium (KES)</th>
+                                <th className="p-1.5 text-left font-bold">Min SI (KES)</th>
+                                <th className="p-1.5 text-left font-bold">Max SI (KES)</th>
+                                <th className="p-1.5 w-6"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(activeRates.highExposureUnits || []).map((unit: any, index: number) => (
+                                <tr key={index} className="border-t border-slate-100">
+                                  <td className="p-1">
+                                    <select
+                                      value={unit.vehicleClass || "private"}
+                                      onChange={(e) => updateHighExposureUnit(index, "vehicleClass", e.target.value)}
+                                      className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    >
+                                      {RATE_CLASSES.map((cls) => (
+                                        <option key={cls.id} value={cls.id}>{cls.label}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="p-1">
+                                    <select
+                                      value={unit.make || ""}
+                                      onChange={(e) => updateHighExposureUnit(index, "make", e.target.value)}
+                                      className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    >
+                                      <option value="">-- Select Make --</option>
+                                      {VEHICLE_MAKES.map((make) => (
+                                        <option key={make} value={make}>{make}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="p-1">
+                                    <select
+                                      value={unit.model || ""}
+                                      disabled={!unit.make}
+                                      onChange={(e) => updateHighExposureUnit(index, "model", e.target.value)}
+                                      className="w-full text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                                    >
+                                      <option value="">All Models</option>
+                                      {(VEHICLE_MAKES_MODELS[unit.make] || []).map((model) => (
+                                        <option key={model} value={model}>{model}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="p-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      max="15"
+                                      value={unit.rate || ""}
+                                      onChange={(e) => updateHighExposureUnit(index, "rate", e.target.value === "" ? 0 : Number(e.target.value))}
+                                      className="w-16 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    />
+                                  </td>
+                                  <td className="p-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      value={unit.minPremium || ""}
+                                      onChange={(e) => updateHighExposureUnit(index, "minPremium", e.target.value === "" ? 0 : Number(e.target.value))}
+                                      className="w-24 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    />
+                                  </td>
+                                  <td className="p-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      placeholder="Any"
+                                      value={unit.minValue || ""}
+                                      onChange={(e) => updateHighExposureUnit(index, "minValue", e.target.value === "" ? undefined : Number(e.target.value))}
+                                      className="w-24 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    />
+                                  </td>
+                                  <td className="p-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      min="0"
+                                      placeholder="Any"
+                                      value={unit.maxValue || ""}
+                                      onChange={(e) => updateHighExposureUnit(index, "maxValue", e.target.value === "" ? undefined : Number(e.target.value))}
+                                      className="w-24 text-[10px] font-mono font-bold p-1 border border-slate-200 bg-white"
+                                    />
+                                  </td>
+                                  <td className="p-1 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => removeHighExposureUnit(index)}
+                                      className="text-red-500 hover:text-red-700 cursor-pointer"
+                                      title="Remove unit"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
+
+                      {/* SECTION 3: TPO Flat Rate - scoped to the class tab selected in Section 1 above,
+                          instead of showing every class's TPO rate at once regardless of tab. */}
+                      <div className="border-t border-[#D8E2F0] pt-3">
+                        <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
+                          TPO Flat Rate - {RATE_CLASSES.find((c) => c.id === selectedRateClass)?.label}
+                        </h5>
+                        <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
+                          {selectedRateClass === "private"
+                            ? "Standard third-party-only premium for this class."
+                            : "Provisional (Subject to Underwriter Confirmation) unless separately verified against binder terms."}
+                        </p>
+                        <div className="max-w-xs space-y-1">
+                          <label className="text-[8px] uppercase tracking-wider text-slate-700 block leading-none">
+                            TPO Premium (KES)
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            min="1000"
+                            value={(activeRates.tpoRates && activeRates.tpoRates[selectedRateClass]) || ""}
+                            onChange={(e) => updateTpoRate(selectedRateClass, e.target.value === "" ? 0 : Number(e.target.value))}
+                            className="w-full text-[11px] font-mono font-bold p-1 border border-[#D8E2F0] bg-white focus:outline-none focus:border-[#316EC9]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* SECTION 3b: Tonnage-Tiered Rates - only meaningful for Commercial Own Goods /
+                          General Cartage, and now scoped to whichever of those two is the active tab
+                          (previously both classes' editors rendered together under every tab). */}
+                      {(selectedRateClass === "commercial_goods" || selectedRateClass === "commercial_general_cartage") && (() => {
+                        const classId = selectedRateClass;
+                        const classLabel = RATE_CLASSES.find((c) => c.id === classId)?.label || classId;
+                        const tonnageBands = activeRates.commercialRates?.[classId]?.tonnageBands || [];
+                        const tpoTiers = activeRates.tpoTonnageRates?.[classId] || [];
+                        return (
+                      <div className="border-t border-[#D8E2F0] pt-3">
+                        <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
+                          Tonnage-Tiered Rates - {classLabel}
+                        </h5>
+                        <p className="text-[9px] text-[#8C887D] leading-tight mb-2">
+                          Many underwriters price this class by tonnage bracket (e.g. up to 3T, 3-8T, 8-20T) rather than value alone. When configured here and the customer supplies a tonnage, these take precedence over the sum-insured bands and flat TPO rate above.
+                        </p>
+                            <div className="mb-3 border border-slate-100 p-2 bg-slate-50/50">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[8px] text-[#8C887D] uppercase">Comprehensive - by tonnage</span>
+                                <button type="button" onClick={() => addTonnageBand(classId)} className="text-[8px] font-bold text-[#316EC9] hover:text-[#142C54] flex items-center gap-0.5 uppercase cursor-pointer">
+                                  <PlusCircle className="h-2.5 w-2.5" /><span>Add Bracket</span>
+                                </button>
+                              </div>
+                              <div className="overflow-x-auto border border-slate-100 bg-white mb-2">
+                                <table className="w-full text-[9px]">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-[#8C887D] uppercase text-[7px]">
+                                      <th className="p-1 text-left font-bold">Min Tons</th>
+                                      <th className="p-1 text-left font-bold">Max Tons</th>
+                                      <th className="p-1 text-left font-bold">Rate (%)</th>
+                                      <th className="p-1 text-left font-bold">Min Premium</th>
+                                      <th className="p-1 w-5"></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {tonnageBands.map((b: any, i: number) => (
+                                      <tr key={i} className="border-t border-slate-100">
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={b.minTons ?? ""} onChange={(e) => updateTonnageBand(classId, i, "minTons", e.target.value === "" ? 0 : Number(e.target.value))} className="w-14 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={b.maxTons ?? ""} onChange={(e) => updateTonnageBand(classId, i, "maxTons", e.target.value === "" ? 0 : Number(e.target.value))} className="w-14 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" max="15" value={b.rate ?? ""} onChange={(e) => updateTonnageBand(classId, i, "rate", e.target.value === "" ? 0 : Number(e.target.value))} className="w-14 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={b.minPremium ?? ""} onChange={(e) => updateTonnageBand(classId, i, "minPremium", e.target.value === "" ? 0 : Number(e.target.value))} className="w-20 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5 text-center"><button type="button" onClick={() => removeTonnageBand(classId, i)} className="text-red-500 hover:text-red-700 cursor-pointer"><Trash2 className="h-3 w-3" /></button></td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[8px] text-[#8C887D] uppercase">TPO - by tonnage</span>
+                                <button type="button" onClick={() => addTpoTonnageTier(classId)} className="text-[8px] font-bold text-[#316EC9] hover:text-[#142C54] flex items-center gap-0.5 uppercase cursor-pointer">
+                                  <PlusCircle className="h-2.5 w-2.5" /><span>Add Bracket</span>
+                                </button>
+                              </div>
+                              <div className="overflow-x-auto border border-slate-100 bg-white">
+                                <table className="w-full text-[9px]">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-[#8C887D] uppercase text-[7px]">
+                                      <th className="p-1 text-left font-bold">Min Tons</th>
+                                      <th className="p-1 text-left font-bold">Max Tons</th>
+                                      <th className="p-1 text-left font-bold">TPO Premium</th>
+                                      <th className="p-1 w-5"></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {tpoTiers.map((t: any, i: number) => (
+                                      <tr key={i} className="border-t border-slate-100">
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={t.minTons ?? ""} onChange={(e) => updateTpoTonnageTier(classId, i, "minTons", e.target.value === "" ? 0 : Number(e.target.value))} className="w-14 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={t.maxTons ?? ""} onChange={(e) => updateTpoTonnageTier(classId, i, "maxTons", e.target.value === "" ? 0 : Number(e.target.value))} className="w-14 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5"><input type="number" step="any" min="0" value={t.premium ?? ""} onChange={(e) => updateTpoTonnageTier(classId, i, "premium", e.target.value === "" ? 0 : Number(e.target.value))} className="w-20 text-[9px] font-mono font-bold p-1 border border-slate-200 bg-white" /></td>
+                                        <td className="p-0.5 text-center"><button type="button" onClick={() => removeTpoTonnageTier(classId, i)} className="text-red-500 hover:text-red-700 cursor-pointer"><Trash2 className="h-3 w-3" /></button></td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                      </div>
+                        );
+                      })()}
+                    </>)}
                     </div>
 
                     {/* SIDE COLUMN: comprehensive riders, medical base rates, levies */}
                     <div className="space-y-5">
 
-                      {/* SECTION 4: Comprehensive Motor Riders */}
+                      {/* SECTION 4: Comprehensive Motor Riders - only meaningful for a motor-licensed carrier */}
+                      {isMotorLicensed && (
                       <div className="border-t border-[#D8E2F0] pt-3">
                         <h5 className="text-[10px] font-extrabold uppercase text-[#142C54] tracking-wider mb-1">
                           Comprehensive Motor Riders
@@ -1674,6 +2364,7 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
 
                         </div>
                       </div>
+                      )}
 
                       {/* SECTION 5: Medical Plan Base Rates */}
                       <div className="border-t border-[#D8E2F0] pt-3">
@@ -1719,6 +2410,12 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
                           </div>
                         </div>
                       </div>
+
+                      {/* SECTION 5b: Medical Rate Table - only shown here (side column) when the
+                          carrier is ALSO motor-licensed; medical-only carriers get it in the wide
+                          main column instead (see medicalRateTableSection above), replacing the
+                          "not licensed for motor" slot rather than sitting twice on the page. */}
+                      {isMotorLicensed && medicalRateTableSection}
 
                       {/* SECTION 6: Levies */}
                       <div className="border-t border-[#D8E2F0] pt-3">
@@ -1767,6 +2464,8 @@ export default function AdminPortalView({ setActiveTab, authenticatedStaff, onLo
 
                     </div>
                   </div>
+                    );
+                  })()}
 
                   {/* OTHER PRODUCT LINES: non-motor rate configuration per insurer */}
                   <div className="border-t border-[#D8E2F0] pt-4">

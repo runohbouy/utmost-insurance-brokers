@@ -1,5 +1,524 @@
 [
   {
+    "id": "log-1786702390907-397",
+    "timestamp": "2026-08-14T10:13:10.907Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "oldmutual",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-oldmutual-7",
+      "newVersionId": "rate-ver-oldmutual-8",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786627755902-929",
+    "timestamp": "2026-08-13T13:29:15.902Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "ncba",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-ncba-2",
+      "newVersionId": "rate-ver-ncba-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786612125511-529",
+    "timestamp": "2026-08-13T09:08:45.511Z",
+    "action": "OTHER_LINE_QUOTE_CALCULATED",
+    "entityType": "other_line_quote",
+    "entityId": "oline-1786612125509-322",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "category": "miscellaneous",
+      "subType": "pet_insurance",
+      "insurerId": "apa",
+      "referenceNumber": "OL-MIS-1786612125509",
+      "status": "quoted",
+      "premium": 7500
+    }
+  },
+  {
+    "id": "log-1786612116291-715",
+    "timestamp": "2026-08-13T09:08:36.291Z",
+    "action": "OTHER_LINE_QUOTE_SUBMITTED",
+    "entityType": "other_line_quote",
+    "entityId": "oline-1786612116287-405",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "category": "investment",
+      "subType": "education_plan",
+      "insurerId": "oldmutual",
+      "referenceNumber": "OL-INV-1786612116287",
+      "status": "pending_underwriter_review",
+      "premium": null
+    }
+  },
+  {
+    "id": "log-1786612115849-620",
+    "timestamp": "2026-08-13T09:08:35.849Z",
+    "action": "OTHER_LINE_QUOTE_SUBMITTED",
+    "entityType": "other_line_quote",
+    "entityId": "oline-1786612115846-755",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "category": "aviation",
+      "subType": "aircraft_hull_liability",
+      "insurerId": "kenindia",
+      "referenceNumber": "OL-AVI-1786612115846",
+      "status": "pending_underwriter_review",
+      "premium": null
+    }
+  },
+  {
+    "id": "log-1786612101272-880",
+    "timestamp": "2026-08-13T09:08:21.272Z",
+    "action": "OTHER_LINE_QUOTE_SUBMITTED",
+    "entityType": "other_line_quote",
+    "entityId": "oline-1786612101269-116",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "category": "life_assurance",
+      "subType": "last_expense",
+      "insurerId": "oldmutual",
+      "referenceNumber": "OL-LIF-1786612101269",
+      "status": "pending_underwriter_review",
+      "premium": null
+    }
+  },
+  {
+    "id": "log-1786609810299-954",
+    "timestamp": "2026-08-13T08:30:10.299Z",
+    "action": "OTHER_LINE_QUOTE_CALCULATED",
+    "entityType": "other_line_quote",
+    "entityId": "oline-1786609810295-940",
+    "actorId": "customer",
+    "actorType": "customer",
+    "details": {
+      "category": "miscellaneous",
+      "subType": "pet_insurance",
+      "insurerId": "apa",
+      "referenceNumber": "OL-MIS-1786609810295",
+      "status": "quoted",
+      "premium": 10000
+    }
+  },
+  {
+    "id": "log-1786527647829-290",
+    "timestamp": "2026-08-12T09:40:47.829Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-jubilee-7",
+      "newVersionId": "rate-ver-jubilee-8",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786527468478-503",
+    "timestamp": "2026-08-12T09:37:48.478Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786527468473-261",
+    "timestamp": "2026-08-12T09:37:48.473Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786527450492-214",
+    "timestamp": "2026-08-12T09:37:30.492Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786527450485-447",
+    "timestamp": "2026-08-12T09:37:30.485Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786524048109-656",
+    "timestamp": "2026-08-12T08:40:48.109Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786524048104-573",
+    "timestamp": "2026-08-12T08:40:48.104Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786523590591-93",
+    "timestamp": "2026-08-12T08:33:10.591Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786523590587-960",
+    "timestamp": "2026-08-12T08:33:10.587Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786523411310-292",
+    "timestamp": "2026-08-12T08:30:11.310Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786523411307-719",
+    "timestamp": "2026-08-12T08:30:11.307Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786523071587-672",
+    "timestamp": "2026-08-12T08:24:31.587Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "jubilee",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-jubilee-5",
+      "newVersionId": "rate-ver-jubilee-6",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786522709398-695",
+    "timestamp": "2026-08-12T08:18:29.398Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522709377-329",
+    "timestamp": "2026-08-12T08:18:29.377Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522687365-396",
+    "timestamp": "2026-08-12T08:18:07.365Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522687356-186",
+    "timestamp": "2026-08-12T08:18:07.356Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522575304-133",
+    "timestamp": "2026-08-12T08:16:15.304Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522575299-988",
+    "timestamp": "2026-08-12T08:16:15.299Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522421989-241",
+    "timestamp": "2026-08-12T08:13:41.989Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522394971-817",
+    "timestamp": "2026-08-12T08:13:14.971Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "apa",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'apa' was missing. Using hardcoded defaults.",
+      "insurerId": "apa",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786522394965-660",
+    "timestamp": "2026-08-12T08:13:14.965Z",
+    "action": "RATE_FALLBACK_USED",
+    "entityType": "rates",
+    "entityId": "aar",
+    "actorId": "system",
+    "actorType": "system",
+    "details": {
+      "reason": "Active rates config for medical insurer 'aar' was missing. Using hardcoded defaults.",
+      "insurerId": "aar",
+      "category": "medical"
+    }
+  },
+  {
+    "id": "log-1786521040321-679",
+    "timestamp": "2026-08-12T07:50:40.321Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "heritage",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-heritage-3",
+      "newVersionId": "rate-ver-heritage-4",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786520665254-526",
+    "timestamp": "2026-08-12T07:44:25.254Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "heritage",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-heritage-2",
+      "newVersionId": "rate-ver-heritage-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786360109138-275",
+    "timestamp": "2026-08-10T11:08:29.138Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "heritage",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-heritage-2",
+      "newVersionId": "rate-ver-heritage-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786359997739-695",
+    "timestamp": "2026-08-10T11:06:37.739Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "icea",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-icea-3",
+      "newVersionId": "rate-ver-icea-4",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786359981095-645",
+    "timestamp": "2026-08-10T11:06:21.095Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "icea",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-icea-2",
+      "newVersionId": "rate-ver-icea-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786359903880-221",
+    "timestamp": "2026-08-10T11:05:03.881Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "cic",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-cic-initial",
+      "newVersionId": "rate-ver-cic-2",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786359874312-898",
+    "timestamp": "2026-08-10T11:04:34.312Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "directline",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-directline-1",
+      "newVersionId": "rate-ver-directline-2",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
+    "id": "log-1786021342566-291",
+    "timestamp": "2026-08-06T13:02:22.566Z",
+    "action": "RATE_TABLE_UPDATED",
+    "entityType": "rates",
+    "entityId": "mua",
+    "actorId": "staff-1",
+    "actorType": "staff",
+    "details": {
+      "oldVersionId": "rate-ver-mua-2",
+      "newVersionId": "rate-ver-mua-3",
+      "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+    }
+  },
+  {
     "id": "log-1784548600000-101",
     "timestamp": "2026-07-20T23:16:40.000Z",
     "action": "RATE_TABLE_DEACTIVATED",

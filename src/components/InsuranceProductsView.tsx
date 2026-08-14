@@ -249,60 +249,65 @@ export default function InsuranceProductsView({
           </div>
         )}
 
-        {/* Results list */}
-        <div>
-          <h2 className="text-xs uppercase tracking-[0.2em] font-bold text-[#142C54] border-b border-[#D8E2F0] pb-2 mb-6">
-            {searchQuery.trim() !== "" || filterCategory !== "all" ? `Search Match Placements (${filteredProducts.length})` : "All Placements catalog"}
-          </h2>
-          
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map(prod => (
-                <div 
-                  key={prod.id}
-                  onClick={() => onSelectProduct(prod.id)}
-                  className="bg-white border border-[#D8E2F0] hover:border-[#142C54] p-5 cursor-pointer flex flex-col justify-between transition-all"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">{prod.icon}</span>
-                      <span className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 ${
-                        prod.quotationMethod === "Instant Indicative Quote" 
-                          ? "bg-green-100 text-green-800" 
-                          : prod.quotationMethod === "Guided Online Quote" 
-                          ? "bg-blue-100 text-blue-800" 
-                          : "bg-amber-100 text-amber-800"
-                      }`}>
-                        {prod.quotationMethod}
-                      </span>
+        {/* Results list - only rendered for an active search or category filter. With
+            neither active, "Browse Categories" above (each card linking to its own
+            "Explore Category Page") already covers discovery; dumping every active
+            product again here made the page roughly double its necessary length. */}
+        {(searchQuery.trim() !== "" || filterCategory !== "all") && (
+          <div>
+            <h2 className="text-xs uppercase tracking-[0.2em] font-bold text-[#142C54] border-b border-[#D8E2F0] pb-2 mb-6">
+              Search Match Placements ({filteredProducts.length})
+            </h2>
+
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProducts.map(prod => (
+                  <div
+                    key={prod.id}
+                    onClick={() => onSelectProduct(prod.id)}
+                    className="bg-white border border-[#D8E2F0] hover:border-[#142C54] p-5 cursor-pointer flex flex-col justify-between transition-all"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">{prod.icon}</span>
+                        <span className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 ${
+                          prod.quotationMethod === "Instant Indicative Quote"
+                            ? "bg-green-100 text-green-800"
+                            : prod.quotationMethod === "Guided Online Quote"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}>
+                          {prod.quotationMethod}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xs font-mono font-bold text-[#142C54]">{prod.name}</h3>
+                      <p className="text-[11px] text-[#8C887D] leading-relaxed line-clamp-3">
+                        {prod.shortDesc}
+                      </p>
                     </div>
 
-                    <h3 className="text-xs font-mono font-bold text-[#142C54]">{prod.name}</h3>
-                    <p className="text-[11px] text-[#8C887D] leading-relaxed line-clamp-3">
-                      {prod.shortDesc}
-                    </p>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-[#316EC9] font-bold uppercase tracking-wider">
+                      <span>Explore Coverages</span>
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                    </div>
                   </div>
-
-                  <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-[#316EC9] font-bold uppercase tracking-wider">
-                    <span>Explore Coverages</span>
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-white border border-[#D8E2F0]">
-              <ShieldAlert className="h-10 w-10 text-[#8C887D] mx-auto mb-2" />
-              <p className="text-xs text-[#8C887D]">We couldn't resolve any active items matching current parameters.</p>
-              <button
-                onClick={() => { setSearchQuery(""); setFilterCategory("all"); }}
-                className="mt-4 bg-[#142C54] text-white px-4 py-2 text-xs font-bold uppercase tracking-wider"
-              >
-                Clear Search filters
-              </button>
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white border border-[#D8E2F0]">
+                <ShieldAlert className="h-10 w-10 text-[#8C887D] mx-auto mb-2" />
+                <p className="text-xs text-[#8C887D]">We couldn't resolve any active items matching current parameters.</p>
+                <button
+                  onClick={() => { setSearchQuery(""); setFilterCategory("all"); }}
+                  className="mt-4 bg-[#142C54] text-white px-4 py-2 text-xs font-bold uppercase tracking-wider"
+                >
+                  Clear Search filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

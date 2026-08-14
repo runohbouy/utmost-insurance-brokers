@@ -3,12 +3,12 @@ import path from "path";
 import dotenv from "dotenv";
 import fs from "fs";
 import crypto from "crypto";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import nodemailer from "nodemailer";
 import { calculateDynamicMedicalQuotes } from "./src/utils/medicalCalculator";
 import { mockInsurers } from "./src/data/mockInsurers";
 import { EXTRA_LICENSED_CLASSES } from "./src/data/extraLicensedClasses";
+import { OTHER_LINE_CATEGORIES } from "./src/data/otherLineCategories";
 
 // Load environment variables
 dotenv.config();
@@ -470,6 +470,8 @@ function getActiveRatesList(ratesDb: any) {
         medicalMultiplier: v.rates.medicalMultiplier,
         medicalMaternityRate: v.rates.medicalMaternityRate,
         medicalDentalOptRate: v.rates.medicalDentalOptRate,
+        medicalRateTable: v.rates.medicalRateTable,
+        memberRateTable: v.rates.memberRateTable,
         sumInsuredBands: v.rates.sumInsuredBands || [],
         vehicleTypes: v.rates.vehicleTypes || [],
         riders: v.rates.riders || []
@@ -1321,23 +1323,17 @@ app.delete("/api/insurer-logos/:id", requireStaffAuth, (req, res) => {
 // ----------------------------------------------------
 // API 1b: Other (non-motor, non-medical) Product Line quote intake
 // ----------------------------------------------------
-// Maps the "Other Product Lines" category ids (shared with AdminPortalView.tsx's
-// OTHER_LINE_CATEGORIES) to their IRA class code, so a submission can be checked against the
-// selected insurer's actual licensing before being accepted.
-const OTHER_LINE_CATEGORY_CODES: Record<string, string> = {
-  liability: "05",
-  engineering: "02",
-  marine: "06",
-  theft: "10",
-  wiba: "11",
-  personal_accident: "09",
-  miscellaneous: "14"
-};
+// Category id -> IRA class code/kind now comes straight from the shared OTHER_LINE_CATEGORIES
+// (same source AdminPortalView.tsx and OtherLinesQuoteView.tsx use) instead of a separate
+// hardcoded map here - the old local copy silently fell out of sync whenever a new category
+// (fire, aviation, life_assurance, investment) was added elsewhere, rejecting every submission
+// for it with a 400.
 
-function getLicensedGeneralClasses(insurerId: string): string[] | undefined {
+function getLicensedClasses(insurerId: string, kind: "general" | "life"): string[] | undefined {
   const profile = mockInsurers.find((m) => m.id === insurerId);
-  if (profile) return profile.licensedGeneralClasses;
-  return EXTRA_LICENSED_CLASSES[insurerId]?.general;
+  if (profile) return kind === "life" ? profile.licensedLifeClasses : profile.licensedGeneralClasses;
+  const extra = EXTRA_LICENSED_CLASSES[insurerId];
+  return kind === "life" ? extra?.life : extra?.general;
 }
 
 app.get("/api/other-line-quotes", (req, res) => {
@@ -1351,15 +1347,16 @@ app.post("/api/other-line-quotes", (req, res) => {
     return res.status(400).json({ error: "Missing category, subType, insurerId, or answers." });
   }
 
-  const categoryCode = OTHER_LINE_CATEGORY_CODES[category];
-  if (!categoryCode) {
+  const categoryDef = OTHER_LINE_CATEGORIES.find((c) => c.id === category);
+  if (!categoryDef) {
     return res.status(400).json({ error: `Unknown other-line category '${category}'.` });
   }
+  const categoryCode = categoryDef.code;
 
   // Only block the submission when we have verified licensing data that excludes this class -
   // insurers with no license data on file (e.g. newly admin-added carriers) are allowed through,
   // matching the same "unrestricted when unverified" default used in the admin licensing filter.
-  const licensedClasses = getLicensedGeneralClasses(insurerId);
+  const licensedClasses = getLicensedClasses(insurerId, categoryDef.kind);
   if (licensedClasses && !licensedClasses.includes(categoryCode)) {
     return res.status(403).json({
       error: `This insurer is not licensed for IRA class ${categoryCode} (required for '${category}') per the Licensed Entities 2026 register.`
@@ -1462,7 +1459,11 @@ app.post("/api/generate-quotes", (req, res) => {
     { name: "Old Mutual General Insurance Kenya Limited", id: "oldmutual", rating: "A+ Rated (Premium Corporate Underwriter)" },
     { name: "Geminia Insurance Company Limited", id: "geminia", rating: "BBB Rated (Highly Reputable Corporate & Retail Underwriter)" },
     { name: "MUA Insurance (Kenya) Limited", id: "mua", rating: "A Rated (Excellent Solvency & Commercial Specialist)" },
-    { name: "Cannon General Insurance Company Limited", id: "cannon", rating: "B+ Rated (Established Underwriter, Competitive Fleet Terms)" }
+    { name: "Cannon General Insurance Company Limited", id: "cannon", rating: "B+ Rated (Established Underwriter, Competitive Fleet Terms)" },
+    { name: "Pioneer General Insurance Limited", id: "pioneer", rating: "BBB+ Rated (Established Composite Underwriter)" },
+    { name: "Madison General Insurance Kenya Limited", id: "madison", rating: "BBB+ Rated (Highly Responsive Retail Insurer)" },
+    { name: "NCBA Insurance Company Limited", id: "ncba", rating: "Unrated (pending verification)" },
+    { name: "Directline Assurance Company Limited", id: "directline", rating: "Unrated (pending verification)" }
   ];
 
   // Admin-added carriers only enter the live quote pool once they have an active rate
@@ -1491,12 +1492,15 @@ app.post("/api/generate-quotes", (req, res) => {
       return res.status(400).json({ error: "Missing required parameter: vehicleType" });
     }
 
-    const val = Number(params.vehicleValue);
-    if (isNaN(val) || val <= 0) {
-      return res.status(400).json({ error: "Missing or invalid parameter: vehicleValue" });
-    }
     const isComp = params.coverType === "comprehensive";
     const selectedVehicleType = params.vehicleType;
+
+    // Vehicle value only drives pricing for Comprehensive - TPO is a flat rate by usage
+    // class regardless of vehicle value, so it's never collected or required for TPO.
+    const val = Number(params.vehicleValue) || 0;
+    if (isComp && (isNaN(val) || val <= 0)) {
+      return res.status(400).json({ error: "Missing or invalid parameter: vehicleValue" });
+    }
 
     quotes = insurers.map((ins, idx) => {
       // Locate the active version in the db to record its reference
@@ -1534,12 +1538,26 @@ app.post("/api/generate-quotes", (req, res) => {
         riders: []
       });
 
+      // Per-class publish toggle: staff can disable a specific vehicle class/cover-type
+      // combination for this insurer (e.g. Directline Motor Private Comprehensive) without
+      // touching the insurer-wide "Published for Public Quoting" toggle above, which affects
+      // every class at once. Returning null here (filtered out below) means the quote doesn't
+      // appear at all - not shown as declined - matching the insurer-wide toggle's behavior.
+      const classStatus = underwriterRates.classPublishStatus?.[params.vehicleUse];
+      const coverKey = isComp ? "comprehensive" : "tpo";
+      if (classStatus && classStatus[coverKey] === false) {
+        return null;
+      }
+
       let basePremium = 0;
       let finalRateUsed = 0;
       let isDeclined = false;
       let declineReason = "";
       let appliedMinPremium = 0;
       let isMinPremiumTriggered = false;
+      let isHighExposureApplied = false;
+      let highExposureNote = "";
+      let isTonnageApplied = false;
 
       // Rider costs tracking
       let excessProtectorCost = 0;
@@ -1559,11 +1577,16 @@ app.post("/api/generate-quotes", (req, res) => {
       let hasSpecificCommercialRate = false;
       let commercialRateBands: any[] = [];
       let commercialMinPremium = 0;
+      // Tonnage is how underwriters actually tier commercial goods/cartage rates (both
+      // comprehensive and TPO) per the binder terms - up to 3T, 3-8T, 8-20T etc. carry
+      // different rates/min premiums, not just a single flat rate for the whole class.
+      let commercialTonnageBands: any[] = [];
 
       if (underwriterRates.commercialRates && underwriterRates.commercialRates[params.vehicleUse]) {
         hasSpecificCommercialRate = true;
         commercialRateBands = underwriterRates.commercialRates[params.vehicleUse].bands || [];
         commercialMinPremium = underwriterRates.commercialRates[params.vehicleUse].minPremium || 0;
+        commercialTonnageBands = underwriterRates.commercialRates[params.vehicleUse].tonnageBands || [];
       }
 
       // Apply a provisional, clearly-labeled loading factor when no usageClass-specific entry exists.
@@ -1626,9 +1649,62 @@ app.post("/api/generate-quotes", (req, res) => {
         }
 
         if (!isDeclined) {
-          // 2. Resolve rating: specific vehicle body type rating takes precedence, falling back to sumInsuredBands if not defined
-          if (hasSpecificCommercialRate) {
-            const matchingBand = commercialRateBands.find((b: any) => val >= b.min && val <= b.max);
+          // 1c. Check for a high-exposure unit override - specific make/model combinations that
+          // this underwriter rates differently from their standard sum-insured schedule (certain
+          // high-theft or high-claims models). Staff-configurable per insurer in the Rates Desk;
+          // matched case-insensitively, and an entry's model is optional (omitted = applies to
+          // every model of that make). An entry may also scope itself to a sum-insured range
+          // (e.g. only override the rate for this model above Kshs 3M) - minValue/maxValue are
+          // optional, so an entry with neither applies at any value. Takes precedence over every
+          // other rate source below - it's a named-unit override, not just another schedule tier.
+          let highExposureMatch: any = null;
+          if (underwriterRates.highExposureUnits?.length && params.vehicleMake) {
+            const makeInput = String(params.vehicleMake).trim().toLowerCase();
+            const modelInput = String(params.vehicleModel || "").trim().toLowerCase();
+            highExposureMatch = underwriterRates.highExposureUnits.find((u: any) =>
+              // Scoped to the specific motor class it was configured under (e.g. Motor Private) -
+              // an entry with no vehicleClass set predates this scoping and is treated as Private
+              // only, since that was the sole class this feature was ever configured for before.
+              (u.vehicleClass || "private") === params.vehicleUse &&
+              String(u.make || "").trim().toLowerCase() === makeInput &&
+              (!u.model || String(u.model).trim().toLowerCase() === modelInput) &&
+              (typeof u.minValue !== "number" || val >= u.minValue) &&
+              (typeof u.maxValue !== "number" || val <= u.maxValue)
+            );
+          }
+
+          // 2. Resolve rating: a high-exposure override takes precedence, then specific vehicle
+          // body type rating, falling back to sumInsuredBands if neither is defined.
+          // Track whichever sum-insured band actually matched (high-exposure, commercial, or
+          // private) so its own minPremium can be applied below - underwriters commonly charge a
+          // different minimum premium per bracket (e.g. Heritage: Kshs 50,000 min under 1M, Kshs
+          // 87,500 min above 3M), not one flat minimum across every bracket.
+          let matchingBand: any = null;
+          if (highExposureMatch) {
+            finalRateUsed = highExposureMatch.rate;
+            matchingBand = highExposureMatch;
+            isHighExposureApplied = true;
+            highExposureNote = highExposureMatch.note || `${params.vehicleMake}${highExposureMatch.model ? " " + highExposureMatch.model : ""} is rated as a high-exposure unit by this underwriter.`;
+          } else if (hasSpecificCommercialRate && commercialTonnageBands.length > 0 && typeof params.vehicleTonnage === "number") {
+            // Tonnage-tiered rating takes precedence over the sum-insured band for this class,
+            // when the underwriter has tonnage brackets configured and the customer supplied one.
+            matchingBand = commercialTonnageBands.find((b: any) => params.vehicleTonnage! >= b.minTons && params.vehicleTonnage! <= b.maxTons);
+            if (matchingBand && typeof matchingBand.rate === "number") {
+              finalRateUsed = matchingBand.rate;
+              isTonnageApplied = true;
+            } else {
+              // Tonnage fell outside every configured bracket - fall back to the sum-insured
+              // band rather than declining outright, since that's still a valid rate source.
+              matchingBand = commercialRateBands.find((b: any) => val >= b.min && val <= b.max);
+              if (matchingBand && typeof matchingBand.rate === "number") {
+                finalRateUsed = matchingBand.rate;
+              } else {
+                isDeclined = true;
+                declineReason = `Rate not configured for the specified tonnage or sum-insured for Commercial ${params.vehicleUse}`;
+              }
+            }
+          } else if (hasSpecificCommercialRate) {
+            matchingBand = commercialRateBands.find((b: any) => val >= b.min && val <= b.max);
             if (matchingBand && typeof matchingBand.rate === "number") {
               finalRateUsed = matchingBand.rate;
             } else {
@@ -1638,7 +1714,7 @@ app.post("/api/generate-quotes", (req, res) => {
           } else if (vTypeConfig && typeof vTypeConfig.rate === "number") {
             finalRateUsed = vTypeConfig.rate;
           } else {
-            const matchingBand = underwriterRates.sumInsuredBands?.find((b: any) => val >= b.min && val <= b.max);
+            matchingBand = underwriterRates.sumInsuredBands?.find((b: any) => val >= b.min && val <= b.max);
             if (matchingBand && typeof matchingBand.rate === "number") {
               finalRateUsed = matchingBand.rate;
             } else {
@@ -1652,19 +1728,16 @@ app.post("/api/generate-quotes", (req, res) => {
             const calculatedBase = Math.round(val * (finalRateUsed / 100));
             basePremium = Math.round(calculatedBase * provisionalLoadingFactor);
 
-            // 4. Check & apply vehicle category minimum premium rules
-            if (hasSpecificCommercialRate) {
-              appliedMinPremium = commercialMinPremium;
-              if (basePremium < appliedMinPremium) {
-                basePremium = appliedMinPremium;
-                isMinPremiumTriggered = true;
-              }
-            } else if (vTypeConfig && vTypeConfig.minPremium) {
-              appliedMinPremium = vTypeConfig.minPremium;
-              if (basePremium < appliedMinPremium) {
-                basePremium = appliedMinPremium;
-                isMinPremiumTriggered = true;
-              }
+            // 4. Check & apply minimum premium rules. The matched band's own minPremium (bracket-
+            // specific) takes precedence; insurers not yet migrated to band-level minimums fall
+            // back to the older flat per-class/per-body-type minimum so they keep working unchanged.
+            const bandMinPremium = typeof matchingBand?.minPremium === "number" ? matchingBand.minPremium : null;
+            appliedMinPremium = hasSpecificCommercialRate
+              ? bandMinPremium ?? commercialMinPremium
+              : bandMinPremium ?? (vTypeConfig?.minPremium || 0);
+            if (appliedMinPremium && basePremium < appliedMinPremium) {
+              basePremium = appliedMinPremium;
+              isMinPremiumTriggered = true;
             }
 
             // 5. Riders calculation - inclusive riders are bundled free into the base
@@ -1672,9 +1745,15 @@ app.post("/api/generate-quotes", (req, res) => {
             // in the matter and already get the benefit); non-inclusive riders only
             // cost extra when the customer explicitly opts in via the checkbox.
             if (underwriterRates.riders) {
+              // Some underwriters (e.g. Geminia) bundle Excess Protector/PVT free at low sum-insured
+              // values but charge for it above a threshold - real binder terms show this as a flag on
+              // the matched sum-insured/tonnage band itself (isExcessProtectorInclusive/isPvtInclusive),
+              // not a fixed insurer-wide toggle. Checking matchingBand here (already shared across the
+              // Private/Commercial/tonnage/high-exposure lookup above) means any insurer's admin can
+              // set this per range without new schema surface, and it works for every vehicle class.
               const epConfig = underwriterRates.riders.find((r: any) => r.riderId === "excess_protector");
               if (epConfig) {
-                if (epConfig.isInclusive || epConfig.status === "unsourced_fully_inclusive") {
+                if (matchingBand?.isExcessProtectorInclusive === true || epConfig.isInclusive || epConfig.status === "unsourced_fully_inclusive") {
                   excessProtectorStatus = "included";
                   excessProtectorCost = 0;
                 } else if (params.excessProtector) {
@@ -1692,7 +1771,7 @@ app.post("/api/generate-quotes", (req, res) => {
               if (!isDeclined) {
                 const pvtConfig = underwriterRates.riders.find((r: any) => r.riderId === "pvt");
                 if (pvtConfig) {
-                  if (pvtConfig.isInclusive || pvtConfig.status === "unsourced_fully_inclusive") {
+                  if (matchingBand?.isPvtInclusive === true || pvtConfig.isInclusive || pvtConfig.status === "unsourced_fully_inclusive") {
                     pvtStatus = "included";
                     pvtCost = 0;
                   } else if (params.pvt) {
@@ -1755,7 +1834,22 @@ app.post("/api/generate-quotes", (req, res) => {
             institutional: 15000
           };
           const flatTpo = tpoRates[params.vehicleUse] || underwriterRates.motorTpoRate || (7500 + idx * 250);
-          basePremium = flatTpo; // Used flat as-is without loading factor or multiplier!
+
+          // Tonnage-tiered TPO takes precedence for commercial_goods/commercial_general_cartage
+          // when the underwriter has tonnage tiers configured and the customer supplied one -
+          // TPO premiums for these classes are commonly set per tonnage bracket, not one flat
+          // figure for the whole usage class (e.g. up to 3T vs 3-8T vs 8-20T).
+          const tonnageTiers = underwriterRates.tpoTonnageRates?.[params.vehicleUse] as any[] | undefined;
+          let tonnageTpo: number | null = null;
+          if (tonnageTiers?.length && typeof params.vehicleTonnage === "number") {
+            const tier = tonnageTiers.find((t: any) => params.vehicleTonnage! >= t.minTons && params.vehicleTonnage! <= t.maxTons);
+            if (tier && typeof tier.premium === "number") {
+              tonnageTpo = tier.premium;
+              isTonnageApplied = true;
+            }
+          }
+
+          basePremium = tonnageTpo ?? flatTpo; // Used flat as-is without loading factor or multiplier!
         }
       }
 
@@ -1804,6 +1898,9 @@ app.post("/api/generate-quotes", (req, res) => {
         finalRateUsed,
         appliedMinPremium,
         isMinPremiumTriggered,
+        isHighExposureApplied,
+        highExposureNote: isHighExposureApplied ? highExposureNote : undefined,
+        isTonnageRated: isTonnageApplied,
         vehicleTypeLabel: typeLabel,
         vehicleUse: params.vehicleUse,
         vehicleType: selectedVehicleType,
@@ -1862,7 +1959,7 @@ app.post("/api/generate-quotes", (req, res) => {
         recommendationReason,
         priceTag: (isDeclined || isProvisionalRate) ? "" : (idx === 5 ? "Lowest Premium" : (isRecommended ? "Best Value" : ""))
       };
-    });
+    }).filter((q) => q !== null);
   } else if (category === "medical") {
     // Call the calculator passing down the dynamic loaded rates database
     const rawQuotes = calculateDynamicMedicalQuotes(params, ratesDb);
@@ -2605,7 +2702,15 @@ app.get("/api/health", (req, res) => {
 // ----------------------------------------------------
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
-    // Development Environment
+    // Development Environment - "vite" is a devDependency, so it must only ever
+    // be imported here (dynamically, lazily) rather than as a top-level static
+    // import. A static import gets bundled into a hard `require("vite")` that
+    // runs unconditionally at process startup regardless of NODE_ENV, which
+    // crashes the production server outright on any host that installs with
+    // devDependencies stripped (e.g. `npm install --omit=dev`) - this bug was
+    // the root cause of the app failing entirely once deployed while working
+    // fine in every local/dev test, since local node_modules always has vite.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -2614,9 +2719,27 @@ async function startServer() {
     console.log("Middlewares integrated in Vite Dev Mode.");
   } else {
     // Production Environment
+    // Vite content-hashes filenames under dist/assets, so those are safe to
+    // cache aggressively - a new build always gets new filenames. index.html
+    // itself is NOT hashed and references those filenames, so it must never
+    // be cached (by the browser or any CDN in front of this server) or a
+    // redeploy can silently keep serving an old bundle with stale UI/logic
+    // indefinitely, even though the new build is sitting right there in dist.
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        index: false,
+        setHeaders: (res, filePath) => {
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          } else {
+            res.setHeader("Cache-Control", "no-cache");
+          }
+        },
+      })
+    );
     app.get("*", (req, res) => {
+      res.set("Cache-Control", "no-cache");
       res.sendFile(path.join(distPath, "index.html"));
     });
     console.log("Serving static files in production from dist...");

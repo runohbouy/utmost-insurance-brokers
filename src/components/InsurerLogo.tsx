@@ -288,17 +288,18 @@ export default function InsurerLogo({ carrierId, className = "", height = "32", 
             Jubilee
           </text>
           
-          {/* Below text "INSURANCE" */}
+          {/* Below text "HEALTH INSURANCE" - matches the medical-only licensing (class 12
+              only, no Motor 07/08) reflected in this carrier's tradingName */}
           <text
             x="2"
             y="41"
             fontFamily="'Inter', system-ui, sans-serif"
             fontWeight="700"
-            fontSize="10"
-            letterSpacing="2.8"
+            fontSize="9"
+            letterSpacing="2"
             fill="#C10E23"
           >
-            INSURANCE
+            HEALTH INSURANCE
           </text>
         </g>
       </svg>
@@ -407,6 +408,142 @@ export default function InsurerLogo({ carrierId, className = "", height = "32", 
             fill="#5C6F84"
           >
             Assurance
+          </text>
+        </g>
+      </svg>
+    );
+  }
+
+  // AAR Insurance logo representation
+  if (normId === "aar" || normId === "aarinsurance") {
+    return (
+      <svg
+        viewBox="0 0 150 55"
+        height={height}
+        className={`inline-block select-none ${className}`}
+        style={{ maxWidth: "100%", ...style }}
+        id="logo-carrier-aar"
+      >
+        <g transform="translate(5, 5)">
+          <rect x="0" y="4" width="34" height="34" rx="6" fill="#00A651" />
+          <text x="17" y="27" textAnchor="middle" fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif" fontWeight="900" fontSize="15" fill="#FFFFFF">AAR</text>
+          <text x="44" y="22" fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif" fontWeight="900" fontSize="15" letterSpacing="0.2" fill="#00A651">Insurance</text>
+          <text x="45" y="34" fontFamily="'Inter', system-ui, sans-serif" fontWeight="700" fontSize="8" letterSpacing="1.2" fill="#5C6F84">KENYA LIMITED</text>
+        </g>
+      </svg>
+    );
+  }
+
+  // APA Insurance logo representation
+  if (normId === "apa" || normId === "apainsurance") {
+    return (
+      <svg
+        viewBox="0 0 150 55"
+        height={height}
+        className={`inline-block select-none ${className}`}
+        style={{ maxWidth: "100%", ...style }}
+        id="logo-carrier-apa"
+      >
+        <g transform="translate(5, 5)">
+          <path d="M2,32 L14,4 L26,32 L20,32 L14,17 L8,32 Z" fill="#F26522" />
+          <text x="33" y="24" fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif" fontWeight="900" fontSize="19" letterSpacing="0.4" fill="#0F2C59">APA</text>
+          <text x="34" y="36" fontFamily="'Inter', system-ui, sans-serif" fontWeight="700" fontSize="8" letterSpacing="1.4" fill="#F26522">INSURANCE</text>
+        </g>
+      </svg>
+    );
+  }
+
+  // NCBA-AIG Insurance logo representation (subsidiary of NCBA Group PLC, formerly AIG Kenya)
+  if (normId === "ncba" || normId === "ncbaaig" || normId === "ncbaaiginsurance") {
+    return (
+      <svg
+        viewBox="0 0 190 55"
+        height={height}
+        className={`inline-block select-none ${className}`}
+        style={{ maxWidth: "100%", ...style }}
+        id="logo-carrier-ncba"
+      >
+        <g transform="translate(5, 5)">
+          {/* Rounded badge chip carrying the "AIG" mark, distinguishing the joint branding */}
+          <rect x="0" y="4" width="34" height="34" rx="8" fill="#4C1D95" />
+          <text
+            x="17"
+            y="26"
+            textAnchor="middle"
+            fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif"
+            fontWeight="900"
+            fontSize="13"
+            fill="#FFFFFF"
+          >
+            AIG
+          </text>
+
+          {/* Text NCBA */}
+          <text
+            x="44"
+            y="26"
+            fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif"
+            fontWeight="900"
+            fontSize="22"
+            letterSpacing="0.2"
+            fill="#4C1D95"
+          >
+            NCBA
+          </text>
+          {/* Subtitle "Insurance" */}
+          <text
+            x="45"
+            y="38"
+            fontFamily="'Inter', system-ui, sans-serif"
+            fontWeight="700"
+            fontSize="9"
+            letterSpacing="1.4"
+            fill="#5C6F84"
+          >
+            INSURANCE
+          </text>
+        </g>
+      </svg>
+    );
+  }
+
+  // Directline Assurance logo representation
+  if (normId === "directline" || normId === "directlineassurance") {
+    return (
+      <svg
+        viewBox="0 0 200 55"
+        height={height}
+        className={`inline-block select-none ${className}`}
+        style={{ maxWidth: "100%", ...style }}
+        id="logo-carrier-directline"
+      >
+        <g transform="translate(5, 5)">
+          {/* Arrow/road mark - "direct" motif */}
+          <path d="M2,22 L22,22 M22,22 L14,14 M22,22 L14,30" stroke="#E31B23" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+
+          {/* Text Directline */}
+          <text
+            x="30"
+            y="27"
+            fontFamily="'Inter', 'Space Grotesk', system-ui, sans-serif"
+            fontWeight="900"
+            fontSize="20"
+            letterSpacing="-0.3"
+            fill="#0F2C59"
+          >
+            Directline
+          </text>
+          {/* Subtitle "ASSURANCE" */}
+          <text
+            x="31"
+            y="39"
+            fontFamily="'Inter', system-ui, sans-serif"
+            fontWeight="700"
+            fontSize="9"
+            letterSpacing="1.8"
+            fill="#E31B23"
+          >
+            ASSURANCE
           </text>
         </g>
       </svg>

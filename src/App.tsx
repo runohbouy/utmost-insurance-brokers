@@ -36,8 +36,18 @@ export default function App() {
   const [productsSegment, setProductsSegment] = useState<"general" | "health" | "life" | "all">("all");
   const [otherLineTarget, setOtherLineTarget] = useState<{ category: string; subType: string } | null>(null);
 
-  // Unified page router state changer that scrolls window back to top 
+  // Unified page router state changer that scrolls window back to top
   const setActiveTab = (tab: ActiveTab) => {
+    // selectedProductId carries the specific motor/medical product a user was
+    // just reading (e.g. "private-motor-third-party") so the quote engine can
+    // open pre-configured to match it, with its category switcher hidden. That
+    // context is only valid when the jump to motor-quotes/medical-quotes came
+    // directly from that product's page - a generic shortcut (Home tile,
+    // Footer link) landing on the same tab should not inherit whatever product
+    // happened to be viewed earlier in the session.
+    if ((tab === "motor-quotes" || tab === "medical-quotes") && activeTab !== "product-details") {
+      setSelectedProductId(null);
+    }
     setActiveTabState(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -207,19 +217,32 @@ export default function App() {
             )}
 
             {activeTab === "motor-quotes" && (
-              <QuoteJourneyView 
-                initialCategory="motor" 
-                setActiveTab={setActiveTab} 
-                onSavedOffer={handleSavedOffer} 
-              />
+              // Keying on selectedProductId remounts the form whenever the target
+              // product changes so its internal useState re-seeds from
+              // initialProductId - without this, navigating from one motor
+              // product's "Get Quote" straight to another (or to the generic quote
+              // tool) while never leaving the motor-quotes tab reuses the same
+              // QuoteJourneyView instance, and its cover-type/vehicle-use state
+              // silently stays stuck on whichever product was viewed first.
+              <React.Fragment key={selectedProductId || "generic-motor"}>
+                <QuoteJourneyView
+                  initialCategory="motor"
+                  initialProductId={selectedProductId}
+                  setActiveTab={setActiveTab}
+                  onSavedOffer={handleSavedOffer}
+                />
+              </React.Fragment>
             )}
 
             {activeTab === "medical-quotes" && (
-              <QuoteJourneyView 
-                initialCategory="medical" 
-                setActiveTab={setActiveTab} 
-                onSavedOffer={handleSavedOffer} 
-              />
+              <React.Fragment key={selectedProductId || "generic-medical"}>
+                <QuoteJourneyView
+                  initialCategory="medical"
+                  initialProductId={selectedProductId}
+                  setActiveTab={setActiveTab}
+                  onSavedOffer={handleSavedOffer}
+                />
+              </React.Fragment>
             )}
 
             {activeTab === "other-lines-quotes" && (

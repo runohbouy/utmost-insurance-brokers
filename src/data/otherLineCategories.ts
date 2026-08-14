@@ -32,9 +32,14 @@ export const OTHER_LINE_CATEGORIES: OtherLineCategory[] = [
 
 // Categories that currently have a real customer-facing intake form (informed by an actual
 // Kenyan-market proposal form) - see otherLineFormDefs.ts. The remaining categories above
-// (aviation, domestic_package, fire, medical, and all Life classes) stay admin-configured only:
-// domestic_package/fire/medical already have dedicated live journeys elsewhere in the app
-// (RoomAnalyzerView, QuoteJourneyView), aviation/miscellaneous-life have no proposal form on file.
+// (domestic_package, medical, and the annuities/pensions/group_life/group_credit Life classes)
+// stay admin-configured only: domestic_package/medical already have dedicated live journeys
+// elsewhere in the app (RoomAnalyzerView, QuoteJourneyView); the remaining Life classes have no
+// source brochure on file for any insurer yet. fire and aviation were added once real CIC (Fire
+// & Perils) and Kenindia/QBE (Aircraft Insurance) proposal forms were located in the binder - see
+// Underwriter-Binder/General. life_assurance and investment were added once real Old Mutual Life
+// product fliers (Life, Critical Illness, Last Expense, Education, Savings & Investment) were
+// located in Underwriter-Binder/Life Brochures.
 export const OTHER_LINE_LIVE_CATEGORY_IDS = [
   "liability",
   "engineering",
@@ -42,5 +47,9 @@ export const OTHER_LINE_LIVE_CATEGORY_IDS = [
   "theft",
   "wiba",
   "personal_accident",
-  "miscellaneous"
+  "miscellaneous",
+  "fire",
+  "aviation",
+  "life_assurance",
+  "investment"
 ];
