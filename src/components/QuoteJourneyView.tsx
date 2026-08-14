@@ -8,7 +8,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   Car, Heart, ShieldCheck, HelpCircle, ArrowRight, CheckCircle,
-  DownloadCloud, Mail, Phone, Lock, Sparkles, UserCheck, Calculator, AlertCircle, AlertTriangle, X
+  DownloadCloud, Mail, Phone, Lock, Sparkles, UserCheck, Calculator, AlertCircle, AlertTriangle, X, ChevronDown
 } from "lucide-react";
 
 interface QuoteJourneyViewProps {
@@ -47,6 +47,37 @@ const PRODUCT_DISPLAY_NAMES: Record<string, string> = {
   "micro-health": "Micro Health Insurance",
   "sme-medical": "SME Medical Insurance",
 };
+
+// Compact rider-status chip for the comparison table's Excess Protector / PVT rows -
+// same three states as the card view's badges, condensed to fit a table cell, with a
+// `dark` variant for the recommended column's navy background.
+function RiderStatusTag({ status, dark }: { status?: "included" | "selected" | "available" | "unavailable"; dark: boolean }) {
+  if (!status || status === "unavailable") {
+    return <span className={`text-[10px] ${dark ? "text-slate-400" : "text-[#8C887D]"}`}>N/A</span>;
+  }
+  const styles: Record<string, string> = dark
+    ? {
+        included: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+        selected: "border-[#316EC9]/40 bg-[#316EC9]/15 text-[#8CB4EA]",
+        available: "border-slate-500/40 bg-transparent text-slate-400",
+      }
+    : {
+        included: "border-emerald-300 bg-emerald-50 text-emerald-800",
+        selected: "border-[#316EC9]/30 bg-[#F0F5FC] text-[#316EC9]",
+        available: "border-[#D8E2F0] bg-white text-[#8C887D]",
+      };
+  const labels: Record<string, string> = {
+    included: "Included Free",
+    selected: "Extra Premium",
+    available: "Not Selected",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none ${styles[status]}`}>
+      {status === "included" && <CheckCircle className="h-2.5 w-2.5" />}
+      {labels[status]}
+    </span>
+  );
+}
 
 export default function QuoteJourneyView({ initialCategory, initialProductId, setActiveTab, onSavedOffer }: QuoteJourneyViewProps) {
   const [category, setCategory] = useState<"motor" | "medical">(initialCategory);
@@ -97,7 +128,30 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [quotes, setQuotes] = useState<InsuranceQuote[]>([]);
   const [selectedOffer, setSelectedOffer] = useState<InsuranceQuote | null>(null);
-  
+
+  // Which cards have their secondary details (plan inclusions, excess terms) expanded -
+  // collapsed by default so 13 quotes can be scanned/compared without a wall of scrolling.
+  const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
+  const toggleCardDetails = (insurerId: string) => {
+    setExpandedCardIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(insurerId)) next.delete(insurerId);
+      else next.add(insurerId);
+      return next;
+    });
+  };
+
+  // Selecting a quote opens the next-step dialog immediately instead of requiring a scroll
+  // down to a static section - closing it (without picking download/buy) keeps the selection
+  // so the slim summary bar below the grid can reopen it.
+  const [showOfferModal, setShowOfferModal] = useState<boolean>(false);
+
+  // Table is the default comparison layout (rows = criteria, columns = insurers,
+  // sticky first column, horizontal scroll) - the fastest way to scan one figure
+  // (e.g. premium) across all 13 carriers at once. Cards remain available for
+  // customers who want the fuller per-insurer read before picking.
+  const [compareView, setCompareView] = useState<"table" | "cards">("table");
+
   // Registration Portal Modal State
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authForm, setAuthForm] = useState({ name: "", email: "", phone: "", otp: "" });
@@ -167,6 +221,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
     setSelectedOffer(offer);
     setPaymentMethod("full");
     setCoverNoteResult(null);
+    setShowOfferModal(true);
   };
 
   // Unified trigger for both "download PDF" and "buy & bind" actions -
@@ -346,7 +401,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-sans text-left space-y-12" id="quote-journey-workspace">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8 font-sans text-left space-y-12" id="quote-journey-workspace">
       
       {/* SECTION HEADER */}
       <div className="border-b border-[#D8E2F0] pb-6">
@@ -389,21 +444,24 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT COLUMN: CUSTOM PARAMETERS FORM */}
-        <div className="lg:col-span-4 border border-[#D8E2F0] bg-[#FAF9F6] p-6 space-y-5 rounded-none">
+      <div className="space-y-8">
+
+        {/* SPECIFICATIONS - a full-width horizontal panel: fields flow left-to-right
+            and wrap across rows as the viewport allows, instead of stacking down a
+            narrow sidebar column. Freeing that column also lets the results below
+            use the full page width. */}
+        <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-6 space-y-5 rounded-none">
           <div className="flex items-center space-x-2 border-b border-[#D8E2F0] pb-3">
             <Calculator className="h-[18px] w-[18px] text-[#316EC9]" />
             <h3 className="font-serif italic text-lg text-[#1A1A1A]">Specifications</h3>
           </div>
 
           <form onSubmit={handleCalculate} id="quotes-form" className="space-y-4 text-xs font-semibold">
-            
+
             {/* A: MOTOR SPECIFIC FORMS */}
             {category === "motor" && (
-              <div className="space-y-3" id="motor-fields-container">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-start" id="motor-fields-container">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
                   <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Registration Number *</label>
                   <input
                     type="text"
@@ -414,7 +472,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                     className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 uppercase focus:border-[#316EC9] focus:outline-none"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Make</label>
                     {isMakeOther ? (
@@ -484,9 +541,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       </select>
                     )}
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Manufacturing Year</label>
                     <input
@@ -520,9 +575,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       <option value="third_party">Third Party Only (TPO)</option>
                     </select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Vehicle Use Class *</label>
                     <select
@@ -552,7 +605,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       <option value="sports">High-Performance Sports Cars</option>
                     </select>
                   </div>
-                </div>
 
                 {/* Tonnage is how underwriters actually tier commercial goods/cartage rates
                     (both comprehensive and TPO) - e.g. up to 3 tonnes vs 3-8 tonnes vs 8-20
@@ -593,7 +645,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
 
                 {/* Optional comprehensive riders - some underwriters bundle these free */}
                 {motorParams.coverType === "comprehensive" && (
-                  <div className="space-y-2 border-t border-[#D8E2F0] pt-3" id="motor-rider-selection">
+                  <div className="space-y-2 border-t border-[#D8E2F0] pt-3 col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-6" id="motor-rider-selection">
                     <label className="text-[#8C887D] uppercase text-[9px] tracking-widest font-extrabold mb-1 block">Optional Cover Extensions</label>
                     <div className="flex items-start space-x-2">
                       <input
@@ -636,7 +688,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                     className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Owner Email</label>
                     <input
@@ -658,13 +709,12 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     />
                   </div>
-                </div>
               </div>
             )}
 
             {/* B: MEDICAL SPECIFIC FORMS */}
             {category === "medical" && (
-              <div className="space-y-3" id="medical-fields-container">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-start" id="medical-fields-container">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Principal Member Name *</label>
                   <input
@@ -677,7 +727,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Age of Principal *</label>
                     <input
@@ -700,7 +749,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     />
                   </div>
-                </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Inpatient Care Limit *</label>
@@ -716,7 +764,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-6">
                   <div className="flex items-center justify-between">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Family Members (Dependants)</label>
                     <button
@@ -775,24 +823,22 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Outpatient Limit *</label>
-                    <select
-                      value={medicalParams.outpatientLimit}
-                      onChange={(e) => setMedicalParams({ ...medicalParams, outpatientLimit: Number(e.target.value) })}
-                      className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                    >
-                      <option value="50000">KES 50,000</option>
-                      <option value="100000">KES 100,000</option>
-                      <option value="150000">KES 150,000</option>
-                      <option value="250000">KES 250,000</option>
-                    </select>
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Outpatient Limit *</label>
+                  <select
+                    value={medicalParams.outpatientLimit}
+                    onChange={(e) => setMedicalParams({ ...medicalParams, outpatientLimit: Number(e.target.value) })}
+                    className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                  >
+                    <option value="50000">KES 50,000</option>
+                    <option value="100000">KES 100,000</option>
+                    <option value="150000">KES 150,000</option>
+                    <option value="250000">KES 250,000</option>
+                  </select>
                 </div>
 
                 {/* Optional Health inclusions */}
-                <div className="space-y-2 border-t border-[#D8E2F0] pt-3">
+                <div className="space-y-2 border-t border-[#D8E2F0] pt-3 col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-6">
                   <label className="text-[#8C887D] uppercase text-[9px] tracking-widest font-extrabold mb-1 block">Option extensions</label>
                   <div className="flex items-center space-x-2">
                     <input
@@ -814,7 +860,6 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Contact Email</label>
                     <input
@@ -836,25 +881,27 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
                     />
                   </div>
-                </div>
 
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={isCalculating}
-              className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
-            >
-              {isCalculating ? "Calculating standard metrics..." : "Compute Insurer Quotes Check"}
-            </button>
+            <div className="flex justify-end border-t border-[#D8E2F0] pt-4">
+              <button
+                type="submit"
+                disabled={isCalculating}
+                className="w-full sm:w-auto bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 px-10 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
+              >
+                {isCalculating ? "Calculating standard metrics..." : "Compute Insurer Quotes Check"}
+              </button>
+            </div>
 
           </form>
         </div>
 
-        {/* RIGHT COLUMN: COMPARATIVE ANALYSIS SHEET OR OFFERS SHOWCASE */}
-        <div className="lg:col-span-8 space-y-6">
-          
+        {/* RESULTS - full width now that the form is a horizontal panel above
+            rather than a sidebar, so quote cards/table get the whole page width. */}
+        <div className="space-y-6">
+
           {/* A: CALCULATING / EMPTY LOADER */}
           {quotes.length === 0 && !isCalculating && (
             <div className="border border-[#D8E2F0] bg-[#FAF9F6] border-dashed p-12 text-center flex flex-col items-center justify-center space-y-4 h-[550px] rounded-none" id="empty-quotes-placeholder">
@@ -863,7 +910,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
               </div>
               <h3 className="text-lg font-serif italic text-[#1A1A1A]">Underwriting Quotes Sheets Loading</h3>
               <p className="text-xs text-[#8C887D] max-w-md mx-auto leading-relaxed">
-                Complete the demographic and vehicle/health specifications on the left to evaluate annual premiums across 5 Kenyan certified carriers.
+                Complete the demographic and vehicle/health specifications above to evaluate annual premiums across 5 Kenyan certified carriers.
               </p>
             </div>
           )}
@@ -882,12 +929,36 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
           {quotes.length > 0 && !isCalculating && (
             <div className="space-y-6" id="loaded-quotes-list-container">
               
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#D8E2F0] pb-3 gap-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#D8E2F0] pb-3 gap-3">
                 <h4 className="text-[10px] font-bold text-[#8C887D] uppercase tracking-widest font-sans">
                   Found {quotes.length} Licensed Insurance Comparisons
                 </h4>
-                <div className="border border-[#316EC9]/30 bg-[#F0F5FC] px-2.5 py-0.5 font-mono text-[9px] text-[#316EC9] font-bold">
-                  Validity Expiry: 14 Days (Standard IRA terms)
+                <div className="flex items-center gap-2">
+                  <div className="border border-[#316EC9]/30 bg-[#F0F5FC] px-2.5 py-0.5 font-mono text-[9px] text-[#316EC9] font-bold">
+                    Validity Expiry: 14 Days (Standard IRA terms)
+                  </div>
+                  <div className="flex border border-[#D8E2F0] rounded-none overflow-hidden shrink-0" id="compare-view-toggle">
+                    <button
+                      type="button"
+                      onClick={() => setCompareView("table")}
+                      className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer ${
+                        compareView === "table" ? "bg-[#142C54] text-white" : "bg-white text-[#8C887D] hover:text-[#316EC9]"
+                      }`}
+                      id="compare-view-table-btn"
+                    >
+                      Table
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCompareView("cards")}
+                      className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider font-mono transition-all cursor-pointer border-l border-[#D8E2F0] ${
+                        compareView === "cards" ? "bg-[#142C54] text-white" : "bg-white text-[#8C887D] hover:text-[#316EC9]"
+                      }`}
+                      id="compare-view-cards-btn"
+                    >
+                      Cards
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -901,14 +972,173 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                 </div>
               </div>
 
+              {/* COMPARISON TABLE - rows = decision criteria, columns = insurers, first
+                  column sticky, columns horizontally scrollable. Modeled on the
+                  feature-comparison-table pattern (sticky row labels + a highlighted
+                  "recommended" column) common to pricing-comparison layouts, adapted to
+                  this app's own serif/sharp-corner brand rather than a generic reskin. */}
+              {compareView === "table" && (
+                <div className="border border-[#D8E2F0] bg-white rounded-none overflow-x-auto" id="quotes-comparison-table">
+                  <table className="border-collapse text-xs w-full">
+                    <thead>
+                      <tr>
+                        <th className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 text-left align-bottom min-w-[132px]">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Underwriter</span>
+                        </th>
+                        {quotes.map((offer) => (
+                          <th
+                            key={offer.insurerId}
+                            className={`border-b border-l border-[#D8E2F0] p-3 text-left align-bottom min-w-[168px] ${
+                              offer.isDeclined
+                                ? "bg-red-50/10"
+                                : offer.isRecommended
+                                ? "bg-[#142C54]"
+                                : selectedOffer?.insurerId === offer.insurerId
+                                ? "bg-[#F0F5FC]"
+                                : "bg-[#FAF9F6]"
+                            }`}
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {offer.isRecommended && !offer.isDeclined && (
+                                  <span className="inline-flex items-center gap-1 border border-[#316EC9]/40 bg-[#316EC9]/15 text-[#8CB4EA] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded-none">
+                                    <Sparkles className="h-2.5 w-2.5" />
+                                    Recommended
+                                  </span>
+                                )}
+                                {offer.priceTag && !offer.isDeclined && !offer.isRecommended && (
+                                  <span className="border border-[#316EC9]/30 bg-[#F0F5FC] px-1.5 py-0.5 text-[8px] font-bold text-[#316EC9] uppercase tracking-wider font-mono">
+                                    {offer.priceTag}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="w-14 h-7 flex items-center justify-center bg-white border border-slate-100 rounded p-0.5">
+                                <InsurerLogo carrierId={offer.insurerId} height="16" className="max-w-full max-h-full object-contain" />
+                              </div>
+                              <p className={`font-serif italic text-[13px] leading-tight ${offer.isRecommended ? "text-white" : "text-[#1A1A1A]"}`}>
+                                {offer.insurerName}
+                              </p>
+                              <p className={`text-[8px] uppercase tracking-wider ${offer.isRecommended ? "text-slate-300" : "text-[#8C887D]"}`}>
+                                {offer.rating}
+                              </p>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Broker Total Premium</span>
+                        </td>
+                        {quotes.map((offer) => (
+                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                            {offer.isDeclined ? (
+                              <span className="text-[11px] text-red-500 font-bold uppercase tracking-wider">Excluded</span>
+                            ) : (
+                              <>
+                                <p className={`text-base font-bold font-sans ${offer.isRecommended ? "text-white" : "text-[#1A1A1A]"}`}>
+                                  KES {offer.totalPremium.toLocaleString()}
+                                </p>
+                                <p className={`text-[9px] font-mono ${offer.isRecommended ? "text-slate-300" : "text-[#8C887D]"}`}>
+                                  Base {offer.basePremium.toLocaleString()} + Levies {(offer.pcf + offer.trainingLevy + offer.stampDuty).toLocaleString()}
+                                </p>
+                              </>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Excess Protector</span>
+                        </td>
+                        {quotes.map((offer) => (
+                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                            {offer.isDeclined ? (
+                              <span className="text-[10px] text-[#8C887D]">—</span>
+                            ) : (
+                              <RiderStatusTag status={offer.riderStatus?.excessProtector} dark={!!offer.isRecommended} />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">PVT Cover</span>
+                        </td>
+                        {quotes.map((offer) => (
+                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                            {offer.isDeclined ? (
+                              <span className="text-[10px] text-[#8C887D]">—</span>
+                            ) : (
+                              <RiderStatusTag status={offer.riderStatus?.pvt} dark={!!offer.isRecommended} />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Cover Highlights</span>
+                        </td>
+                        {quotes.map((offer) => (
+                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                            {offer.isDeclined ? (
+                              <span className="text-[10px] text-red-500 leading-snug">{offer.declineReason || "Excluded risk category."}</span>
+                            ) : (
+                              <p
+                                className={`text-[10px] leading-snug line-clamp-3 cursor-help ${offer.isRecommended ? "text-slate-200" : "text-[#5E5A51]"}`}
+                                title={[...offer.mainBenefits, `Excess Terms: ${offer.excessTerms}`].join("\n")}
+                              >
+                                {offer.mainBenefits.slice(0, 2).join(" · ")}
+                              </p>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+
+                      <tr>
+                        <td className="sticky left-0 z-10 bg-white border-r border-[#D8E2F0] p-3 align-top">
+                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Action</span>
+                        </td>
+                        {quotes.map((offer) => (
+                          <td key={offer.insurerId} className="border-l border-[#D8E2F0] p-3 align-top bg-white">
+                            {offer.isDeclined ? (
+                              <span className="text-[9px] text-red-500 font-bold uppercase tracking-wider">Unavailable</span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSelectOffer(offer)}
+                                className={`w-full uppercase tracking-wider text-[9px] font-bold px-3 py-2 rounded-none transition-all cursor-pointer border ${
+                                  selectedOffer?.insurerId === offer.insurerId
+                                    ? "bg-[#142C54] text-white border-[#142C54]"
+                                    : "bg-white text-[#1A1A1A] border-[#D8E2F0] hover:border-[#316EC9] hover:text-[#316EC9]"
+                                }`}
+                                id={`compare-table-select-${offer.insurerId}`}
+                              >
+                                {selectedOffer?.insurerId === offer.insurerId ? "Selected ✓" : "Select"}
+                              </button>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {compareView === "cards" && (
+              <>
               {/* Side-by-side Carrier Grids */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {quotes.map((offer, idx) => (
                   <div
                     key={offer.insurerId}
                     id={`quote-card-${offer.insurerId}`}
                     onClick={() => !offer.isDeclined && handleSelectOffer(offer)}
-                    className={`border p-5 text-left relative space-y-4 rounded-none transition-all ${
+                    className={`border p-4 text-left relative space-y-3 rounded-none transition-all ${
                       offer.isDeclined
                         ? "border-red-200 bg-red-50/10 opacity-75 cursor-not-allowed"
                         : selectedOffer?.insurerId === offer.insurerId
@@ -1021,50 +1251,59 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                           </div>
                         )}
 
-                        {/* Major benefits lists */}
-                        <div className="space-y-1.5 text-xs text-[#5E5A51]">
-                          <p className="font-bold text-[#1A1A1A] text-[9px] uppercase tracking-wider border-b border-[#D8E2F0]/60 pb-1 font-mono">Plan Cover Inclusions:</p>
-                          {offer.mainBenefits.slice(0, 3).map((ben, i) => (
-                            <p key={i} className="flex items-center text-[11px] leading-relaxed font-sans">
-                              <CheckCircle className="mr-1.5 h-3.5 w-3.5 shrink-0 text-[#316EC9]" />
-                              <span>{ben}</span>
-                            </p>
-                          ))}
-                        </div>
                       </>
                     )}
 
                      {/* Policy Conditions & Disclaimers (Only for Active Quotes) */}
                      {!offer.isDeclined ? (
                        <>
-                         <div className="rounded-none bg-[#F0F5FC]/30 p-2.5 border border-[#D8E2F0] font-mono text-[9px] text-[#8C887D] leading-relaxed">
-                           <p className="font-bold text-[#1A1A1A] font-sans text-[8px] uppercase">Excess Terms:</p>
-                           {offer.excessTerms}
-                         </div>
+                         {/* Expandable details - collapsed by default so all cards can be
+                             scanned/compared at a glance; expanding reveals inclusions,
+                             excess terms and the recommendation note in place, without
+                             navigating away from the grid. */}
+                         <button
+                           type="button"
+                           onClick={(e) => { e.stopPropagation(); toggleCardDetails(offer.insurerId); }}
+                           className="w-full flex items-center justify-between text-[9px] font-bold text-[#316EC9] uppercase tracking-wider font-mono border-t border-b border-[#D8E2F0]/60 py-2 cursor-pointer"
+                           id={`quote-card-toggle-${offer.insurerId}`}
+                         >
+                           <span>{expandedCardIds.has(offer.insurerId) ? "Hide plan details" : "View plan details & excess terms"}</span>
+                           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedCardIds.has(offer.insurerId) ? "rotate-180" : ""}`} />
+                         </button>
 
-                         {/* Broker-written Recommendation Block */}
-                         {offer.isRecommended && (
-                           <div className="rounded-none bg-[#142C54] text-white p-3 border border-[#142C54] space-y-1 text-xs leading-relaxed">
-                             <div className="flex items-center space-x-1 text-[#316EC9] font-bold text-[10px] uppercase tracking-wider font-mono">
-                               <Sparkles className="h-3.5 w-3.5" />
-                               <span>Utmost Recommended Option</span>
+                         {expandedCardIds.has(offer.insurerId) && (
+                           <div className="space-y-3">
+                             <div className="space-y-1.5 text-xs text-[#5E5A51]">
+                               <p className="font-bold text-[#1A1A1A] text-[9px] uppercase tracking-wider border-b border-[#D8E2F0]/60 pb-1 font-mono">Plan Cover Inclusions:</p>
+                               {offer.mainBenefits.slice(0, 3).map((ben, i) => (
+                                 <p key={i} className="flex items-center text-[11px] leading-relaxed font-sans">
+                                   <CheckCircle className="mr-1.5 h-3.5 w-3.5 shrink-0 text-[#316EC9]" />
+                                   <span>{ben}</span>
+                                 </p>
+                               ))}
                              </div>
-                             <p className="text-slate-350 italic font-serif">
-                               "{offer.recommendationReason}"
-                             </p>
+
+                             <div className="rounded-none bg-[#F0F5FC]/30 p-2.5 border border-[#D8E2F0] font-mono text-[9px] text-[#8C887D] leading-relaxed">
+                               <p className="font-bold text-[#1A1A1A] font-sans text-[8px] uppercase">Excess Terms:</p>
+                               {offer.excessTerms}
+                             </div>
+
+                             {/* Broker-written Recommendation Block */}
+                             {offer.isRecommended && (
+                               <div className="rounded-none bg-[#142C54] text-white p-3 border border-[#142C54] space-y-1 text-xs leading-relaxed">
+                                 <div className="flex items-center space-x-1 text-[#316EC9] font-bold text-[10px] uppercase tracking-wider font-mono">
+                                   <Sparkles className="h-3.5 w-3.5" />
+                                   <span>Utmost Recommended Option</span>
+                                 </div>
+                                 <p className="text-slate-350 italic font-serif">
+                                   "{offer.recommendationReason}"
+                                 </p>
+                               </div>
+                             )}
                            </div>
                          )}
 
-                         {/* Quality Disclaimer Block */}
-                         <div className="rounded-none bg-[#FFF8E7] p-2.5 border border-[#FFE8B5] font-mono text-[9px] text-[#8A6D3B] leading-normal flex items-start space-x-2">
-                           <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[#C19A4D] mt-0.5" />
-                           <div>
-                             <p className="font-bold text-[#7A5B2B] font-sans text-[8px] uppercase tracking-wider">Staff Confirmation Required:</p>
-                             This quote is indicative and not final. Confirmation from an Utmost staff member is required to finalize this rate.
-                           </div>
-                         </div>
-
-                         <div className="flex justify-between items-center text-[9px] text-[#8C887D] font-bold uppercase tracking-wider border-t border-[#D8E2F0] pt-2.5 font-mono">
+                         <div className="flex justify-between items-center text-[9px] text-[#8C887D] font-bold uppercase tracking-wider pt-1 font-mono">
                            <span>Waiting Rule: Direct</span>
                            <span className={`text-[9px] uppercase tracking-widest ${selectedOffer?.insurerId === offer.insurerId ? "text-[#316EC9]" : "text-slate-400"}`}>
                              {selectedOffer?.insurerId === offer.insurerId ? "Selected Offer ✓" : "Select this option"}
@@ -1081,21 +1320,129 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                   </div>
                 ))}
               </div>
+              </>
+              )}
 
-              {/* PAYMENT METHOD CHOICE - full payment vs optional IPF financing */}
-              {selectedOffer && !coverNoteResult && (
-                <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-5 text-left space-y-4 rounded-none" id="payment-method-choice">
-                  <div className="flex items-center space-x-2 border-b border-[#D8E2F0] pb-2">
-                    <Calculator className="h-[14px] w-[14px] text-[#316EC9]" />
-                    <h5 className="font-bold text-[#1A1A1A] text-xs uppercase tracking-wider font-mono">How would you like to pay?</h5>
+              {/* Single, top-level staff-confirmation disclaimer - previously repeated
+                  identically inside every one of the (up to 13) cards above, which was
+                  the single largest contributor to page length. */}
+              <div className="rounded-none bg-[#FFF8E7] p-3 border border-[#FFE8B5] font-mono text-[9px] text-[#8A6D3B] leading-normal flex items-start space-x-2">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[#C19A4D] mt-0.5" />
+                <div>
+                  <p className="font-bold text-[#7A5B2B] font-sans text-[8px] uppercase tracking-wider">Staff Confirmation Required:</p>
+                  All quotes above are indicative and not final. Confirmation from an Utmost staff member is required to finalize any rate.
+                </div>
+              </div>
+
+              {/* SELECTED OFFER SUMMARY BAR - selecting a card opens the checkout modal
+                  immediately (see handleSelectOffer); this slim bar only appears once the
+                  customer has dismissed that modal, so the selection isn't lost and they
+                  can jump straight back in without rescrolling the grid. */}
+              {selectedOffer && !showOfferModal && (
+                <div className="border border-[#316EC9] bg-[#F0F5FC] p-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-none" id="selected-offer-summary-bar">
+                  <div className="flex items-center gap-3 text-left">
+                    <CheckCircle className="h-5 w-5 text-[#316EC9] shrink-0" />
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-[#316EC9] tracking-wider block font-mono">
+                        {coverNoteResult ? "Cover Note Registered" : "Offer Selected"}
+                      </span>
+                      <p className="text-sm text-[#1A1A1A]">
+                        <strong className="font-serif italic">{selectedOffer.insurerName}</strong> &middot; KES {selectedOffer.totalPremium.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    {!coverNoteResult && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOffer(null)}
+                        className="text-[10px] uppercase tracking-wider font-bold text-[#8C887D] hover:text-[#316EC9] px-2 py-2.5 cursor-pointer"
+                        id="clear-selected-offer-btn"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowOfferModal(true)}
+                      className="uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-4 py-2.5 text-[10px] font-bold transition-all rounded-none cursor-pointer"
+                      id="reopen-offer-modal-btn"
+                    >
+                      <span>{coverNoteResult ? "View confirmation" : "Continue"}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </div>
+
+      </div>
+
+      {/* OFFER CHECKOUT MODAL - opens immediately on selecting a quote card, replacing
+          what used to be a static section requiring a scroll past the remaining cards.
+          Holds payment method choice + download/buy actions, then swaps to the cover
+          note confirmation in place once Buy & Bind succeeds. */}
+      {showOfferModal && selectedOffer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-none p-4 transition-all" id="offer-checkout-modal">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto border border-[#D8E2F0] bg-[#FAF9F6] p-6 shadow-none space-y-5 text-left rounded-none">
+
+            <div className="flex justify-between items-start border-b border-[#D8E2F0] pb-3">
+              <div className="space-y-1 flex items-center gap-3">
+                <div className="w-16 h-8 flex items-center justify-center bg-white border border-slate-100 rounded p-0.5 shrink-0">
+                  <InsurerLogo carrierId={selectedOffer.insurerId} height="20" className="max-w-full max-h-full object-contain" />
+                </div>
+                <div>
+                  <span className="border border-[#316EC9]/30 bg-[#F0F5FC] px-2.5 py-0.5 font-mono text-[9px] font-bold text-[#316EC9] uppercase tracking-wider">
+                    {coverNoteResult ? "Confirmation" : "Checkout"}
+                  </span>
+                  <h3 className="text-lg font-serif italic text-[#1A1A1A] pt-1 leading-tight">{selectedOffer.insurerName}</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowOfferModal(false)}
+                className="text-[#1A1A1A] hover:text-[#316EC9] text-sm font-bold p-1 cursor-pointer shrink-0"
+                id="close-offer-modal-btn"
+              >
+                ✕
+              </button>
+            </div>
+
+            {coverNoteResult ? (
+              /* COVER NOTE CONFIRMATION - real outcome once Buy & Bind completes */
+              <div className="space-y-3" id="cover-note-confirmation">
+                <div className="flex items-center space-x-2 text-emerald-800">
+                  <CheckCircle className="h-5 w-5" />
+                  <h4 className="font-serif italic text-lg">Cover Note Request Registered</h4>
+                </div>
+                <p className="text-xs text-emerald-950">
+                  Reference: <strong className="font-mono">{coverNoteResult.coverNoteRef}</strong> &middot; Status: <strong>{coverNoteResult.status}</strong>
+                </p>
+                <p className="text-xs text-[#5E5A51] leading-relaxed">
+                  Our finance team will send an M-Pesa STK Push prompt to complete payment{paymentMethod === "ipf" ? ` (first installment of KES ${Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()})` : ""}. Once payment is confirmed, an Utmost underwriting staff member will issue your final cover note documents.
+                </p>
+                <button
+                  onClick={() => { setShowOfferModal(false); setActiveTab("portal"); }}
+                  className="bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-all rounded-none cursor-pointer"
+                >
+                  Go to Customer Portal
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* PAYMENT METHOD CHOICE - full payment vs optional IPF financing */}
+                <div className="border border-[#D8E2F0] bg-white p-4 text-left space-y-4 rounded-none" id="payment-method-choice">
+                  <h5 className="font-bold text-[#1A1A1A] text-xs uppercase tracking-wider font-mono">How would you like to pay?</h5>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("full")}
                       className={`text-left border p-3 rounded-none transition-all cursor-pointer ${
-                        paymentMethod === "full" ? "border-[#316EC9] bg-white ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
+                        paymentMethod === "full" ? "border-[#316EC9] bg-[#F0F5FC] ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
                       }`}
                       id="payment-method-full-btn"
                     >
@@ -1106,7 +1453,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       type="button"
                       onClick={() => setPaymentMethod("ipf")}
                       className={`text-left border p-3 rounded-none transition-all cursor-pointer ${
-                        paymentMethod === "ipf" ? "border-[#316EC9] bg-white ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
+                        paymentMethod === "ipf" ? "border-[#316EC9] bg-[#F0F5FC] ring-1 ring-[#316EC9]/15" : "border-[#D8E2F0] bg-white hover:border-[#316EC9]"
                       }`}
                       id="payment-method-ipf-btn"
                     >
@@ -1131,7 +1478,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                       </div>
 
                       <div className="text-xs">
-                        <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Estimated downpayment (1st Month):</p>
+                        <p className="text-[#8C887D] font-semibold mb-0.5 font-mono">Est. downpayment (1st Month):</p>
                         <p className="text-sm font-bold text-[#1A1A1A] font-sans">
                           KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}
                         </p>
@@ -1149,27 +1496,20 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* FORM ACTIONS */}
-              {selectedOffer && !coverNoteResult && (
-                <div className="border border-[#D8E2F0] bg-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-none" id="quotes-offer-actions">
-                  <div className="text-left space-y-1">
-                    <span className="text-[9px] uppercase font-bold text-[#8C887D] tracking-wider block font-mono">Selected Underwriter</span>
-                    <h4 className="font-serif italic text-lg text-[#1A1A1A]">{selectedOffer.insurerName}</h4>
-                    <p className="text-xs text-[#5E5A51]">
-                      {paymentMethod === "ipf" ? (
-                        <>Monthly Installment: <strong className="font-bold text-[#1A1A1A]">KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}</strong> over {premiumFinanceMonths} months (IPF)</>
-                      ) : (
-                        <>Total Due: <strong className="font-bold text-[#1A1A1A]">KES {selectedOffer.totalPremium.toLocaleString()}</strong> (Annual premium fully factored)</>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="flex space-x-3 w-full sm:w-auto">
+                {/* FORM ACTIONS */}
+                <div className="border-t border-[#D8E2F0] pt-4 space-y-3" id="quotes-offer-actions">
+                  <p className="text-xs text-[#5E5A51]">
+                    {paymentMethod === "ipf" ? (
+                      <>Monthly Installment: <strong className="font-bold text-[#1A1A1A]">KES {Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString()}</strong> over {premiumFinanceMonths} months (IPF)</>
+                    ) : (
+                      <>Total Due: <strong className="font-bold text-[#1A1A1A]">KES {selectedOffer.totalPremium.toLocaleString()}</strong> (Annual premium fully factored)</>
+                    )}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleQuoteAction("download")}
-                      className="flex-grow sm:flex-none uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 border border-[#D8E2F0] bg-white hover:bg-[#F0F5FC] px-4 py-3 text-[10px] font-bold text-[#1A1A1A] transition-all rounded-none cursor-pointer"
+                      className="flex-grow uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 border border-[#D8E2F0] bg-white hover:bg-[#F0F5FC] px-4 py-3 text-[10px] font-bold text-[#1A1A1A] transition-all rounded-none cursor-pointer"
                       id="quote-dl-pdf-btn"
                     >
                       <DownloadCloud className="h-4 w-4 text-[#316EC9]" />
@@ -1178,7 +1518,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                     <button
                       onClick={() => handleQuoteAction("buy")}
                       disabled={isBinding}
-                      className="flex-grow sm:flex-none uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-5 py-3 text-[10px] font-bold transition-all rounded-none cursor-pointer disabled:opacity-50"
+                      className="flex-grow uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-5 py-3 text-[10px] font-bold transition-all rounded-none cursor-pointer disabled:opacity-50"
                       id="quote-buy-bind-btn"
                     >
                       <ShieldCheck className="h-4 w-4" />
@@ -1186,36 +1526,11 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                     </button>
                   </div>
                 </div>
-              )}
-
-              {/* COVER NOTE CONFIRMATION - real outcome once Buy & Bind completes */}
-              {coverNoteResult && (
-                <div className="border border-emerald-300 bg-emerald-50 p-6 space-y-3 rounded-none" id="cover-note-confirmation">
-                  <div className="flex items-center space-x-2 text-emerald-800">
-                    <CheckCircle className="h-5 w-5" />
-                    <h4 className="font-serif italic text-lg">Cover Note Request Registered</h4>
-                  </div>
-                  <p className="text-xs text-emerald-950">
-                    Reference: <strong className="font-mono">{coverNoteResult.coverNoteRef}</strong> &middot; Status: <strong>{coverNoteResult.status}</strong>
-                  </p>
-                  <p className="text-xs text-emerald-950 leading-relaxed">
-                    Our finance team will send an M-Pesa STK Push prompt to complete payment{paymentMethod === "ipf" ? ` (first installment of KES ${selectedOffer ? Math.round((selectedOffer.totalPremium * 1.05) / premiumFinanceMonths).toLocaleString() : ""})` : ""}. Once payment is confirmed, an Utmost underwriting staff member will issue your final cover note documents.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab("portal")}
-                    className="bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-4 py-2.5 text-[10px] uppercase tracking-widest font-bold transition-all rounded-none cursor-pointer"
-                  >
-                    Go to Customer Portal
-                  </button>
-                </div>
-              )}
-
-            </div>
-          )}
-
+              </>
+            )}
+          </div>
         </div>
-
-      </div>
+      )}
 
       {/* USER REGISTRATION / OTP PORTAL MODAL DIALOG */}
       {showAuthModal && (
