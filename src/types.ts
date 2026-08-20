@@ -54,6 +54,22 @@ export interface InsuranceQuote {
     excessProtector: "included" | "selected" | "available" | "unavailable";
     pvt: "included" | "selected" | "available" | "unavailable";
   };
+  // Medical-only, structured equivalent of the motor riderStatus/riderBreakdown pair above -
+  // Excess Protector/PVT don't apply to medical cover, so the comparison view shows these
+  // benefit limits instead. Dental and optical are still one bundled co-pay addon in this
+  // app's schema (a single "dentalCover" toggle selects both together), so
+  // dentalIncluded/opticalIncluded always move in lockstep - but each is tracked and
+  // displayed separately since they can carry their own KES sub-limit per insurer.
+  // dentalLimit/opticalLimit are only present for insurers with a confirmed, sourced figure.
+  medicalBenefits?: {
+    inpatientLimit: number;
+    outpatientLimit: number;
+    maternityIncluded: boolean;
+    dentalIncluded: boolean;
+    opticalIncluded: boolean;
+    dentalLimit?: number;
+    opticalLimit?: number;
+  };
 }
 
 export interface ClaimTimelineStep {

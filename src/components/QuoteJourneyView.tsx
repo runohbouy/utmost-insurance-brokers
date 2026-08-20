@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   InsuranceQuote, MotorQuoteParams, MedicalQuoteParams, ActiveTab
 } from "../types";
@@ -77,6 +77,26 @@ function RiderStatusTag({ status, dark }: { status?: "included" | "selected" | "
       {labels[status]}
     </span>
   );
+}
+
+// Medical Dental/Optical row tag - shows the real KES sub-limit when this insurer has a
+// sourced one (currently only CIC); otherwise falls back to the same "Extra Premium"/"Not
+// Selected" chip used elsewhere rather than inventing a number for insurers without one.
+function MedicalAddonTag({ included, limit, dark }: { included: boolean; limit?: number; dark: boolean }) {
+  if (!included) {
+    return <RiderStatusTag status="available" dark={dark} />;
+  }
+  if (typeof limit === "number") {
+    return (
+      <span className={`inline-flex items-center gap-1 border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none ${
+        dark ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300" : "border-emerald-300 bg-emerald-50 text-emerald-800"
+      }`}>
+        <CheckCircle className="h-2.5 w-2.5" />
+        KES {limit.toLocaleString()}
+      </span>
+    );
+  }
+  return <RiderStatusTag status="selected" dark={dark} />;
 }
 
 export default function QuoteJourneyView({ initialCategory, initialProductId, setActiveTab, onSavedOffer }: QuoteJourneyViewProps) {
@@ -169,6 +189,18 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
   // Buy & Bind outcome - a real cover-note request reference once submitted.
   const [isBinding, setIsBinding] = useState<boolean>(false);
   const [coverNoteResult, setCoverNoteResult] = useState<{ coverNoteRef: string; status: string } | null>(null);
+
+  // Now that Specifications is a full-width panel above the results (not a side column),
+  // clicking Compute leaves the results area below the fold with no visual cue that
+  // anything happened - it reads as a silent failure until the customer thinks to
+  // scroll. Scrolling to the results area as soon as calculation starts shows the
+  // loading state immediately, and lands the customer on the quotes once they arrive.
+  const resultsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isCalculating) {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [isCalculating]);
 
   // Run quotes calculation API
   const handleCalculate = async (e: React.FormEvent) => {
@@ -900,7 +932,7 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
 
         {/* RESULTS - full width now that the form is a horizontal panel above
             rather than a sidebar, so quote cards/table get the whole page width. */}
-        <div className="space-y-6">
+        <div className="space-y-6 scroll-mt-20" ref={resultsRef}>
 
           {/* A: CALCULATING / EMPTY LOADER */}
           {quotes.length === 0 && !isCalculating && (
@@ -1049,35 +1081,123 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                         ))}
                       </tr>
 
-                      <tr>
-                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
-                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Excess Protector</span>
-                        </td>
-                        {quotes.map((offer) => (
-                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
-                            {offer.isDeclined ? (
-                              <span className="text-[10px] text-[#8C887D]">—</span>
-                            ) : (
-                              <RiderStatusTag status={offer.riderStatus?.excessProtector} dark={!!offer.isRecommended} />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
+                      {/* Excess Protector / PVT are motor-only riders - Medical shows its own
+                          benefit limits (Inpatient, Outpatient, Maternity, Dental & Optical)
+                          instead, since EP/PVT have no meaning for a medical scheme. */}
+                      {category === "motor" ? (
+                        <>
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Excess Protector</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <RiderStatusTag status={offer.riderStatus?.excessProtector} dark={!!offer.isRecommended} />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
 
-                      <tr>
-                        <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
-                          <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">PVT Cover</span>
-                        </td>
-                        {quotes.map((offer) => (
-                          <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
-                            {offer.isDeclined ? (
-                              <span className="text-[10px] text-[#8C887D]">—</span>
-                            ) : (
-                              <RiderStatusTag status={offer.riderStatus?.pvt} dark={!!offer.isRecommended} />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">PVT Cover</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <RiderStatusTag status={offer.riderStatus?.pvt} dark={!!offer.isRecommended} />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        </>
+                      ) : (
+                        <>
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Inpatient Limit</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <span className={`text-[11px] font-bold font-mono ${offer.isRecommended ? "text-white" : "text-[#1A1A1A]"}`}>
+                                    KES {offer.medicalBenefits?.inpatientLimit.toLocaleString()}
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Outpatient Limit</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <span className={`text-[11px] font-bold font-mono ${offer.isRecommended ? "text-white" : "text-[#1A1A1A]"}`}>
+                                    KES {offer.medicalBenefits?.outpatientLimit.toLocaleString()}
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Maternity</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <RiderStatusTag status={offer.medicalBenefits?.maternityIncluded ? "selected" : "available"} dark={!!offer.isRecommended} />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Dental</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <MedicalAddonTag included={!!offer.medicalBenefits?.dentalIncluded} limit={offer.medicalBenefits?.dentalLimit} dark={!!offer.isRecommended} />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+
+                          <tr>
+                            <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
+                              <span className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider font-mono">Optical</span>
+                            </td>
+                            {quotes.map((offer) => (
+                              <td key={offer.insurerId} className={`border-b border-l border-[#D8E2F0] p-3 align-top ${offer.isRecommended ? "bg-[#142C54]" : ""}`}>
+                                {offer.isDeclined ? (
+                                  <span className="text-[10px] text-[#8C887D]">—</span>
+                                ) : (
+                                  <MedicalAddonTag included={!!offer.medicalBenefits?.opticalIncluded} limit={offer.medicalBenefits?.opticalLimit} dark={!!offer.isRecommended} />
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        </>
+                      )}
 
                       <tr>
                         <td className="sticky left-0 z-10 bg-[#FAF9F6] border-b border-r border-[#D8E2F0] p-3 align-top">
@@ -1218,6 +1338,41 @@ export default function QuoteJourneyView({ initialCategory, initialProductId, se
                               }
                               return null;
                             })}
+                          </div>
+                        )}
+
+                        {/* Medical benefit-limit badges - Excess Protector/PVT don't apply to
+                            medical schemes, so this shows the benefit limits actually being
+                            compared instead: Inpatient/Outpatient (always priced) plus
+                            Maternity/Dental/Optical only when the customer selected them.
+                            Dental/Optical show their real KES sub-limit where sourced
+                            (currently CIC only), otherwise just that they were selected. */}
+                        {offer.medicalBenefits && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="inline-flex items-center gap-1 border border-[#D8E2F0] bg-white text-[#1A1A1A] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                              Inpatient KES {offer.medicalBenefits.inpatientLimit.toLocaleString()}
+                            </span>
+                            <span className="inline-flex items-center gap-1 border border-[#D8E2F0] bg-white text-[#1A1A1A] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                              Outpatient KES {offer.medicalBenefits.outpatientLimit.toLocaleString()}
+                            </span>
+                            {offer.medicalBenefits.maternityIncluded && (
+                              <span className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Maternity Selected</span>
+                              </span>
+                            )}
+                            {offer.medicalBenefits.dentalIncluded && (
+                              <span className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Dental{typeof offer.medicalBenefits.dentalLimit === "number" ? ` KES ${offer.medicalBenefits.dentalLimit.toLocaleString()}` : " Selected"}</span>
+                              </span>
+                            )}
+                            {offer.medicalBenefits.opticalIncluded && (
+                              <span className="inline-flex items-center gap-1 border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-none">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Optical{typeof offer.medicalBenefits.opticalLimit === "number" ? ` KES ${offer.medicalBenefits.opticalLimit.toLocaleString()}` : " Selected"}</span>
+                              </span>
+                            )}
                           </div>
                         )}
 

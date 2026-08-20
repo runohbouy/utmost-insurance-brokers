@@ -768,6 +768,40 @@ export function calculateDynamicMedicalQuotes(params: MedicalQuoteParams, ratesD
     });
   }
 
+  // isRecommended above is set independently per insurer against its own age threshold
+  // (Old Mutual >=45, Jubilee <45, Star Discover <40, Britam >=55) - those ranges overlap
+  // (a 35-year-old satisfies both Jubilee's <45 and Star Discover's <40; a 60-year-old
+  // satisfies both Old Mutual's >=45 and Britam's >=55), so two cards could end up
+  // highlighted as "the" recommended pick at once. Enforce exactly one winner, preferring
+  // the narrower/more specific age band in each overlapping pair.
+  quotes.forEach((q: any) => { q.isRecommended = false; });
+  const recommendedId = age < 40 ? "stardiscover" : age < 45 ? "jubilee" : age < 55 ? "oldmutual" : "britam";
+  const recommendedQuote = quotes.find((q: any) => q.insurerId === recommendedId);
+  if (recommendedQuote) recommendedQuote.isRecommended = true;
+
+  // Structured benefit-limit summary for the comparison view - Excess Protector/PVT are a motor
+  // concept and don't apply here, so the comparison view shows Inpatient/Outpatient/Maternity/
+  // Dental & Optical instead. Same for every insurer since these come straight from the
+  // customer's own selections/inputs, not a per-insurer lookup.
+  const medicalBenefitsBase = {
+    inpatientLimit: selectedIpLimit,
+    outpatientLimit: opLimit,
+    maternityIncluded: !!isMaternity,
+    dentalIncluded: !!isDentalOpt,
+    opticalIncluded: !!isDentalOpt
+  };
+  quotes.forEach((q: any) => { q.medicalBenefits = { ...medicalBenefitsBase }; });
+
+  // CIC is the only insurer with a confirmed, sourced Dental/Optical sub-limit right now -
+  // Ksh 30,000 each, per the Platinum tier in "New CIC Family Medisure 2024.pdf" (the only
+  // tier this app models for CIC - see the CIC block above). Every other insurer here only
+  // tracks whether the customer selected the Dental & Optical addon, not its own KES limit -
+  // fabricating a number for them isn't safe without their real rate cards.
+  const cicQuote = quotes.find((q: any) => q.insurerId === "cic");
+  if (cicQuote) {
+    cicQuote.medicalBenefits = { ...cicQuote.medicalBenefits, dentalLimit: 30000, opticalLimit: 30000 };
+  }
+
   if (ratesDb && ratesDb.rates) {
     const levies = ratesDb.levies || { pcfRate: 0.0025, itlRate: 0.0020, stampDuty: 40 };
     // Publish toggle: an insurer explicitly unchecked from public quoting in the Database Rates
