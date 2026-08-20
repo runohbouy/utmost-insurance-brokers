@@ -1875,10 +1875,29 @@ app.post("/api/generate-quotes", (req, res) => {
         }
       }
 
-      const typeLabel = selectedVehicleType === "saloon" ? "Saloon" 
+      const typeLabel = selectedVehicleType === "saloon" ? "Saloon"
                      : selectedVehicleType === "suv" ? "SUV/Luxury"
                      : selectedVehicleType === "pickup" ? "Commercial Pickup"
                      : "Sports Car";
+
+      // Default (not explicitly selected) windscreen/radio limits shown in mainBenefits -
+      // previously hardcoded to "50,000 included" for every insurer regardless of their
+      // actual configured limit, so a corrected per-insurer figure never reached the
+      // customer unless they separately ticked the windscreen add-on. Resolves the same
+      // way the optional-addon path above does (body-type limit, or threshold band),
+      // falling back to 50,000 only when this insurer has no windscreen rider configured.
+      let includedWindscreenLimit = 50000;
+      const windscreenRiderConfig = underwriterRates.riders?.find((r: any) => r.riderId === "windscreen");
+      if (windscreenRiderConfig) {
+        if (windscreenRiderConfig.limitType === "threshold") {
+          const matchingThreshold = windscreenRiderConfig.thresholds?.find((t: any) => val >= t.min && val <= t.max);
+          if (matchingThreshold) includedWindscreenLimit = matchingThreshold.limit;
+        } else if (windscreenRiderConfig.limits && typeof windscreenRiderConfig.limits === "object") {
+          const configLimit = windscreenRiderConfig.limits[selectedVehicleType];
+          if (typeof configLimit === "number") includedWindscreenLimit = configLimit;
+        }
+      }
+      const radioRiderConfig = underwriterRates.riders?.find((r: any) => r.riderId === "radio");
 
       return {
         id: `quote-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`,
@@ -1932,7 +1951,10 @@ app.post("/api/generate-quotes", (req, res) => {
           ? []
           : (isComp
               ? [
-                  `Windscreen Extension Limit: KES ${params.windscreen ? windscreenLimit.toLocaleString() : "50,000 included"}`,
+                  `Windscreen Extension Limit: KES ${(params.windscreen ? windscreenLimit : includedWindscreenLimit).toLocaleString()} included`,
+                  ...(radioRiderConfig && typeof radioRiderConfig.freeLimit === "number"
+                    ? [`Radio & Entertainment Unit Limit: KES ${radioRiderConfig.freeLimit.toLocaleString()} included`]
+                    : []),
                   `Excess Protector Protection: ${
                     excessProtectorStatus === "included" ? "YES - Included at no extra cost (Nil excess on own damage)" :
                     excessProtectorStatus === "selected" ? "YES - Added as rider (Nil excess on own damage)" :

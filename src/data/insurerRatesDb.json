@@ -9656,7 +9656,7 @@
       "versionNumber": 3,
       "insurerId": "britam",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-13T06:48:05.647Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -11585,7 +11585,7 @@
       "versionNumber": 2,
       "insurerId": "pioneer",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-13T06:48:05.648Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -15814,7 +15814,7 @@
       "versionNumber": 4,
       "insurerId": "madison",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-13T13:46:13.466Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -16040,7 +16040,7 @@
       "versionNumber": 4,
       "insurerId": "geminia",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-13T16:34:30.371Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -18372,7 +18372,7 @@
       "versionNumber": 5,
       "insurerId": "kenindia",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-13T17:00:51.315Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -19401,7 +19401,7 @@
       "versionNumber": 5,
       "insurerId": "cic",
       "category": "all",
-      "status": "active",
+      "status": "inactive",
       "timestamp": "2026-08-20T07:54:45.693Z",
       "updatedByStaffId": "staff-1",
       "rates": {
@@ -19663,6 +19663,2216 @@
             ],
             "minPremium": 5000
           }
+        }
+      }
+    },
+    {
+      "id": "rate-ver-britam-4",
+      "versionNumber": 4,
+      "insurerId": "britam",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.294Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Britam General Insurance Company (K) Limited",
+        "motorTpoRate": 12000,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 12500,
+        "medicalDentalOptRate": 4500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1999999,
+            "rate": 4.6
+          },
+          {
+            "min": 2000000,
+            "max": 4999999,
+            "rate": 4.3
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 4.1
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "rate": 4.5,
+            "minPremium": 34000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "rate": 4.2,
+            "minPremium": 44000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "rate": 5.1,
+            "minPremium": 51000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "rate": 6.8,
+            "minPremium": 135000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2000
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 9,
+            "limits": {
+              "saloon": 50000,
+              "suv": 100000,
+              "pickup": 50000,
+              "sports": 150000
+            }
+          }
+        ],
+        "medicalRateTable": {
+          "inpatientBands": [
+            {
+              "label": "Essential",
+              "maxLimit": 300000,
+              "ratesByAgeBand": [
+                [
+                  27478,
+                  43964,
+                  59256,
+                  69409,
+                  79561,
+                  89714
+                ],
+                [
+                  37976,
+                  60761,
+                  76053,
+                  86206,
+                  96358,
+                  106511
+                ],
+                [
+                  50141,
+                  80226,
+                  95518,
+                  105670,
+                  115823,
+                  125975
+                ],
+                [
+                  69412,
+                  111058,
+                  126351,
+                  136503,
+                  146656,
+                  156808
+                ],
+                [
+                  91452,
+                  146322,
+                  161615,
+                  171767,
+                  181920,
+                  192072
+                ],
+                [
+                  114188,
+                  182700,
+                  197992,
+                  208145,
+                  218297,
+                  228450
+                ],
+                [
+                  144609,
+                  231374,
+                  246666,
+                  256818,
+                  266971,
+                  277123
+                ],
+                [
+                  151844,
+                  242950,
+                  258243,
+                  268395,
+                  278548,
+                  288700
+                ]
+              ]
+            },
+            {
+              "label": "Silver",
+              "maxLimit": 500000,
+              "ratesByAgeBand": [
+                [
+                  40723,
+                  65157,
+                  85597,
+                  98896,
+                  112196,
+                  125496
+                ],
+                [
+                  48594,
+                  77750,
+                  98190,
+                  111490,
+                  124789,
+                  138089
+                ],
+                [
+                  57850,
+                  92559,
+                  112999,
+                  126299,
+                  139598,
+                  152898
+                ],
+                [
+                  87102,
+                  139364,
+                  159803,
+                  173103,
+                  186403,
+                  199703
+                ],
+                [
+                  114760,
+                  183616,
+                  204055,
+                  217355,
+                  230655,
+                  243954
+                ],
+                [
+                  143290,
+                  229265,
+                  249704,
+                  263004,
+                  276304,
+                  289603
+                ],
+                [
+                  181465,
+                  290344,
+                  310783,
+                  324083,
+                  337383,
+                  350682
+                ],
+                [
+                  190544,
+                  304871,
+                  325311,
+                  338610,
+                  351910,
+                  365210
+                ]
+              ]
+            },
+            {
+              "label": "Bronze",
+              "maxLimit": 1000000,
+              "ratesByAgeBand": [
+                [
+                  48787,
+                  78059,
+                  103360,
+                  119761,
+                  136161,
+                  152562
+                ],
+                [
+                  57306,
+                  91690,
+                  116991,
+                  133391,
+                  149792,
+                  166192
+                ],
+                [
+                  71830,
+                  114928,
+                  140229,
+                  156630,
+                  173030,
+                  189430
+                ],
+                [
+                  88912,
+                  142259,
+                  167560,
+                  183961,
+                  200361,
+                  216761
+                ],
+                [
+                  121891,
+                  195025,
+                  220326,
+                  236726,
+                  253127,
+                  269527
+                ],
+                [
+                  154364,
+                  246982,
+                  272283,
+                  288684,
+                  305084,
+                  321484
+                ],
+                [
+                  186400,
+                  298241,
+                  323542,
+                  339942,
+                  356343,
+                  372743
+                ],
+                [
+                  195727,
+                  313163,
+                  338464,
+                  354865,
+                  371265,
+                  387666
+                ]
+              ]
+            },
+            {
+              "label": "Platinum",
+              "maxLimit": 2000000,
+              "ratesByAgeBand": [
+                [
+                  57897,
+                  92635,
+                  122756,
+                  142430,
+                  162105,
+                  181779
+                ],
+                [
+                  63269,
+                  101230,
+                  131351,
+                  151026,
+                  170700,
+                  190375
+                ],
+                [
+                  81684,
+                  130694,
+                  160815,
+                  180490,
+                  200164,
+                  219839
+                ],
+                [
+                  96580,
+                  154528,
+                  184649,
+                  204323,
+                  223998,
+                  243673
+                ],
+                [
+                  138081,
+                  220929,
+                  251050,
+                  270724,
+                  290399,
+                  310073
+                ],
+                [
+                  174407,
+                  279052,
+                  309173,
+                  328847,
+                  348522,
+                  368196
+                ],
+                [
+                  210605,
+                  336968,
+                  367089,
+                  386763,
+                  406438,
+                  426112
+                ],
+                [
+                  221143,
+                  353828,
+                  383949,
+                  403624,
+                  423298,
+                  442973
+                ]
+              ]
+            },
+            {
+              "label": "Platinum",
+              "maxLimit": 3000000,
+              "ratesByAgeBand": [
+                [
+                  68656,
+                  109850,
+                  147206,
+                  171856,
+                  196507,
+                  221157
+                ],
+                [
+                  77376,
+                  123802,
+                  161158,
+                  185809,
+                  210459,
+                  235110
+                ],
+                [
+                  93954,
+                  150326,
+                  187683,
+                  212333,
+                  236984,
+                  261634
+                ],
+                [
+                  101958,
+                  163134,
+                  200490,
+                  225140,
+                  249791,
+                  274441
+                ],
+                [
+                  158793,
+                  254068,
+                  288708,
+                  311333,
+                  333959,
+                  356584
+                ],
+                [
+                  200568,
+                  320910,
+                  355549,
+                  378174,
+                  400800,
+                  423425
+                ],
+                [
+                  242196,
+                  387513,
+                  422152,
+                  444777,
+                  467404,
+                  490029
+                ],
+                [
+                  254314,
+                  406902,
+                  441541,
+                  464168,
+                  486793,
+                  509419
+                ]
+              ]
+            },
+            {
+              "label": "Platinum",
+              "maxLimit": 5000000,
+              "ratesByAgeBand": [
+                [
+                  85114,
+                  136182,
+                  177274,
+                  204390,
+                  231505,
+                  258621
+                ],
+                [
+                  92851,
+                  148562,
+                  193390,
+                  222971,
+                  252551,
+                  282132
+                ],
+                [
+                  112745,
+                  180391,
+                  225220,
+                  254800,
+                  284381,
+                  313961
+                ],
+                [
+                  122350,
+                  195761,
+                  240588,
+                  270168,
+                  299749,
+                  329329
+                ],
+                [
+                  179505,
+                  287208,
+                  326365,
+                  351941,
+                  377519,
+                  403095
+                ],
+                [
+                  226729,
+                  362768,
+                  401925,
+                  427501,
+                  453079,
+                  478655
+                ],
+                [
+                  273787,
+                  438058,
+                  477216,
+                  502792,
+                  528369,
+                  553946
+                ],
+                [
+                  462356,
+                  739769,
+                  790449,
+                  824420,
+                  858391,
+                  892362
+                ]
+              ]
+            },
+            {
+              "label": "Platinum",
+              "maxLimit": 10000000,
+              "ratesByAgeBand": [
+                [
+                  108326,
+                  173323,
+                  225621,
+                  260133,
+                  294643,
+                  329154
+                ],
+                [
+                  116064,
+                  185703,
+                  241737,
+                  278714,
+                  315689,
+                  352665
+                ],
+                [
+                  140931,
+                  225489,
+                  281525,
+                  318500,
+                  355476,
+                  392451
+                ],
+                [
+                  152937,
+                  244701,
+                  300735,
+                  337710,
+                  374687,
+                  411662
+                ],
+                [
+                  220930,
+                  353486,
+                  401680,
+                  433158,
+                  464638,
+                  496117
+                ],
+                [
+                  279051,
+                  446483,
+                  494677,
+                  526155,
+                  557635,
+                  589114
+                ],
+                [
+                  336968,
+                  539149,
+                  587342,
+                  618821,
+                  650301,
+                  681779
+                ],
+                [
+                  531709,
+                  850734,
+                  909016,
+                  948083,
+                  987150,
+                  1026216
+                ]
+              ]
+            }
+          ],
+          "outpatientBands": [
+            {
+              "label": "30K",
+              "maxLimit": 30000,
+              "ratesByAgeBand": [
+                [
+                  19628,
+                  19628,
+                  19628,
+                  19628,
+                  19628,
+                  19628
+                ],
+                [
+                  27676,
+                  27676,
+                  27676,
+                  27676,
+                  27676,
+                  27676
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "label": "50K",
+              "maxLimit": 50000,
+              "ratesByAgeBand": [
+                [
+                  22520,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  28731,
+                  43096,
+                  49896,
+                  56696,
+                  63496,
+                  70296
+                ],
+                [
+                  34568,
+                  51853,
+                  58653,
+                  65453,
+                  72253,
+                  79053
+                ],
+                [
+                  40406,
+                  60609,
+                  67409,
+                  74209,
+                  81009,
+                  87809
+                ],
+                [
+                  45343,
+                  68015,
+                  74815,
+                  81615,
+                  88415,
+                  95215
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "label": "70K",
+              "maxLimit": 70000,
+              "ratesByAgeBand": [
+                [
+                  24987,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  30369,
+                  45553,
+                  53153,
+                  60753,
+                  68353,
+                  75953
+                ],
+                [
+                  36834,
+                  55251,
+                  62851,
+                  70451,
+                  78051,
+                  85651
+                ],
+                [
+                  43300,
+                  64950,
+                  72550,
+                  80150,
+                  87750,
+                  95350
+                ],
+                [
+                  57092,
+                  85638,
+                  93238,
+                  100838,
+                  108438,
+                  116038
+                ],
+                [
+                  68109,
+                  102164,
+                  109764,
+                  117364,
+                  124964,
+                  132564
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "label": "100K",
+              "maxLimit": 100000,
+              "ratesByAgeBand": [
+                [
+                  28688,
+                  43033,
+                  51733,
+                  60433,
+                  69133,
+                  77833
+                ],
+                [
+                  30614,
+                  45921,
+                  54621,
+                  63321,
+                  72021,
+                  80721
+                ],
+                [
+                  39128,
+                  58691,
+                  67391,
+                  76091,
+                  84791,
+                  93491
+                ],
+                [
+                  47641,
+                  71462,
+                  80162,
+                  88862,
+                  97562,
+                  106262
+                ],
+                [
+                  74715,
+                  112073,
+                  120773,
+                  129473,
+                  138173,
+                  146873
+                ],
+                [
+                  89133,
+                  133700,
+                  142400,
+                  151100,
+                  159800,
+                  168500
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "label": "150K",
+              "maxLimit": 150000,
+              "ratesByAgeBand": [
+                [
+                  32643,
+                  48965,
+                  58865,
+                  68765,
+                  78665,
+                  88565
+                ],
+                [
+                  35918,
+                  53877,
+                  63777,
+                  73677,
+                  83577,
+                  93477
+                ],
+                [
+                  45992,
+                  68988,
+                  78888,
+                  88788,
+                  98688,
+                  108588
+                ],
+                [
+                  56066,
+                  84099,
+                  93999,
+                  103899,
+                  113799,
+                  123699
+                ],
+                [
+                  88102,
+                  132152,
+                  142052,
+                  151952,
+                  161852,
+                  171752
+                ],
+                [
+                  105162,
+                  157743,
+                  167643,
+                  177543,
+                  187443,
+                  197343
+                ],
+                [
+                  133222,
+                  199833,
+                  209733,
+                  219633,
+                  229533,
+                  239433
+                ],
+                [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              ]
+            },
+            {
+              "label": "200K",
+              "maxLimit": 200000,
+              "ratesByAgeBand": [
+                [
+                  35777,
+                  53665,
+                  64465,
+                  75265,
+                  86065,
+                  96865
+                ],
+                [
+                  39190,
+                  58785,
+                  69585,
+                  80385,
+                  91185,
+                  101985
+                ],
+                [
+                  50227,
+                  75340,
+                  86140,
+                  96940,
+                  107740,
+                  118540
+                ],
+                [
+                  61263,
+                  91894,
+                  102694,
+                  113494,
+                  124294,
+                  135094
+                ],
+                [
+                  96359,
+                  144538,
+                  155338,
+                  166138,
+                  176938,
+                  187738
+                ],
+                [
+                  115049,
+                  172573,
+                  183373,
+                  194173,
+                  204973,
+                  215773
+                ],
+                [
+                  154797,
+                  232195,
+                  242995,
+                  253795,
+                  264595,
+                  275395
+                ],
+                [
+                  157518,
+                  236277,
+                  247077,
+                  257877,
+                  268677,
+                  279477
+                ]
+              ]
+            }
+          ]
+        },
+        "memberRateTable": {
+          "ageBands": [
+            {
+              "min": 18,
+              "max": 30
+            },
+            {
+              "min": 31,
+              "max": 40
+            },
+            {
+              "min": 41,
+              "max": 50
+            },
+            {
+              "min": 51,
+              "max": 60
+            },
+            {
+              "min": 61,
+              "max": 70
+            },
+            {
+              "min": 71,
+              "max": 75
+            },
+            {
+              "min": 76,
+              "max": 85
+            },
+            {
+              "min": 86,
+              "max": 120
+            }
+          ],
+          "maternity": [
+            26000,
+            32500,
+            32500,
+            48750,
+            65000,
+            81250,
+            97500
+          ],
+          "dental": [
+            3300,
+            3300,
+            6600,
+            9900,
+            13200,
+            13200,
+            13200
+          ],
+          "optical": [
+            3300,
+            3300,
+            6600,
+            9900,
+            13200,
+            13200,
+            13200
+          ]
+        },
+        "isPublished": true,
+        "tpoRates": {
+          "private": 12000
+        },
+        "classPublishStatus": {
+          "private": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "commercial_goods": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "commercial_general_cartage": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "institutional": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "motorcycle": {
+            "comprehensive": false,
+            "tpo": false
+          }
+        },
+        "sourceNote": "Business scope restricted per staff instruction: Private (Comprehensive & TPO), Commercial Goods, Commercial General Cartage, Institutional and Motorcycle disabled - PSV/Uber and Tricycle remain quotable."
+      }
+    },
+    {
+      "id": "rate-ver-pioneer-3",
+      "versionNumber": 3,
+      "insurerId": "pioneer",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.300Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Pioneer General Insurance Limited",
+        "isPublished": true,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 0,
+        "medicalDentalOptRate": 0,
+        "motorTpoRate": 12000,
+        "sumInsuredBands": [
+          {
+            "min": 500000,
+            "max": 999999,
+            "rate": 6,
+            "minPremium": 37500
+          },
+          {
+            "min": 1000000,
+            "max": 1499999,
+            "rate": 5,
+            "minPremium": 37500
+          },
+          {
+            "min": 1500000,
+            "max": 2499999,
+            "rate": 4,
+            "minPremium": 37500
+          },
+          {
+            "min": 2500000,
+            "max": 4999999,
+            "rate": 3.25,
+            "minPremium": 37500
+          },
+          {
+            "min": 5000000,
+            "max": 99999999,
+            "rate": 3,
+            "minPremium": 37500
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "minPremium": 37500
+          }
+        ],
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 4.5
+              }
+            ],
+            "minPremium": 50000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 4.5
+              }
+            ],
+            "minPremium": 50000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 3.5
+              }
+            ],
+            "minPremium": 37500
+          }
+        },
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 5000
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500
+          },
+          {
+            "riderId": "courtesy_car",
+            "riderName": "Courtesy Car / Loss of Use",
+            "ratePerDay": 450,
+            "maxDays": 10,
+            "waitingDays": 0,
+            "note": "Kshs 4,500 for 10 days (or Kshs 7,500 for 20 days) per binder."
+          }
+        ],
+        "tpoRates": {
+          "private": 12000,
+          "commercial_goods": 7500,
+          "commercial_general_cartage": 7500,
+          "institutional": 7500,
+          "psv_chaufeur": 0,
+          "motorcycle": 3000,
+          "tricycle": 5000
+        },
+        "maxVehicleAgeComprehensive": 15,
+        "sourceNote": "Rates sourced from the Underwriter-Binder folder (staff-provided binder documents) - motor lines only. Medical/other-lines figures carried forward unchanged from the prior version since the binder documents are motor-only. Source: RATES 2025 - PIONEER.pdf. | Business scope restricted per staff instruction: PSV/Uber Comprehensive is the only quotable class - every other vehicle-use x cover-type combination disabled.",
+        "tpoTonnageRates": {
+          "commercial_goods": [
+            {
+              "minTons": 0,
+              "maxTons": 3,
+              "premium": 7500
+            },
+            {
+              "minTons": 3,
+              "maxTons": 8,
+              "premium": 10000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 15,
+              "premium": 15000
+            },
+            {
+              "minTons": 15,
+              "maxTons": 30,
+              "premium": 20000
+            }
+          ],
+          "commercial_general_cartage": [
+            {
+              "minTons": 0,
+              "maxTons": 3,
+              "premium": 7500
+            },
+            {
+              "minTons": 3,
+              "maxTons": 8,
+              "premium": 10000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 15,
+              "premium": 15000
+            },
+            {
+              "minTons": 15,
+              "maxTons": 30,
+              "premium": 20000
+            }
+          ]
+        },
+        "classPublishStatus": {
+          "private": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "commercial_goods": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "commercial_general_cartage": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "institutional": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "motorcycle": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "tricycle": {
+            "comprehensive": false,
+            "tpo": false
+          },
+          "psv_chaufeur": {
+            "tpo": false
+          }
+        }
+      }
+    },
+    {
+      "id": "rate-ver-cic-6",
+      "versionNumber": 6,
+      "insurerId": "cic",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.329Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "CIC General Insurance Limited",
+        "motorTpoRate": 7500,
+        "medicalMultiplier": 0.9,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 10500,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1000000,
+            "rate": 6
+          },
+          {
+            "min": 1000001,
+            "max": 1500000,
+            "rate": 5
+          },
+          {
+            "min": 1500001,
+            "max": 2500000,
+            "rate": 4
+          },
+          {
+            "min": 2500001,
+            "max": 99999999,
+            "rate": 3
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 30000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 40000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": false,
+            "minPremium": 140000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 5000,
+            "note": "Confirmed by CIC KEY BROKERS & AGENTS MOTOR TERMS 2024 (Std, 04/07/2024): Motor Private excess protector (own-damage only) 0.25%, min Kshs 5,000. Document also lists a broader own-damage-&-theft variant at 1% (not modeled - schema supports one EP tier per insurer)."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500,
+            "note": "Confirmed by CIC KEY BROKERS & AGENTS MOTOR TERMS 2024 (Std, 04/07/2024): Motor Private PVT 0.25%, min Kshs 2,500."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 100000,
+              "suv": 100000,
+              "pickup": 100000,
+              "sports": 100000
+            },
+            "note": "Confirmed by CIC KEY BROKERS & AGENTS MOTOR TERMS 2024 (Std, 04/07/2024): Kshs 100,000 windscreen limit for Motor Private/Hybrid/Non-Zero-Mileage Commercial (Institutional's real limit is 50,000, not representable here since limits are keyed by body type, not vehicle-use class)."
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "rate": 0,
+            "freeLimit": 100000,
+            "note": "Radio & Entertainment Unit limit set to Kshs 100,000 for CIC per staff instruction (2026-08-20)."
+          }
+        ],
+        "medicalRateTable": {
+          "inpatientBands": [
+            {
+              "label": "Platinum",
+              "maxLimit": 10000000,
+              "ratesByAgeBand": [
+                [
+                  31060,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  48070,
+                  76114,
+                  101249,
+                  123594,
+                  143576,
+                  160555
+                ],
+                [
+                  64339,
+                  101876,
+                  135518,
+                  165426,
+                  192171,
+                  214896
+                ],
+                [
+                  68453,
+                  108389,
+                  144182,
+                  176002,
+                  204457,
+                  228635
+                ],
+                [
+                  86244,
+                  136560,
+                  181657,
+                  221747,
+                  257597,
+                  288059
+                ]
+              ]
+            }
+          ],
+          "outpatientBands": [
+            {
+              "label": "Platinum",
+              "maxLimit": 300000,
+              "ratesByAgeBand": [
+                [
+                  44170,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  45913,
+                  79126,
+                  96906,
+                  114884,
+                  132908
+                ],
+                [
+                  61888,
+                  106656,
+                  130623,
+                  154857,
+                  179151
+                ],
+                [
+                  74537,
+                  128455,
+                  157319,
+                  186507,
+                  215767
+                ],
+                [
+                  85958,
+                  148138,
+                  181425,
+                  215085,
+                  248828
+                ]
+              ]
+            }
+          ]
+        },
+        "memberRateTable": {
+          "ageBands": [
+            {
+              "min": 0,
+              "max": 18
+            },
+            {
+              "min": 19,
+              "max": 29
+            },
+            {
+              "min": 30,
+              "max": 39
+            },
+            {
+              "min": 40,
+              "max": 49
+            },
+            {
+              "min": 50,
+              "max": 120
+            }
+          ],
+          "maternity": [
+            0
+          ],
+          "dental": [
+            0
+          ],
+          "optical": [
+            0
+          ]
+        },
+        "isPublished": true,
+        "tpoRates": {
+          "private": 7500
+        },
+        "sourceNote": "Re-verified against the real CIC KEY BROKERS & AGENTS MOTOR TERMS 2024 (Std, 04/07/2024) binder document. Motor Private corrected from an unsourced flat-by-body-type rate (4.9/4.7/5/8%) to the document's real sum-insured tiers (6% up to 1M, 5% 1M-1.5M, 4% 1.5M-2.5M, 3% above 2.5M). Added Commercial Goods (5%, min 50,000), Commercial General Cartage (6%, min 50,000), Institutional (3%, min 30,000) and Motorcycle (3%, min 5,000) - previously entirely unmodeled for this insurer. TPO rate (7,500) is unchanged - this document doesn't cover TPO. Excluded from this pass: Motor Commercial Hybrid Zero Mileage (4.5%/5.5% all-inclusive) - doesn't map to an existing vehicle-use category since it distinguishes by vehicle age/mileage status, which the app doesn't collect for commercial risks.",
+        "maxVehicleAgeComprehensive": 15,
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5,
+                "minPremium": 50000
+              }
+            ],
+            "minPremium": 50000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 6,
+                "minPremium": 50000
+              }
+            ],
+            "minPremium": 50000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 3,
+                "minPremium": 30000
+              }
+            ],
+            "minPremium": 30000
+          },
+          "motorcycle": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 3,
+                "minPremium": 5000
+              }
+            ],
+            "minPremium": 5000
+          }
+        }
+      }
+    },
+    {
+      "id": "rate-ver-geminia-5",
+      "versionNumber": 5,
+      "insurerId": "geminia",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.330Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Geminia Insurance Company Limited",
+        "motorTpoRate": 12000,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 30000,
+        "medicalDentalOptRate": 12000,
+        "isExcessProtectorInclusive": false,
+        "isPvtInclusive": false,
+        "sumInsuredBands": [
+          {
+            "min": 0,
+            "max": 1500000,
+            "rate": 6,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 1500001,
+            "max": 2000000,
+            "rate": 5,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 2000001,
+            "max": 2500000,
+            "rate": 4,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 2500001,
+            "max": 3000000,
+            "rate": 3.5,
+            "isPvtInclusive": true
+          },
+          {
+            "min": 3000001,
+            "max": 3500000,
+            "rate": 3.25,
+            "isPvtInclusive": false
+          },
+          {
+            "min": 3500001,
+            "max": 99999999,
+            "rate": 3,
+            "isPvtInclusive": false
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.5,
+            "minPremium": 5000,
+            "note": "Confirmed real Motor Private rate per Geminia Revised Motor Terms 2025 (0.5%, min Kshs 5,000, flat across all sum-insured bands) - corrects a prior turn's standardization to 0.25% that assumed this was an unsourced Commercial-pattern figure, which this document disproves."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500,
+            "note": "Chargeable rate for Motor Private sum insured >3,000,000 per Geminia Revised Motor Terms 2025 (0.25%, min Kshs 2,500). Below that threshold, PVT is bundled free - see each sumInsuredBands entry's isPvtInclusive flag, now actually enforced by the engine."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 100000,
+              "suv": 100000,
+              "pickup": 100000,
+              "sports": 100000
+            },
+            "note": "Windscreen limit set to Kshs 100,000 for Geminia per staff instruction (2026-08-20)."
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "rate": 0,
+            "freeLimit": 100000,
+            "note": "Radio & Entertainment Unit limit set to Kshs 100,000 for Geminia per staff instruction (2026-08-20)."
+          }
+        ],
+        "tpoRates": {
+          "private": 12000,
+          "motorcycle": 3000,
+          "psv_chaufeur": 15000,
+          "commercial_goods": 12000,
+          "commercial_general_cartage": 20000,
+          "institutional": 12000
+        },
+        "sourceNote": "Updated from Geminia's revised 2025 motor terms: revision letter Ref 110/2025 (4 March 2025, 'Review of our 5th December 2024 Circular in Respect to Motor Terms', signed Ben J. Ndegwa, Managing Director) and its attached schedule 'PROPOSED MOTOR PREMIUM RATES - 2025'. Max vehicle age 15 years for all classes except Tankers (10 years, not modeled - no distinct 'tankers' vehicleUse class exists in this engine). Motor Cycle PVT is 0.25% min Kshs 1,000 (vs Private's min Kshs 2,500) and PSV-Chauffeur's own Excess Protector/PVT (0.5%/5,000, 0.25%/2,500) matches Private exactly - neither is separately modeled since riders here are global, not per-class. Reinstatement of Own Damage Excess Protector: 0.75% (min Kshs 7,500 for Private), allowed once per period - not modeled (no reinstatement concept in this engine). Not offered comprehensive: Motor Cycle (TPO only, matches this engine's existing behavior). Electric vehicles: showroom-only underwriting - not modeled.",
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 4.5,
+                "minPremium": 35000
+              }
+            ],
+            "minPremium": 35000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5.5,
+                "minPremium": 75000
+              }
+            ],
+            "minPremium": 75000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 3.75,
+                "minPremium": 35000
+              }
+            ],
+            "minPremium": 35000
+          }
+        },
+        "tpoTonnageRates": {
+          "commercial_goods": [
+            {
+              "minTons": 0,
+              "maxTons": 3,
+              "premium": 12000
+            },
+            {
+              "minTons": 3,
+              "maxTons": 8,
+              "premium": 15000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 30,
+              "premium": 20000
+            }
+          ],
+          "commercial_general_cartage": [
+            {
+              "minTons": 0,
+              "maxTons": 8,
+              "premium": 20000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 20,
+              "premium": 25000
+            },
+            {
+              "minTons": 20,
+              "maxTons": 30,
+              "premium": 30000
+            }
+          ]
+        },
+        "maxVehicleAgeComprehensive": 15
+      }
+    },
+    {
+      "id": "rate-ver-madison-5",
+      "versionNumber": 5,
+      "insurerId": "madison",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.330Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Madison General Insurance Kenya Limited",
+        "isPublished": true,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 0,
+        "medicalDentalOptRate": 0,
+        "motorTpoRate": 12000,
+        "sumInsuredBands": [
+          {
+            "min": 500000,
+            "max": 1500000,
+            "rate": 8,
+            "minPremium": 45000
+          },
+          {
+            "min": 1500001,
+            "max": 2500000,
+            "rate": 6.5,
+            "minPremium": 45000
+          },
+          {
+            "min": 2500001,
+            "max": 3500000,
+            "rate": 4.5,
+            "minPremium": 45000
+          },
+          {
+            "min": 3500001,
+            "max": 5000000,
+            "rate": 3.5,
+            "minPremium": 100000
+          },
+          {
+            "min": 5000001,
+            "max": 99999999,
+            "rate": 3,
+            "minPremium": 150000
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 45000
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "minPremium": 100000
+          }
+        ],
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 5000,
+            "note": "Corrected to the confirmed Kenyan-market Motor Private standard (0.25%, min Kshs 5,000) - the prior 0.5% figure matched the recurring Commercial-class rate seen misapplied at other insurers, with no sourcing note on file (unlike this insurer's PVT rider, which already documents the Private rate correctly)."
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.25,
+            "minPremium": 2500,
+            "note": "Private rate 0.25% min Kshs 2,500; Commercial rate 0.5% min Kshs 5,000 per binder - private rate applied here."
+          },
+          {
+            "riderId": "courtesy_car",
+            "riderName": "Courtesy Car / Loss of Use",
+            "ratePerDay": 600,
+            "maxDays": 10,
+            "waitingDays": 0,
+            "note": "Flat Kshs 6,000 for 10 days per binder."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 30000,
+              "suv": 30000,
+              "pickup": 30000,
+              "sports": 30000
+            },
+            "note": "Windscreen limit set to Kshs 30,000 for Madison per staff instruction (2026-08-20)."
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "rate": 0,
+            "freeLimit": 30000,
+            "note": "Radio & Entertainment Unit limit set to Kshs 30,000 for Madison per staff instruction (2026-08-20)."
+          }
+        ],
+        "tpoRates": {
+          "private": 12000,
+          "commercial_goods": 15000,
+          "commercial_general_cartage": 20000
+        },
+        "maxVehicleAgeComprehensive": 15,
+        "sourceNote": "Rates sourced from the Underwriter-Binder folder (staff-provided binder documents) - motor lines only. Medical/other-lines figures carried forward unchanged from the prior version since the binder documents are motor-only. Source: Madison.pdf (private-focused - existing commercial sum-insured bands left unchanged, only TPO tiers updated). | Excess Protector corrected to the confirmed Motor Private standard for consistency with this insurer's already-correct PVT rider.",
+        "tpoTonnageRates": {
+          "commercial_goods": [
+            {
+              "minTons": 0,
+              "maxTons": 3,
+              "premium": 15000
+            },
+            {
+              "minTons": 3,
+              "maxTons": 8,
+              "premium": 20000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 20,
+              "premium": 25000
+            },
+            {
+              "minTons": 20,
+              "maxTons": 30,
+              "premium": 30000
+            }
+          ],
+          "commercial_general_cartage": [
+            {
+              "minTons": 0,
+              "maxTons": 3,
+              "premium": 15000
+            },
+            {
+              "minTons": 3,
+              "maxTons": 8,
+              "premium": 20000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 20,
+              "premium": 25000
+            },
+            {
+              "minTons": 20,
+              "maxTons": 30,
+              "premium": 30000
+            }
+          ]
+        },
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 500000,
+                "max": 1500000,
+                "rate": 8,
+                "minPremium": 45000
+              },
+              {
+                "min": 1500001,
+                "max": 2500000,
+                "rate": 6.5,
+                "minPremium": 45000
+              },
+              {
+                "min": 2500001,
+                "max": 3500000,
+                "rate": 4.5,
+                "minPremium": 45000
+              },
+              {
+                "min": 3500001,
+                "max": 5000000,
+                "rate": 3.5,
+                "minPremium": 100000
+              },
+              {
+                "min": 5000001,
+                "max": 99999999,
+                "rate": 3,
+                "minPremium": 150000
+              }
+            ],
+            "minPremium": 45000,
+            "tonnageBands": []
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 500000,
+                "max": 1500000,
+                "rate": 8,
+                "minPremium": 45000
+              },
+              {
+                "min": 1500001,
+                "max": 2500000,
+                "rate": 6.5,
+                "minPremium": 45000
+              },
+              {
+                "min": 2500001,
+                "max": 3500000,
+                "rate": 4.5,
+                "minPremium": 45000
+              },
+              {
+                "min": 3500001,
+                "max": 5000000,
+                "rate": 3.5,
+                "minPremium": 100000
+              },
+              {
+                "min": 5000001,
+                "max": 99999999,
+                "rate": 3,
+                "minPremium": 150000
+              }
+            ],
+            "minPremium": 45000,
+            "tonnageBands": []
+          }
+        }
+      }
+    },
+    {
+      "id": "rate-ver-kenindia-6",
+      "versionNumber": 6,
+      "insurerId": "kenindia",
+      "category": "all",
+      "status": "active",
+      "timestamp": "2026-08-20T08:28:42.331Z",
+      "updatedByStaffId": "staff-1",
+      "rates": {
+        "insurerName": "Kenindia Assurance Company Limited",
+        "isPublished": true,
+        "medicalMultiplier": 1,
+        "medicalMaternityRate": 18000,
+        "medicalDentalOptRate": 8500,
+        "motorTpoRate": 12000,
+        "sumInsuredBands": [
+          {
+            "min": 600000,
+            "max": 1000000,
+            "rate": 6,
+            "minPremium": 42500
+          },
+          {
+            "min": 1000001,
+            "max": 1500000,
+            "rate": 3.5,
+            "minPremium": 42500
+          },
+          {
+            "min": 1500001,
+            "max": 2500000,
+            "rate": 3.5,
+            "minPremium": 42500
+          },
+          {
+            "min": 2500001,
+            "max": 5000000,
+            "rate": 3.5,
+            "minPremium": 42500
+          },
+          {
+            "min": 5000001,
+            "max": 99999999,
+            "rate": 3,
+            "minPremium": 42500
+          }
+        ],
+        "vehicleTypes": [
+          {
+            "typeId": "saloon",
+            "typeName": "Saloon / Hatchback / Wagon",
+            "allowedComprehensive": true,
+            "minPremium": 42500
+          },
+          {
+            "typeId": "suv",
+            "typeName": "SUV / 4x4 / Luxury",
+            "allowedComprehensive": true,
+            "minPremium": 42500
+          },
+          {
+            "typeId": "pickup",
+            "typeName": "Commercial Pickups / Vans",
+            "allowedComprehensive": true,
+            "minPremium": 42500
+          },
+          {
+            "typeId": "sports",
+            "typeName": "High-Performance Sports Cars",
+            "allowedComprehensive": true,
+            "minPremium": 42500
+          }
+        ],
+        "commercialRates": {
+          "commercial_goods": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5.35
+              }
+            ],
+            "minPremium": 50000
+          },
+          "commercial_general_cartage": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 5.35
+              }
+            ],
+            "minPremium": 50000
+          },
+          "institutional": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 4.95
+              }
+            ],
+            "minPremium": 50000
+          },
+          "motorcycle": {
+            "bands": [
+              {
+                "min": 0,
+                "max": 99999999,
+                "rate": 3.5,
+                "minPremium": 7500
+              }
+            ],
+            "minPremium": 7500
+          }
+        },
+        "riders": [
+          {
+            "riderId": "excess_protector",
+            "riderName": "Excess Protector",
+            "rate": 0.25,
+            "minPremium": 5000,
+            "note": "Fully inclusive (no extra charge) - Motor Private, Own Goods, and Hybrid (Own Goods+General Cartage combined) are all explicitly 'all inclusive' per Kenindia's Utmost-specific motor terms summary. Corrects a prior turn's 0.25% standardization, made without this document.",
+            "isInclusive": true
+          },
+          {
+            "riderId": "pvt",
+            "riderName": "Political Violence & Terrorism",
+            "rate": 0.3,
+            "minPremium": 3000,
+            "isInclusive": true,
+            "note": "Fully inclusive (no extra charge) - see Excess Protector's note for the same source."
+          },
+          {
+            "riderId": "windscreen",
+            "riderName": "Windscreen Cover",
+            "rate": 10,
+            "limits": {
+              "saloon": 100000,
+              "suv": 100000,
+              "pickup": 100000,
+              "sports": 100000
+            },
+            "note": "Windscreen limit set to Kshs 100,000 for Kenindia per staff instruction (2026-08-20)."
+          },
+          {
+            "riderId": "courtesy_car",
+            "riderName": "Road Rescue",
+            "ratePerDay": 6500,
+            "maxDays": 1,
+            "waitingDays": 0,
+            "note": "Road rescue up to 40km per binder: Kshs 6,500 flat."
+          },
+          {
+            "riderId": "radio",
+            "riderName": "Radio & Entertainment Unit",
+            "rate": 0,
+            "freeLimit": 50000,
+            "note": "Radio & Entertainment Unit limit set to Kshs 50,000 for Kenindia per staff instruction (2026-08-20)."
+          }
+        ],
+        "tpoRates": {
+          "private": 12000,
+          "commercial_goods": 20000,
+          "commercial_general_cartage": 20000,
+          "motorcycle": 7500
+        },
+        "maxVehicleAgeComprehensive": 15,
+        "sourceNote": "Rates sourced from the Underwriter-Binder folder (staff-provided binder documents) - motor lines only. Medical/other-lines figures carried forward unchanged from the prior version since the binder documents are motor-only. Source: MOTOR TERMS SUMMARY UTMOST - KENINDIA.xlsx. | Excess Protector corrected - prior value (2.5%) was a 10x outlier apparently describing the standard OD excess amount rather than the rider premium. | Confirmed Excess Protector and PVT are fully inclusive across Motor Private/Own Goods/Hybrid per MOTOR TERMS SUMMARY UTMOST - KENINDIA.xlsx (previously charged, first at an anomalous 2.5% then a standardized 0.25% - neither correct). Added Motorcycle Private comprehensive (3.5%, min Kshs 7,500) - the existing tpoRates.motorcycle=7,500 was this same comprehensive minimum premium mistakenly stored as a TPO figure; left unchanged since no distinct motorcycle TPO figure is given in this document. Ambulances, Fire Engines, Tankers, Agroforestry Equipment, and Driving Schools are all 'On Quotation Basis' / reinsurance-terms only - not modeled (no automated rate exists for these at Kenindia).",
+        "tpoTonnageRates": {
+          "commercial_goods": [
+            {
+              "minTons": 0,
+              "maxTons": 8,
+              "premium": 20000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 20,
+              "premium": 25000
+            },
+            {
+              "minTons": 20,
+              "maxTons": 30,
+              "premium": 30000
+            }
+          ],
+          "commercial_general_cartage": [
+            {
+              "minTons": 0,
+              "maxTons": 8,
+              "premium": 20000
+            },
+            {
+              "minTons": 8,
+              "maxTons": 20,
+              "premium": 25000
+            },
+            {
+              "minTons": 20,
+              "maxTons": 30,
+              "premium": 30000
+            }
+          ]
         }
       }
     }
