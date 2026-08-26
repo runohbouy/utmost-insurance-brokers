@@ -32,14 +32,17 @@ export const OTHER_LINE_CATEGORIES: OtherLineCategory[] = [
 
 // Categories that currently have a real customer-facing intake form (informed by an actual
 // Kenyan-market proposal form) - see otherLineFormDefs.ts. The remaining categories above
-// (domestic_package, medical, and the annuities/pensions/group_life/group_credit Life classes)
-// stay admin-configured only: domestic_package/medical already have dedicated live journeys
-// elsewhere in the app (RoomAnalyzerView, QuoteJourneyView); the remaining Life classes have no
-// source brochure on file for any insurer yet. fire and aviation were added once real CIC (Fire
-// & Perils) and Kenindia/QBE (Aircraft Insurance) proposal forms were located in the binder - see
-// Underwriter-Binder/General. life_assurance and investment were added once real Old Mutual Life
-// product fliers (Life, Critical Illness, Last Expense, Education, Savings & Investment) were
-// located in Underwriter-Binder/Life Brochures.
+// (medical, and the annuities/pensions/group_life/group_credit Life classes) stay admin-
+// configured only: medical already has its own dedicated live journey elsewhere in the app
+// (QuoteJourneyView); the remaining Life classes have no source brochure on file for any
+// insurer yet. fire and aviation were added once real CIC (Fire & Perils) and Kenindia/QBE
+// (Aircraft Insurance) proposal forms were located in the binder - see Underwriter-Binder/
+// General. life_assurance and investment were added once real Old Mutual Life product fliers
+// (Life, Critical Illness, Last Expense, Education, Savings & Investment) were located in
+// Underwriter-Binder/Life Brochures. domestic_package was added once the real CIC Domestic
+// Package Proposal Form was located in Proposal_forms - it now shares this same real-proposal-
+// form popup flow instead of the separate photo-based AI Risk Evaluator (RoomAnalyzerView),
+// which remains available on its own as an alternative, faster-but-less-precise entry point.
 export const OTHER_LINE_LIVE_CATEGORY_IDS = [
   "liability",
   "engineering",
@@ -51,5 +54,6 @@ export const OTHER_LINE_LIVE_CATEGORY_IDS = [
   "fire",
   "aviation",
   "life_assurance",
-  "investment"
+  "investment",
+  "domestic_package"
 ];

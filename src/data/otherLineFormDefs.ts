@@ -35,6 +35,34 @@ export interface OtherLineCategoryFormDef {
 }
 
 export const OTHER_LINE_FORM_DEFS: Record<string, OtherLineCategoryFormDef> = {
+  domestic_package: {
+    categoryId: "domestic_package",
+    subTypes: [
+      {
+        id: "domestic_package_standard",
+        label: "Domestic Package (Home & Contents)",
+        sourceForm: "CIC General Domestic Package Proposal Form",
+        ratingBasisFieldId: "totalSumInsured",
+        fields: [
+          { id: "buildingType", label: "Type of building", type: "select", options: ["Bungalow", "Flat / Apartment", "Maisonette", "Other"], required: true },
+          { id: "usedForBusiness", label: "Is any part of the building used for business?", type: "boolean" },
+          { id: "businessUsageDetails", label: "If yes, please give more details", type: "text" },
+          { id: "unoccupiedOver7Days", label: "Will the premises be left unoccupied for more than 7 days?", type: "boolean" },
+          { id: "buildingsSumInsured", label: "Section A - Buildings", type: "number", unit: "KES" },
+          { id: "contentsSumInsured", label: "Section B - Contents", type: "number", unit: "KES", helpText: "Declare, with details, any single item worth more than 5% of this sum insured (except furniture)." },
+          { id: "allRisksSumInsured", label: "Section C - All Risks (valuables carried around)", type: "number", unit: "KES", helpText: "Each article must be declared (value, make, model, serial number). Any item over Kshs 50,000 needs a valuation report or proof of purchase." },
+          { id: "domesticServantsWibaRequired", label: "Section D - Domestic Servants (WIBA cover for household staff)", type: "boolean" },
+          { id: "householdStaffAnnualEarnings", label: "Estimated annual earnings - indoor servants, gardeners, drivers, watchman etc.", type: "number", unit: "KES", helpText: "Cover for the first 2 indoor servants is free; this funds WIBA cover for all declared household staff." },
+          { id: "occupierLiabilityRequired", label: "Section E - Occupier's Liability", type: "boolean", helpText: "Free up to Kshs 2,000,000." },
+          { id: "ownersLiabilityRequired", label: "Section F - Owner's Liability", type: "boolean", helpText: "Free up to Kshs 2,000,000." },
+          { id: "totalSumInsured", label: "Total sum insured (all sections combined)", type: "number", unit: "KES", required: true },
+          { id: "claimsHistory3yr", label: "Claims/losses in the last 3 years (details and amounts)", type: "textarea" },
+          { id: "previousInsurer", label: "Name of previous insurer(s)", type: "text" },
+          { id: "everDeclinedOrLoaded", label: "Has any insurer declined your proposal, cancelled/refused to renew your policy, or required an increased premium on renewal?", type: "boolean" }
+        ]
+      }
+    ]
+  },
   liability: {
     categoryId: "liability",
     subTypes: [

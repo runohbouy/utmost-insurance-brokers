@@ -1,11 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { ActiveTab } from "../types";
-import { mockInsurers } from "../data/mockInsurers";
-import { EXTRA_LICENSED_CLASSES } from "../data/extraLicensedClasses";
 import { OTHER_LINE_CATEGORIES, OTHER_LINE_LIVE_CATEGORY_IDS } from "../data/otherLineCategories";
 import { OTHER_LINE_FORM_DEFS, OtherLineFieldDef } from "../data/otherLineFormDefs";
-import InsurerLogo from "./InsurerLogo";
-import { Briefcase, ShieldCheck, AlertCircle, CheckCircle, Phone, Sparkles } from "lucide-react";
+import { Briefcase, ShieldCheck, CheckCircle, Phone, Sparkles, FileText } from "lucide-react";
 
 interface OtherLinesQuoteViewProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -15,37 +12,8 @@ interface OtherLinesQuoteViewProps {
 
 const LIVE_CATEGORIES = OTHER_LINE_CATEGORIES.filter((c) => OTHER_LINE_LIVE_CATEGORY_IDS.includes(c.id));
 
-// Display names for the 3 built-in insurers with no full mockInsurers.ts profile (matches the
-// names used in server.ts's builtInInsurers motor list).
-const EXTRA_INSURER_NAMES: Record<string, string> = {
-  stardiscover: "Star Discover Insurance Limited",
-  aar: "AAR Insurance (Kenya) Limited",
-  oldmutual: "Old Mutual General Insurance Kenya Limited",
-  apa: "APA Insurance Limited"
-};
-
-// Only surface carriers with verified IRA licensing data for the selected class - unlike the
-// admin rate editor (which defaults to "show everything" when license data is unverified), the
-// customer-facing flow errs strict so nobody is quoted against an insurer that isn't actually
-// authorised for that class. `kind` picks whether to check licensedGeneralClasses or
-// licensedLifeClasses - Life-kind categories (life_assurance, investment, etc.) must check the
-// life list, not general, or no insurer would ever qualify for them.
-function getLicensedInsurersForCategory(categoryCode: string, kind: "general" | "life") {
-  return mockInsurers
-    .filter((m) => ((kind === "life" ? m.licensedLifeClasses : m.licensedGeneralClasses) || []).includes(categoryCode))
-    .map((m) => ({ id: m.id, name: m.tradingName || m.name }))
-    .concat(
-      Object.entries(EXTRA_LICENSED_CLASSES)
-        .filter(([, v]) => ((kind === "life" ? v.life : v.general) || []).includes(categoryCode))
-        .map(([id]) => ({ id, name: EXTRA_INSURER_NAMES[id] || id }))
-    );
-}
-
 type SubmissionResult = {
   referenceNumber: string;
-  status: "quoted" | "pending_underwriter_review";
-  premium: number | null;
-  rateApplied: { itemName: string; rateType: string; rate: number } | null;
 };
 
 export default function OtherLinesQuoteView({ setActiveTab, initialCategory, initialSubType }: OtherLinesQuoteViewProps) {
@@ -58,9 +26,6 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
   const [subTypeId, setSubTypeId] = useState<string>(validInitialSubType);
   const subType = categoryFormDef.subTypes.find((s) => s.id === subTypeId) || categoryFormDef.subTypes[0];
 
-  const licensedInsurers = useMemo(() => getLicensedInsurersForCategory(category.code, category.kind), [category.code, category.kind]);
-  const [insurerId, setInsurerId] = useState<string>(licensedInsurers[0]?.id || "");
-
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -69,22 +34,27 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Clicking "Generate Quote" opens the real proposal form as a popup instead of it sitting
+  // inline on the page - matches the pattern used for Motor's checkout modal. The same modal
+  // swaps to showing the confirmation once a submission succeeds, so re-opening it (e.g. via
+  // the summary bar after closing) shows the outcome rather than a blank form again.
+  const [showProposalModal, setShowProposalModal] = useState(false);
+
   const handleCategoryChange = (id: string) => {
     setCategoryId(id);
     const def = OTHER_LINE_FORM_DEFS[id];
     setSubTypeId(def.subTypes[0].id);
-    const newCategory = OTHER_LINE_CATEGORIES.find((c) => c.id === id)!;
-    const insurers = getLicensedInsurersForCategory(newCategory.code, newCategory.kind);
-    setInsurerId(insurers[0]?.id || "");
     setAnswers({});
     setResult(null);
     setError(null);
+    setShowProposalModal(false);
   };
 
   const handleSubTypeChange = (id: string) => {
     setSubTypeId(id);
     setAnswers({});
     setResult(null);
+    setShowProposalModal(false);
   };
 
   const handleFieldChange = (fieldId: string, value: any) => {
@@ -104,10 +74,6 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
       setError(`Please complete: ${missing.map((f) => f.label).join(", ")}`);
       return;
     }
-    if (!insurerId) {
-      setError("No licensed insurer is available for this class yet - please contact our advisory line directly.");
-      return;
-    }
 
     setIsSubmitting(true);
     setResult(null);
@@ -118,9 +84,7 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
         body: JSON.stringify({
           category: categoryId,
           subType: subTypeId,
-          insurerId,
           answers,
-          ratingBasisValue: Number(answers[subType.ratingBasisFieldId]) || 0,
           contactName: contactName.trim(),
           contactPhone: contactPhone.trim(),
           contactEmail: contactEmail.trim()
@@ -131,10 +95,7 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
         throw new Error(data.error || "Submission failed.");
       }
       setResult({
-        referenceNumber: data.request.referenceNumber,
-        status: data.request.status,
-        premium: data.request.premium,
-        rateApplied: data.request.rateApplied
+        referenceNumber: data.request.referenceNumber
       });
     } catch (err: any) {
       setError(err.message || "Failed to submit this request. Please try again.");
@@ -226,7 +187,7 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
         <p className="text-[10px] uppercase font-bold text-[#316EC9] tracking-[0.25em] mb-1 font-mono">Specialty Product Lines</p>
         <h1 className="text-3xl font-serif italic tracking-tight text-[#1A1A1A]">Liability, Engineering, Marine & Other Covers</h1>
         <p className="mt-1.5 text-xs text-[#8C887D] max-w-4xl leading-relaxed">
-          Underwriting questions below mirror the real proposal forms used in the Kenyan market for each class. Carriers shown are filtered to only those verified as IRA-licensed for the selected class.
+          Choose a class below, then Generate Quote opens the real proposal form for it - the same underwriting questions real insurers ask on their own paperwork. Once submitted, our staff share your completed proposal with the licensed underwriters best placed to quote it and come back with competing terms.
         </p>
       </div>
 
@@ -246,167 +207,179 @@ export default function OtherLinesQuoteView({ setActiveTab, initialCategory, ini
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* SELECTION PANEL - class picked here; no underwriter selector, since the completed
+          proposal form is shopped to several licensed underwriters by staff, not tied to one.
+          The actual underwriting questions only appear once Generate Quote opens the popup. */}
+      <div className="max-w-2xl mx-auto w-full border border-[#D8E2F0] bg-[#FAF9F6] p-8 space-y-6 rounded-none text-center">
+        <div className="border border-[#D8E2F0] p-3 text-neutral-400 bg-white rounded-none inline-flex mx-auto">
+          <ShieldCheck className="h-8 w-8 text-neutral-300" />
+        </div>
+        <h3 className="text-lg font-serif italic text-[#1A1A1A]">{category.label}</h3>
 
-        {/* LEFT: FORM */}
-        <div className="lg:col-span-7 border border-[#D8E2F0] bg-[#FAF9F6] p-6 space-y-5 rounded-none">
+        {categoryFormDef.subTypes.length > 1 && (
+          <div className="space-y-1.5 text-left max-w-sm mx-auto">
+            <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Cover Type *</label>
+            <select
+              value={subTypeId}
+              onChange={(e) => handleSubTypeChange(e.target.value)}
+              className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
+            >
+              {categoryFormDef.subTypes.map((st) => (
+                <option key={st.id} value={st.id}>{st.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-          {categoryFormDef.subTypes.length > 1 && (
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Cover Type *</label>
-              <select
-                value={subTypeId}
-                onChange={(e) => handleSubTypeChange(e.target.value)}
-                className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
-              >
-                {categoryFormDef.subTypes.map((st) => (
-                  <option key={st.id} value={st.id}>{st.label}</option>
-                ))}
-              </select>
+        <p className="text-xs text-[#8C887D] max-w-sm mx-auto leading-relaxed">
+          Complete the proposal form and our staff will place it with the licensed underwriters best suited to this class, then come back to you with competing quotations.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setShowProposalModal(true)}
+          className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
+          id="other-lines-generate-quote-btn"
+        >
+          Generate Quote
+        </button>
+      </div>
+
+      {/* SELECTED/SUBMITTED SUMMARY BAR - reopens the popup without losing a submitted result,
+          once the customer has closed it. Mirrors the pattern used on the Motor quote journey. */}
+      {result && !showProposalModal && (
+        <div className="max-w-2xl mx-auto w-full border border-[#316EC9] bg-[#F0F5FC] p-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-none">
+          <div className="flex items-center gap-3 text-left">
+            <CheckCircle className="h-5 w-5 text-[#316EC9] shrink-0" />
+            <div>
+              <span className="text-[9px] uppercase font-bold text-[#316EC9] tracking-wider block font-mono">
+                Submitted For Underwriter Placement
+              </span>
+              <p className="text-sm text-[#1A1A1A]">
+                Reference: <strong className="font-mono">{result.referenceNumber}</strong>
+              </p>
             </div>
-          )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowProposalModal(true)}
+            className="uppercase tracking-wider inline-flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white border border-[#142C54] hover:border-[#316EC9] px-4 py-2.5 text-[10px] font-bold transition-all rounded-none cursor-pointer"
+          >
+            <span>View details</span>
+          </button>
+        </div>
+      )}
 
-          <div className="space-y-1.5">
-            <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Underwriter *</label>
-            {licensedInsurers.length === 0 ? (
-              <div className="border border-[#FFE8B5] bg-[#FFF8E7] p-3 text-[11px] text-[#8A6D3B]">
-                No insurer in our current licensing register is verified for this class yet. Please call our advisory line below.
+      {/* PROPOSAL FORM POPUP - the real proposal-form questions, opened on demand instead of
+          sitting inline on the page. Swaps to the outcome once submitted. */}
+      {showProposalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-none p-4 transition-all" id="proposal-form-modal">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#D8E2F0] bg-[#FAF9F6] p-6 shadow-none space-y-5 text-left rounded-none">
+
+            <div className="flex justify-between items-start border-b border-[#D8E2F0] pb-3">
+              <div>
+                {/* No underwriter logo, selector, or source-document citation here by design -
+                    this same risk information gets shopped to several licensed underwriters by
+                    staff, not just one, so branding or naming the form after a single insurer's
+                    own paperwork would be misleading. */}
+                <span className="border border-[#316EC9]/30 bg-[#F0F5FC] px-2.5 py-0.5 font-mono text-[9px] font-bold text-[#316EC9] uppercase tracking-wider inline-flex items-center gap-1">
+                  <FileText className="h-3 w-3" />
+                  Proposal Form
+                </span>
+                <h3 className="text-lg font-serif italic text-[#1A1A1A] pt-1 leading-tight">{subType.label}</h3>
+              </div>
+              <button
+                onClick={() => setShowProposalModal(false)}
+                className="text-[#1A1A1A] hover:text-[#316EC9] text-sm font-bold p-1 cursor-pointer shrink-0"
+                id="close-proposal-modal-btn"
+              >
+                ✕
+              </button>
+            </div>
+
+            {result ? (
+              <div className="space-y-4">
+                <div className="border border-[#D8E2F0] bg-white p-5 space-y-3 rounded-none">
+                  <div className="flex items-center space-x-2 text-[#142C54]">
+                    <Sparkles className="h-5 w-5" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Submitted for Underwriter Placement</span>
+                  </div>
+                  <p className="text-xs text-[#5E5A51] leading-relaxed">
+                    Your completed proposal has been logged and will be shared with the licensed underwriters best placed to quote this class - expect a call back with competing terms.
+                  </p>
+                  <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-2.5 text-[10px] text-[#8C887D] font-mono">
+                    Reference: <strong className="text-[#1A1A1A]">{result.referenceNumber}</strong>
+                  </div>
+                  <a href="tel:+254707798701" className="flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white text-[10px] font-bold uppercase tracking-widest py-3 transition-all">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span>Call Advisory Line +254 707 798701</span>
+                  </a>
+                </div>
               </div>
             ) : (
-              <select
-                value={insurerId}
-                onChange={(e) => setInsurerId(e.target.value)}
-                className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs font-semibold text-slate-800 focus:border-[#316EC9] focus:outline-none"
-              >
-                {licensedInsurers.map((ins) => (
-                  <option key={ins.id} value={ins.id}>{ins.name}</option>
-                ))}
-              </select>
+              <form onSubmit={handleSubmit} className="space-y-5 text-xs font-semibold">
+                <div className="space-y-2">
+                  <p className="text-[9px] font-bold text-[#8C887D] uppercase tracking-widest font-mono border-b border-[#D8E2F0] pb-1.5">Proposer Details</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Your Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. 0712 345678"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Email (optional)</label>
+                      <input
+                        type="email"
+                        placeholder="e.g. name@domain.com"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[9px] font-bold text-[#8C887D] uppercase tracking-widest font-mono border-b border-[#D8E2F0] pb-1.5">Risk Details</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {subType.fields.map(renderField)}
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="border border-red-200 bg-red-50 p-3 text-[11px] text-red-700 rounded-none">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit for Underwriting"}
+                </button>
+              </form>
             )}
           </div>
-
-          <p className="text-[9px] text-[#8C887D] font-mono uppercase tracking-wider border-t border-[#D8E2F0] pt-3">
-            Source: {subType.sourceForm} (generic Kenyan-market reference)
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-[#D8E2F0] pb-4">
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Your Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
-                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Phone Number *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="e.g. 0712 345678"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Email (optional)</label>
-                <input
-                  type="email"
-                  placeholder="e.g. name@domain.com"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {subType.fields.map(renderField)}
-            </div>
-
-            {error && (
-              <div className="border border-red-200 bg-red-50 p-3 text-[11px] text-red-700 rounded-none">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || licensedInsurers.length === 0}
-              className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting ? "Submitting..." : "Submit for Underwriting"}
-            </button>
-          </form>
         </div>
-
-        {/* RIGHT: RESULT / INFO */}
-        <div className="lg:col-span-5 space-y-6">
-          {!result && (
-            <div className="border border-[#D8E2F0] bg-[#FAF9F6] border-dashed p-8 text-center flex flex-col items-center justify-center space-y-4 rounded-none">
-              <div className="border border-[#D8E2F0] p-3 text-neutral-400 bg-white rounded-none">
-                <ShieldCheck className="h-8 w-8 text-neutral-300" />
-              </div>
-              <h3 className="text-lg font-serif italic text-[#1A1A1A]">Specialist Cover Requires Underwriting</h3>
-              <p className="text-xs text-[#8C887D] max-w-sm mx-auto leading-relaxed">
-                Most classes here (Liability, Engineering, Marine, Theft, WIBA, Personal Accident, Fidelity/Money) don't yet have a published binder rate on file for every carrier - your request routes straight to our underwriting desk for a same-day indicative quote, unless the selected insurer already has a negotiated rate loaded, in which case you'll see an instant premium.
-              </p>
-            </div>
-          )}
-
-          {result && result.status === "quoted" && (
-            <div className="border border-[#316EC9]/30 bg-white p-6 space-y-4 rounded-none">
-              <div className="flex items-center space-x-2 text-[#316EC9]">
-                <CheckCircle className="h-5 w-5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Instant Indicative Premium</span>
-              </div>
-              <p className="text-2xl font-bold text-[#1A1A1A]">KES {result.premium?.toLocaleString()}</p>
-              {result.rateApplied && (
-                <p className="text-[10px] text-[#8C887D] font-mono">
-                  Applied: {result.rateApplied.itemName} @ {result.rateApplied.rate}{result.rateApplied.rateType === "permille" ? "‰" : "%"}
-                </p>
-              )}
-              <div className="border border-[#FFE8B5] bg-[#FFF8E7] p-2.5 text-[10px] text-[#8A6D3B]">
-                Reference: <strong>{result.referenceNumber}</strong>. Indicative only - final terms confirmed by an Utmost staff member.
-              </div>
-            </div>
-          )}
-
-          {result && result.status === "pending_underwriter_review" && (
-            <div className="border border-[#D8E2F0] bg-white p-6 space-y-4 rounded-none">
-              <div className="flex items-center space-x-2 text-[#142C54]">
-                <Sparkles className="h-5 w-5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest font-mono">Submitted for Underwriter Review</span>
-              </div>
-              <p className="text-xs text-[#5E5A51] leading-relaxed">
-                No published binder rate is on file yet for this insurer/class combination, so we won't invent a figure. Your risk information has been logged and routed to our underwriting desk - expect a call back with an indicative quote.
-              </p>
-              <div className="border border-[#D8E2F0] bg-[#FAF9F6] p-2.5 text-[10px] text-[#8C887D] font-mono">
-                Reference: <strong className="text-[#1A1A1A]">{result.referenceNumber}</strong>
-              </div>
-              <a href="tel:+254707798701" className="flex items-center justify-center space-x-1.5 bg-[#142C54] hover:bg-[#316EC9] text-white text-[10px] font-bold uppercase tracking-widest py-3 transition-all">
-                <Phone className="h-3.5 w-3.5" />
-                <span>Call Advisory Line +254 707 798701</span>
-              </a>
-            </div>
-          )}
-
-          {insurerId && licensedInsurers.length > 0 && (
-            <div className="border border-[#D8E2F0] bg-white p-4 flex items-center space-x-3">
-              <div className="w-14 h-7 flex items-center justify-center bg-slate-50 border border-slate-100 rounded p-0.5 shrink-0">
-                <InsurerLogo carrierId={insurerId} height="18" className="max-w-full max-h-full object-contain" />
-              </div>
-              <p className="text-[10px] text-[#8C887D] font-mono uppercase tracking-wider">
-                Verified for IRA class {category.code} ({category.label})
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

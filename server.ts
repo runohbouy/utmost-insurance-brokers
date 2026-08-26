@@ -1329,11 +1329,26 @@ app.delete("/api/insurer-logos/:id", requireStaffAuth, (req, res) => {
 // (fire, aviation, life_assurance, investment) was added elsewhere, rejecting every submission
 // for it with a 400.
 
-function getLicensedClasses(insurerId: string, kind: "general" | "life"): string[] | undefined {
-  const profile = mockInsurers.find((m) => m.id === insurerId);
-  if (profile) return kind === "life" ? profile.licensedLifeClasses : profile.licensedGeneralClasses;
-  const extra = EXTRA_LICENSED_CLASSES[insurerId];
-  return kind === "life" ? extra?.life : extra?.general;
+// Display names for the handful of built-in insurers with no full mockInsurers.ts profile
+// (matches EXTRA_LICENSED_CLASSES' keys and the names used in the /api/insurers motor list).
+const EXTRA_INSURER_NAMES: Record<string, string> = {
+  stardiscover: "Star Discover Insurance Limited",
+  aar: "AAR Insurance (Kenya) Limited",
+  oldmutual: "Old Mutual General Insurance Kenya Limited",
+  apa: "APA Insurance Limited"
+};
+
+// Other-line submissions no longer ask the customer to pick one underwriter (the same proposal
+// gets shopped to several by staff), but staff still need to know at intake time which carriers
+// are actually licensed for this IRA class - computed here instead, for the record/lead email.
+function getLicensedInsurerNamesForCategory(categoryCode: string, kind: "general" | "life"): string[] {
+  const fromProfiles = mockInsurers
+    .filter((m) => ((kind === "life" ? m.licensedLifeClasses : m.licensedGeneralClasses) || []).includes(categoryCode))
+    .map((m) => m.tradingName || m.name);
+  const fromExtras = Object.entries(EXTRA_LICENSED_CLASSES)
+    .filter(([, v]: [string, any]) => ((kind === "life" ? v.life : v.general) || []).includes(categoryCode))
+    .map(([id]) => EXTRA_INSURER_NAMES[id] || id);
+  return [...fromProfiles, ...fromExtras];
 }
 
 app.get("/api/other-line-quotes", (req, res) => {
@@ -1341,44 +1356,23 @@ app.get("/api/other-line-quotes", (req, res) => {
 });
 
 app.post("/api/other-line-quotes", (req, res) => {
-  const { category, subType, insurerId, answers, ratingBasisValue, contactName, contactPhone, contactEmail } = req.body;
+  const { category, subType, answers, contactName, contactPhone, contactEmail } = req.body;
 
-  if (!category || !subType || !insurerId || !answers) {
-    return res.status(400).json({ error: "Missing category, subType, insurerId, or answers." });
+  if (!category || !subType || !answers) {
+    return res.status(400).json({ error: "Missing category, subType, or answers." });
   }
 
   const categoryDef = OTHER_LINE_CATEGORIES.find((c) => c.id === category);
   if (!categoryDef) {
     return res.status(400).json({ error: `Unknown other-line category '${category}'.` });
   }
-  const categoryCode = categoryDef.code;
 
-  // Only block the submission when we have verified licensing data that excludes this class -
-  // insurers with no license data on file (e.g. newly admin-added carriers) are allowed through,
-  // matching the same "unrestricted when unverified" default used in the admin licensing filter.
-  const licensedClasses = getLicensedClasses(insurerId, categoryDef.kind);
-  if (licensedClasses && !licensedClasses.includes(categoryCode)) {
-    return res.status(403).json({
-      error: `This insurer is not licensed for IRA class ${categoryCode} (required for '${category}') per the Licensed Entities 2026 register.`
-    });
-  }
-
-  const ratesDb = loadRatesDb();
-  const activeVersion = ratesDb.versions?.find((v: any) => v.insurerId === insurerId && v.status === "active");
-  const lineConfig = activeVersion?.rates?.otherLines?.[category];
-  const ratableItem = lineConfig?.items?.find((it: any) => it.rate && it.rate > 0);
-
-  let status: "quoted" | "pending_underwriter_review" = "pending_underwriter_review";
-  let premium: number | null = null;
-  let rateApplied: { itemName: string; rateType: string; rate: number } | null = null;
-
-  const basis = Number(ratingBasisValue) || 0;
-  if (ratableItem && basis > 0) {
-    const computed = ratableItem.rateType === "permille" ? (basis * ratableItem.rate) / 1000 : (basis * ratableItem.rate) / 100;
-    premium = Math.round(Math.max(computed, lineConfig.minPremium || 0));
-    rateApplied = { itemName: ratableItem.name, rateType: ratableItem.rateType, rate: ratableItem.rate };
-    status = "quoted";
-  }
+  // No single insurer is picked by the customer for these classes - the completed proposal form
+  // is shared with several underwriters by staff for competing quotations, so every submission
+  // is logged for underwriter placement rather than rated against one carrier's own book.
+  // We still resolve which carriers are actually licensed for this IRA class, purely so staff
+  // have a ready shortlist of who to approach.
+  const eligibleUnderwriters = getLicensedInsurerNamesForCategory(categoryDef.code, categoryDef.kind);
 
   const requests = loadDbFile(OTHER_LINE_REQUEST_FILE, []);
   const referenceNumber = `OL-${category.slice(0, 3).toUpperCase()}-${Date.now()}`;
@@ -1388,23 +1382,20 @@ app.post("/api/other-line-quotes", (req, res) => {
     timestamp: new Date().toISOString(),
     category,
     subType,
-    insurerId,
+    eligibleUnderwriters,
     answers,
-    ratingBasisValue: basis,
-    status,
-    premium,
-    rateApplied
+    status: "pending_underwriter_review" as const
   };
   requests.unshift(record);
   saveDbFile(OTHER_LINE_REQUEST_FILE, requests);
 
   addAuditLog({
-    action: status === "quoted" ? "OTHER_LINE_QUOTE_CALCULATED" : "OTHER_LINE_QUOTE_SUBMITTED",
+    action: "OTHER_LINE_QUOTE_SUBMITTED",
     entityType: "other_line_quote",
     entityId: record.id,
     actorId: "customer",
     actorType: "customer",
-    details: { category, subType, insurerId, referenceNumber, status, premium }
+    details: { category, subType, referenceNumber, eligibleUnderwriters }
   });
 
   if (contactName && contactPhone) {
@@ -1416,9 +1407,8 @@ app.post("/api/other-line-quotes", (req, res) => {
         <p><strong>Phone:</strong> ${contactPhone}</p>
         <p><strong>Email:</strong> ${contactEmail || "Not provided"}</p>
         <p><strong>Class:</strong> ${category} / ${subType}</p>
-        <p><strong>Underwriter requested:</strong> ${insurerId}</p>
         <p><strong>Reference:</strong> ${referenceNumber}</p>
-        <p><strong>Status:</strong> ${status === "quoted" ? `Instant premium: KES ${premium?.toLocaleString()}` : "Pending underwriter review"}</p>
+        <p><strong>Underwriters licensed for this class (share for competing quotes):</strong> ${eligibleUnderwriters.length ? eligibleUnderwriters.join(", ") : "None on file yet - verify licensing manually"}</p>
         <p><strong>Submitted details:</strong> ${JSON.stringify(answers)}</p>
       `
     }).catch(() => {});

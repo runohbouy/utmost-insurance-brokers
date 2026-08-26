@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts } from "../data/productStore";
-import { 
-  Search, ShieldCheck, CheckCircle, ChevronRight, User, Users, Building, 
-  ArrowRight, FileText, Calendar, Plus, ExternalLink, CalendarDays, UploadCloud 
+import { PRODUCT_TO_OTHER_LINE } from "../data/otherLineProductMap";
+import {
+  Search, ShieldCheck, CheckCircle, ChevronRight, User, Users, Building,
+  ArrowRight, FileText, Calendar, Plus, ExternalLink, CalendarDays, UploadCloud
 } from "lucide-react";
 
 interface GetAQuoteViewProps {
@@ -12,23 +13,6 @@ interface GetAQuoteViewProps {
   onSelectProduct?: (id: string) => void;
   onRouteToOtherLine?: (category: string, subType: string) => void;
 }
-
-// Maps specific catalog products onto the real proposal-form-informed intake built in
-// OtherLinesQuoteView, so choosing "Fast Online Forms" for these sends the client straight to
-// the matching underwriting questionnaire instead of the generic "adviser will call" flow.
-const PRODUCT_TO_OTHER_LINE: Record<string, { category: string; subType: string }> = {
-  "public-liability": { category: "liability", subType: "public_liability" },
-  "professional-indemnity": { category: "liability", subType: "professional_indemnity" },
-  "directors-officers-liability": { category: "liability", subType: "directors_officers" },
-  "contractors-all-risks": { category: "engineering", subType: "contractors_all_risk" },
-  "machinery-breakdown": { category: "engineering", subType: "machinery_breakdown" },
-  "marine-cargo-transit": { category: "marine", subType: "goods_in_transit" },
-  "goods-in-transit": { category: "marine", subType: "goods_in_transit" },
-  "work-injury-benefits": { category: "wiba", subType: "wiba_standard" },
-  "group-personal-accident": { category: "personal_accident", subType: "group_personal_accident" },
-  "fidelity-guarantee": { category: "miscellaneous", subType: "fidelity_guarantee" },
-  "burglary-housebreaking": { category: "theft", subType: "burglary" }
-};
 
 export default function GetAQuoteView({ setActiveTab, initialProductId, onSelectProduct, onRouteToOtherLine }: GetAQuoteViewProps) {
   const [products, setProducts] = useState<Product[]>([]);

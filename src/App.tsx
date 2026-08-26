@@ -303,12 +303,16 @@ export default function App() {
             )}
 
             {activeTab === "product-details" && (
-              <ProductDetailsView 
+              <ProductDetailsView
                 productId={selectedProductId || "private-motor-comprehensive"}
                 setActiveTab={setActiveTab}
                 setSelectedProductId={setSelectedProductId}
                 onSelectProduct={(prodId) => {
                   setSelectedProductId(prodId);
+                }}
+                onRouteToOtherLine={(category, subType) => {
+                  setOtherLineTarget({ category, subType });
+                  setActiveTab("other-lines-quotes");
                 }}
               />
             )}

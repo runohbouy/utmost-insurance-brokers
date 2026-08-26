@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Product, PRODUCT_CATEGORIES } from "../data/allProducts";
 import { getStoredProducts } from "../data/productStore";
 import { getCategoryDetailContent } from "../data/categoryDetailContent";
+import { PRODUCT_TO_OTHER_LINE } from "../data/otherLineProductMap";
 import { 
   Building, UserCheck, ShieldCheck, AlertCircle, FileText, Sparkles, 
   HelpCircle, ChevronRight, PhoneCall, ArrowLeft, Send, CheckSquare, 
@@ -14,9 +15,10 @@ interface ProductDetailsViewProps {
   setActiveTab: (tab: any) => void;
   setSelectedProductId?: (id: string | null) => void;
   onSelectProduct?: (productId: string) => void;
+  onRouteToOtherLine?: (category: string, subType: string) => void;
 }
 
-export default function ProductDetailsView({ productId, setActiveTab, setSelectedProductId, onSelectProduct }: ProductDetailsViewProps) {
+export default function ProductDetailsView({ productId, setActiveTab, setSelectedProductId, onSelectProduct, onRouteToOtherLine }: ProductDetailsViewProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [quoteRequestSubmitted, setQuoteRequestSubmitted] = useState(false);
@@ -193,6 +195,11 @@ export default function ProductDetailsView({ productId, setActiveTab, setSelecte
       setActiveTab("motor-quotes");
     } else if (product.requiredForm === "med-calc") {
       setActiveTab("medical-quotes");
+    } else if (PRODUCT_TO_OTHER_LINE[product.id] && onRouteToOtherLine) {
+      // Product has a real, sourced proposal form in OtherLinesQuoteView - send the customer
+      // straight there instead of the generic "adviser will call" inline form below.
+      const target = PRODUCT_TO_OTHER_LINE[product.id];
+      onRouteToOtherLine(target.category, target.subType);
     } else {
       // Otherwise scroll smoothly to the quick placement audit request form at the bottom
       const formEl = document.getElementById("product-specific-form-anchor");
