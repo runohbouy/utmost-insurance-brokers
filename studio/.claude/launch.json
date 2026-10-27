@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "studio-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "erp-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../ERP", "run", "dev"],
+      "port": 3100
+    },
+    {
+      "name": "dropmarket-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Runo/Documents/Projects/dropmarket", "run", "dev"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

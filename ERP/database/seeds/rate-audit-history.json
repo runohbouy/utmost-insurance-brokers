@@ -1,0 +1,253 @@
+[
+ {
+  "id": "log-1786702390907-397",
+  "timestamp": "2026-08-14T10:13:10.907Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "oldmutual",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-oldmutual-7",
+   "newVersionId": "rate-ver-oldmutual-8",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786627755902-929",
+  "timestamp": "2026-08-13T13:29:15.902Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "ncba",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-ncba-2",
+   "newVersionId": "rate-ver-ncba-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786527647829-290",
+  "timestamp": "2026-08-12T09:40:47.829Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-jubilee-7",
+   "newVersionId": "rate-ver-jubilee-8",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786523071587-672",
+  "timestamp": "2026-08-12T08:24:31.587Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-jubilee-5",
+   "newVersionId": "rate-ver-jubilee-6",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786521040321-679",
+  "timestamp": "2026-08-12T07:50:40.321Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "heritage",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-heritage-3",
+   "newVersionId": "rate-ver-heritage-4",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786520665254-526",
+  "timestamp": "2026-08-12T07:44:25.254Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "heritage",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-heritage-2",
+   "newVersionId": "rate-ver-heritage-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786360109138-275",
+  "timestamp": "2026-08-10T11:08:29.138Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "heritage",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-heritage-2",
+   "newVersionId": "rate-ver-heritage-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786359997739-695",
+  "timestamp": "2026-08-10T11:06:37.739Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "icea",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-icea-3",
+   "newVersionId": "rate-ver-icea-4",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786359981095-645",
+  "timestamp": "2026-08-10T11:06:21.095Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "icea",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-icea-2",
+   "newVersionId": "rate-ver-icea-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786359903880-221",
+  "timestamp": "2026-08-10T11:05:03.881Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "cic",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-cic-initial",
+   "newVersionId": "rate-ver-cic-2",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786359874312-898",
+  "timestamp": "2026-08-10T11:04:34.312Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "directline",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-directline-1",
+   "newVersionId": "rate-ver-directline-2",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1786021342566-291",
+  "timestamp": "2026-08-06T13:02:22.566Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "mua",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-mua-2",
+   "newVersionId": "rate-ver-mua-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1784548600000-101",
+  "timestamp": "2026-07-20T23:16:40.000Z",
+  "action": "RATE_TABLE_DEACTIVATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "versionId": "rate-ver-jubilee-4",
+   "reason": "Jubilee Health Insurance Limited is licensed only for IRA class 12 (Medical) per the Licensed Entities 2026 notice; the entity holds no Motor (07/08) or Fire (03/04) authorisation. Motor rate version deactivated and Jubilee removed from the live motor quote engine and Domestic Package carrier list. Medical quoting is unaffected."
+  }
+ },
+ {
+  "id": "log-1784548600000-102",
+  "timestamp": "2026-07-20T23:16:40.000Z",
+  "action": "RATE_TABLE_DEACTIVATED",
+  "entityType": "rates",
+  "entityId": "aar",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "versionId": "rate-ver-aar-initial",
+   "reason": "AAR Insurance (Kenya) Limited is not licensed for IRA classes 07/08 (Motor Private/Commercial) per the Licensed Entities 2026 notice. Motor rate version deactivated and AAR removed from the live motor quote engine."
+  }
+ },
+ {
+  "id": "log-1784287692981-640",
+  "timestamp": "2026-07-17T11:28:12.981Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-jubilee-3",
+   "newVersionId": "rate-ver-jubilee-4",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1784287005105-885",
+  "timestamp": "2026-07-17T11:16:45.105Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-jubilee-2",
+   "newVersionId": "rate-ver-jubilee-3",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1784283538264-699",
+  "timestamp": "2026-07-17T10:18:58.264Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "jubilee",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "details": {
+   "oldVersionId": "rate-ver-jubilee-initial",
+   "newVersionId": "rate-ver-jubilee-2",
+   "changes": "Rates changed: motorComp: unchanged%, TPO: unchanged, medMult: unchangedx"
+  }
+ },
+ {
+  "id": "log-1",
+  "timestamp": "2026-06-17T12:45:00.000Z",
+  "action": "RATE_TABLE_UPDATED",
+  "entityType": "rates",
+  "entityId": "icea",
+  "actorId": "staff-1",
+  "actorType": "staff",
+  "seedData": true,
+  "details": {
+   "oldVersionId": "rate-ver-icea-initial",
+   "newVersionId": "rate-ver-icea-2",
+   "changes": "Updated ICEA LION comprehensive rating coefficient to 4.3% in backend database"
+  }
+ }
+]

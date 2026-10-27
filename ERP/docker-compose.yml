@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: uib
+      POSTGRES_PASSWORD: uib_dev_password
+      POSTGRES_DB: uib_ops
+    ports:
+      - "5432:5432"
+    volumes:
+      - crm_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  crm_postgres_data:

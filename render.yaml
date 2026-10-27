@@ -1,17 +1,49 @@
+# One repository, one database, two deployables.
+#
+#   https://www.<domain>   utmost-web   static site            ./studio
+#   https://api.<domain>   utmost-api   Node service           ./ERP   (backend + staff dashboard)
+#                          utmost-db    PostgreSQL             the ONE database both use
+#
+# The site is a front end only: every insurer, rate and setting it shows is fetched from
+# the API, which reads them from the database. See docs/DEPLOYMENT.md for the DNS and
+# custom-domain steps (replace <domain> with the real domain, e.g. utmostkenya.com).
+
+databases:
+  - name: utmost-db
+    databaseName: utmost
+    user: utmost
+    plan: basic-256mb        # the free tier is deleted after 30 days; don't hold business data on it
+
 services:
   - type: web
-    name: utmost-insurance-brokers
+    name: utmost-api
     runtime: node
-    plan: free
-    buildCommand: npm install && npm run build
+    rootDir: ERP
+    plan: starter
+    # Dev dependencies are needed to build and to run the migrations (tsx).
+    buildCommand: npm ci --include=dev && npm run build
+    # Brings the database schema up to date before each new version starts serving.
+    preDeployCommand: npm run db:migrate:all
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: utmost-db
+          property: connectionString
+      # The server refuses to start in production without strong secrets (32+ characters).
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTERNAL_API_KEY
+        generateValue: true
+      # The website's origin(s): comma-separated, exactly as the browser sends them.
+      - key: ALLOWED_ORIGIN
+        sync: false            # https://www.<domain>,https://<domain>
+      - key: TRUST_PROXY
+        value: "1"
       - key: GEMINI_API_KEY
-        sync: false
-      - key: APP_URL
         sync: false
       - key: SMTP_HOST
         sync: false
@@ -27,3 +59,17 @@ services:
         sync: false
       - key: LEADS_EMAIL
         sync: false
+
+  - type: web
+    name: utmost-web
+    runtime: static
+    rootDir: studio
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false            # https://api.<domain>  (the API's public origin, no trailing slash)

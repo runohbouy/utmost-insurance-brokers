@@ -1,9 +1,29 @@
+# This repository tracks only the two applications and the files that tie them together.
+# The folder it sits in also holds source documents (binders, rate letters, scans, policy
+# jackets); those stay out of version control.
+/*
+!/.gitignore
+!/.github/
+!/.claude/
+!/README.md
+!/package.json
+!/render.yaml
+!/scripts/
+!/docs/
+!/studio/
+!/ERP/
+
+# Everywhere
 node_modules/
-build/
 dist/
+build/
 coverage/
-.DS_Store
 *.log
-.env*
+.DS_Store
+.env
+.env.*
 !.env.example
 .claude/settings.local.json
+
+# Local databases and test caches (ERP)
+database/.pgdata*/

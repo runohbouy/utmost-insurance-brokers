@@ -1,0 +1,10 @@
+// Request cases replayed against both the old studio server and the new ERP site API.
+export const CASES = [
+  { name: "motor-comprehensive-private", path: "generate-quotes", body: { category: "motor", params: { vehicleReg: "KDA 123A", vehicleMake: "Toyota", vehicleModel: "Corolla", mfgYear: 2020, vehicleValue: 1500000, coverType: "comprehensive", vehicleUse: "private", vehicleType: "saloon", ownerName: "A", ownerEmail: "a@x.co", ownerPhone: "0712345678" } } },
+  { name: "motor-tpo-commercial", path: "generate-quotes", body: { category: "motor", params: { vehicleReg: "KDB 456B", vehicleMake: "Isuzu", vehicleModel: "NPR", mfgYear: 2018, vehicleValue: 3200000, coverType: "tpo", vehicleUse: "commercial", vehicleType: "truck", ownerName: "B", ownerEmail: "b@x.co", ownerPhone: "0712345679" } } },
+  { name: "motor-expensive-new", path: "generate-quotes", body: { category: "motor", params: { vehicleReg: "KDC 789C", vehicleMake: "Land Rover", vehicleModel: "Range Rover", mfgYear: 2024, vehicleValue: 12000000, coverType: "comprehensive", vehicleUse: "private", vehicleType: "suv", ownerName: "C", ownerEmail: "c@x.co", ownerPhone: "0712345670" } } },
+  { name: "medical-single", path: "generate-quotes", body: { category: "medical", params: { principalName: "D", principalAge: 32, principalPhone: "0712345671", principalEmail: "d@x.co", principalCounty: "Nairobi", dependantsCount: 0, dependants: [], inpatientLimit: 1000000, outpatientLimit: 100000, maternityCover: false, dentalCover: false } } },
+  { name: "medical-family", path: "generate-quotes", body: { category: "medical", params: { principalName: "E", principalAge: 45, principalPhone: "0712345672", principalEmail: "e@x.co", principalCounty: "Mombasa", dependantsCount: 2, dependants: [{ relationship: "spouse", age: 41 }, { relationship: "child", age: 8 }], inpatientLimit: 3000000, outpatientLimit: 250000, maternityCover: true, dentalCover: true } } },
+  { name: "missing-category", path: "generate-quotes", body: {}, expectStatus: 400 },
+];
+export const GETS = ["insurers", "insurer-logos"];

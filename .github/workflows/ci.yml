@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API (ERP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: ERP
+    # A real PostgreSQL server: the whole suite runs against it, not only the embedded engine.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: uib
+          POSTGRES_PASSWORD: uib_ci_password
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U uib"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ERP/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npm run lint
+      - name: Test (embedded Postgres)
+        run: npm test
+      - name: Test (PostgreSQL 16 server)
+        run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://uib:uib_ci_password@localhost:5432/postgres
+      - name: Build
+        run: npm run build
+      - name: Dependency audit (production deps, high severity and up)
+        run: npm audit --omit=dev --audit-level=high
+
+  web:
+    name: Website (studio)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build

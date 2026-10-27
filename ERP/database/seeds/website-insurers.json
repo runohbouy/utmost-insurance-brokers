@@ -1,0 +1,893 @@
+[
+ {
+  "slug": "jubilee",
+  "insurerId": "jubilee-health",
+  "displayName": "Jubilee Health Insurance",
+  "ratingLabel": "A+ Rated (AM Best credit assessment)",
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "jubilee",
+   "name": "Jubilee Health Insurance Limited",
+   "tradingName": "Jubilee Health Insurance",
+   "logoEmoji": "🌍",
+   "established": 1937,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not Licensed for Motor (classes 07/08 not held)",
+   "iraLicenseMedical": "IRA/12/032/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A+ Rated (AM Best credit assessment)",
+   "strengthReason": "Market leader with largest asset reserve, direct digital system integration, and rapid outpatient checkups.",
+   "availableProducts": [
+    "Family Medical Schemes"
+   ],
+   "licensedGeneralClasses": [
+    "12"
+   ],
+   "claimTurnaroundDays": 5,
+   "emergencyPhone": "+254 703 300000"
+  }
+ },
+ {
+  "slug": "icea",
+  "insurerId": "icea-lion-general",
+  "displayName": "ICEA LION General Insurance Company Limited",
+  "ratingLabel": "A Rated (Excellent Wealth & Asset Coverage)",
+  "quotePoolOrder": 0,
+  "profile": {
+   "id": "icea",
+   "name": "ICEA LION General Insurance Company Limited",
+   "tradingName": "ICEA LION Group",
+   "logoEmoji": "🦁",
+   "established": 1964,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/154/2026",
+   "iraLicenseMedical": "IRA/12/029/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A Rated (Global Credit Ratings agency GCR)",
+   "strengthReason": "Highly recommended for property coverage, contents inventories, and generous multi-vehicle premium discounts.",
+   "availableProducts": [
+    "Motor Commercial Goods",
+    "Erection All Risks",
+    "Standard Domestic Package",
+    "Marine Open Cargo Sea/Air"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a",
+    "37b"
+   ],
+   "claimTurnaroundDays": 6,
+   "emergencyPhone": "+254 719 071000"
+  }
+ },
+ {
+  "slug": "heritage",
+  "insurerId": "heritage-general",
+  "displayName": "The Heritage Insurance Company Limited",
+  "ratingLabel": "A- Rated (Rapid Claims Settlement)",
+  "quotePoolOrder": 1,
+  "profile": {
+   "id": "heritage",
+   "name": "The Heritage Insurance Company Limited",
+   "tradingName": "Heritage Insurance",
+   "logoEmoji": "🐆",
+   "established": 1976,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/201/2026",
+   "iraLicenseMedical": "IRA/12/014/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A- Rated (Excellent claims honoring reputation)",
+   "strengthReason": "Guaranteed tow cover within 45 mins in major towns and highly flexible medical co-pay reductions.",
+   "availableProducts": [
+    "Motor Private",
+    "Individual Health Scheme",
+    "Domestic Package",
+    "Contractors All Risks"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "claimTurnaroundDays": 4,
+   "emergencyPhone": "+254 711 037000"
+  }
+ },
+ {
+  "slug": "britam",
+  "insurerId": "britam-general",
+  "displayName": "Britam General Insurance Company (K) Limited",
+  "ratingLabel": "A Rated (Nationwide Coverage & Strong Trust)",
+  "quotePoolOrder": 5,
+  "profile": {
+   "id": "britam",
+   "name": "Britam General Insurance Company (K) Limited",
+   "tradingName": "Britam",
+   "logoEmoji": "🛡️",
+   "established": 1965,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/110/2026",
+   "iraLicenseMedical": "IRA/12/045/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A Rated (Excellent long-term stability)",
+   "strengthReason": "With you every step of the way. Market leader in asset management and comprehensive individual life planning covers.",
+   "availableProducts": [
+    "Motor Private",
+    "Individual Health Scheme",
+    "Domestic Package",
+    "Group Life Schemes"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "36",
+    "37a",
+    "37b"
+   ],
+   "claimTurnaroundDays": 4,
+   "emergencyPhone": "+254 705 100100"
+  }
+ },
+ {
+  "slug": "cic",
+  "insurerId": "cic-general",
+  "displayName": "CIC General Insurance Limited",
+  "ratingLabel": "BBB+ Rated (Highly Popular Sacco/SME Choice)",
+  "quotePoolOrder": 2,
+  "profile": {
+   "id": "cic",
+   "name": "CIC General Insurance Limited",
+   "tradingName": "CIC Group",
+   "logoEmoji": "🤝",
+   "established": 1978,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/232/2026",
+   "iraLicenseMedical": "IRA/12/006/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB+ Rated (Highly resilient micro-insurer)",
+   "strengthReason": "Popular choices with broad SACCO relationships, pocket-friendly premiums, and low waiting thresholds.",
+   "availableProducts": [
+    "Motor Private",
+    "SME Medical schemes",
+    "Burglary & Perils",
+    "Crop Insurance"
+   ],
+   "licensedGeneralClasses": [
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a",
+    "37b"
+   ],
+   "claimTurnaroundDays": 8,
+   "emergencyPhone": "+254 703 099121"
+  }
+ },
+ {
+  "slug": "madison",
+  "insurerId": "madison-general",
+  "displayName": "Madison General Insurance Kenya Limited",
+  "ratingLabel": "BBB+ Rated (Highly Responsive Retail Insurer)",
+  "quotePoolOrder": 11,
+  "profile": {
+   "id": "madison",
+   "name": "Madison General Insurance Kenya Limited",
+   "tradingName": "Madison General Insurance",
+   "logoEmoji": "🏢",
+   "established": 1988,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/188/2026",
+   "iraLicenseMedical": "IRA/12/055/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB+ Rated (Highly responsive retail insurer)",
+   "strengthReason": "Strong SME and retail general insurance book with fast claims approval across motor, medical and property lines.",
+   "availableProducts": [
+    "Motor Private",
+    "SME Medical schemes",
+    "Burglary & Perils",
+    "Crop Insurance"
+   ],
+   "licensedGeneralClasses": [
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "claimTurnaroundDays": 5,
+   "emergencyPhone": "+254 709 922000"
+  }
+ },
+ {
+  "slug": "madison-life",
+  "insurerId": "madison-life",
+  "displayName": "Madison Life",
+  "ratingLabel": "BBB+ Rated (Established long-term underwriter)",
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "madison-life",
+   "name": "Madison Life Assurance Kenya Limited",
+   "tradingName": "Madison Life",
+   "logoEmoji": "🏢",
+   "established": 1988,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "iraLicenseMedical": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB+ Rated (Established long-term underwriter)",
+   "strengthReason": "Pioneers in high-value group life plans and flexible school fees educational policies, with fast claims approval.",
+   "availableProducts": [
+    "Life Assurance",
+    "Group Life Schemes",
+    "Personal Pension",
+    "Deposit Administration",
+    "Group Credit Life"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a",
+    "37b"
+   ],
+   "claimTurnaroundDays": 6,
+   "emergencyPhone": "+254 709 922010"
+  }
+ },
+ {
+  "slug": "kenindia",
+  "insurerId": "kenindia-general",
+  "displayName": "Kenindia Assurance Company Limited",
+  "ratingLabel": "BBB Rated (Strong Corporate Integrity)",
+  "quotePoolOrder": 3,
+  "profile": {
+   "id": "kenindia",
+   "name": "Kenindia Assurance Company Limited",
+   "tradingName": "Kenindia Assurance",
+   "logoEmoji": "🐘",
+   "established": 1978,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/189/2026",
+   "iraLicenseMedical": "IRA/12/077/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB Rated (Unsurpassed corporate liability stability)",
+   "strengthReason": "Favored list for large-scale parastatals, municipal transport, and machinery breakdown schemes.",
+   "availableProducts": [
+    "Motor Commercial Cartage",
+    "Industrial All Risks",
+    "Group Medical Schemes",
+    "Public Liability"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37b"
+   ],
+   "claimTurnaroundDays": 7,
+   "emergencyPhone": "+254 722 204125"
+  }
+ },
+ {
+  "slug": "geminia",
+  "insurerId": "geminia-general",
+  "displayName": "Geminia Insurance Company Limited",
+  "ratingLabel": "BBB Rated (Highly Reputable Corporate & Retail Underwriter)",
+  "quotePoolOrder": 7,
+  "profile": {
+   "id": "geminia",
+   "name": "Geminia Insurance Company Limited",
+   "tradingName": "Geminia Insurance",
+   "logoEmoji": "💎",
+   "established": 1981,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/102/2026",
+   "iraLicenseMedical": "IRA/12/011/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB Rated (Excellent corporate & retail reputation)",
+   "strengthReason": "Strong asset reserve, known for flexible sum-insured bands with zero body-type penalties.",
+   "availableProducts": [
+    "Motor Private",
+    "Domestic Package",
+    "Fire & Perils",
+    "Personal Accident"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a"
+   ],
+   "claimTurnaroundDays": 6,
+   "emergencyPhone": "+254 709 883000"
+  }
+ },
+ {
+  "slug": "mua",
+  "insurerId": "mua-general",
+  "displayName": "MUA Insurance (Kenya) Limited",
+  "ratingLabel": "A Rated (Excellent Solvency & Commercial Specialist)",
+  "quotePoolOrder": 8,
+  "profile": {
+   "id": "mua",
+   "name": "MUA Insurance (Kenya) Limited",
+   "tradingName": "MUA Insurance",
+   "logoEmoji": "🇲🇺",
+   "established": 1952,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/167/2026",
+   "iraLicenseMedical": "IRA/12/089/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A Rated (Excellent solvency and local claim honoring speed)",
+   "strengthReason": "Renowned for robust commercial transport portfolios, institutional schedules, and comprehensive windscreen buyback structures.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Goods",
+    "Motor Commercial General Cartage",
+    "Institutional Group Motor",
+    "Domestic Package",
+    "Fire & Perils",
+    "Marine Cargo",
+    "Personal Accident",
+    "Medical Insurance",
+    "Work Injury Benefits (WIBA)"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "claimTurnaroundDays": 5,
+   "emergencyPhone": "+254 703 021000"
+  }
+ },
+ {
+  "slug": "cannon",
+  "insurerId": "cannon-general",
+  "displayName": "Cannon General Insurance Company Limited",
+  "ratingLabel": "B+ Rated (Established Underwriter, Competitive Fleet Terms)",
+  "quotePoolOrder": 9,
+  "profile": {
+   "id": "cannon",
+   "name": "Cannon General Insurance Company Limited",
+   "tradingName": "Cannon General Insurance",
+   "logoEmoji": "🎯",
+   "established": 1974,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/098/2026",
+   "iraLicenseMedical": "Not Licensed (Class 12 Medical not authorised)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "B+ Rated (Established underwriter, competitive commercial fleet terms)",
+   "strengthReason": "Strong scheme-based motor terms for own goods, general cartage and institutional fleets, with no-blame-no-excess and free windscreen/side mirror cover bundled into every comprehensive policy.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Goods",
+    "Motor Commercial General Cartage",
+    "Institutional Group Motor",
+    "Motor Cycle",
+    "Domestic Package",
+    "Fire & Perils",
+    "Marine Cargo",
+    "Public Liability",
+    "Personal Accident",
+    "Work Injury Benefits (WIBA)"
+   ],
+   "licensedGeneralClasses": [
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "14"
+   ],
+   "claimTurnaroundDays": 5,
+   "emergencyPhone": "+254 020 3966000"
+  }
+ },
+ {
+  "slug": "pioneer",
+  "insurerId": "pioneer-general",
+  "displayName": "Pioneer General Insurance Limited",
+  "ratingLabel": "BBB+ Rated (Established Composite Underwriter)",
+  "quotePoolOrder": 10,
+  "profile": {
+   "id": "pioneer",
+   "name": "Pioneer General Insurance Limited",
+   "tradingName": "Pioneer Insurance",
+   "logoEmoji": "🦁",
+   "established": 1968,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/205/2026",
+   "iraLicenseMedical": "IRA/12/067/2026",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB+ Rated (Established composite underwriter with broad class authorisation)",
+   "strengthReason": "One of the few carriers authorised across nearly every general insurance class, from aviation and marine to medical and motor - useful for clients consolidating varied risk profiles under one underwriter.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Goods",
+    "Domestic Package",
+    "Fire & Perils",
+    "Marine Cargo",
+    "Personal Accident",
+    "Medical Insurance",
+    "Aviation Insurance"
+   ],
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "claimTurnaroundDays": 7,
+   "emergencyPhone": "+254 020 2811000"
+  }
+ },
+ {
+  "slug": "monarch",
+  "insurerId": "monarch-general",
+  "displayName": "The Monarch Insurance",
+  "ratingLabel": "BBB Rated (Dual-licensed general and long-term underwriter)",
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "monarch",
+   "name": "The Monarch Insurance Company Limited",
+   "tradingName": "The Monarch Insurance",
+   "logoEmoji": "👑",
+   "established": 1996,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "IRA/06/241/2026",
+   "iraLicenseMedical": "Not Licensed (Class 12 Medical not authorised)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "BBB Rated (Dual-licensed general and long-term underwriter)",
+   "strengthReason": "One of the rare dual-licensed underwriters, transacting both general classes (motor, fire, liability, marine) and long-term life business (life assurance, group life, pensions) under the same entity.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Goods",
+    "Domestic Package",
+    "Fire & Perils",
+    "Personal Accident",
+    "Life Assurance",
+    "Group Life Schemes",
+    "Pensions"
+   ],
+   "licensedGeneralClasses": [
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a"
+   ],
+   "claimTurnaroundDays": 8,
+   "emergencyPhone": "+254 020 2245266"
+  }
+ },
+ {
+  "slug": "capex",
+  "insurerId": "capex-life",
+  "displayName": "Capex Life Assurance",
+  "ratingLabel": "Unrated (Specialist long-term underwriter)",
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "capex",
+   "name": "Capex Life Assurance Company Limited",
+   "tradingName": "Capex Life Assurance",
+   "logoEmoji": "💠",
+   "established": 2004,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "iraLicenseMedical": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "Unrated (Specialist long-term underwriter)",
+   "strengthReason": "Focused purely on long-term savings and protection products - life assurance, annuities, pensions and group life/credit schemes - with no general insurance class exposure.",
+   "availableProducts": [
+    "Life Assurance",
+    "Annuities",
+    "Personal Pension",
+    "Deposit Administration",
+    "Group Life Schemes",
+    "Group Credit Life"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35"
+   ],
+   "claimTurnaroundDays": 10,
+   "emergencyPhone": "+254 020 2723210"
+  }
+ },
+ {
+  "slug": "liberty",
+  "insurerId": "liberty-life",
+  "displayName": "Liberty Life",
+  "ratingLabel": "A- Rated (Established long-term underwriter, full investment-linked authorisation)",
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "liberty",
+   "name": "Liberty Life Assurance Kenya Limited",
+   "tradingName": "Liberty Life",
+   "logoEmoji": "🗽",
+   "established": 1997,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "iraLicenseMedical": "Not Licensed (Long Term Insurer only - no General class authorisation)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "A- Rated (Established long-term underwriter, full investment-linked authorisation)",
+   "strengthReason": "Full long-term product breadth including both unit-linked and non-linked investment authorisation, on top of standard life, pension and group schemes - suited to clients wanting investment-linked policies.",
+   "availableProducts": [
+    "Life Assurance",
+    "Annuities",
+    "Personal Pension",
+    "Deposit Administration",
+    "Group Life Schemes",
+    "Group Credit Life",
+    "Unit-Linked Investment"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "32",
+    "33a",
+    "33b",
+    "34",
+    "35",
+    "37a",
+    "37b"
+   ],
+   "claimTurnaroundDays": 9,
+   "emergencyPhone": "+254 020 2894000"
+  }
+ },
+ {
+  "slug": "ncba",
+  "insurerId": "ncba-general",
+  "displayName": "NCBA Insurance Company Limited",
+  "ratingLabel": "Unrated (pending verification)",
+  "quotePoolOrder": 12,
+  "profile": {
+   "id": "ncba",
+   "name": "NCBA Insurance Company Limited",
+   "tradingName": "NCBA-AIG Insurance",
+   "logoEmoji": "🏦",
+   "established": 1962,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not yet verified against IRA notice - binder confirms Motor Private & Commercial",
+   "iraLicenseMedical": "Not offered per binder (motor lines only)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "Unrated (pending verification)",
+   "strengthReason": "Formerly AIG Kenya Insurance Company Limited, now a subsidiary of NCBA Group PLC - broad private and commercial motor rating including fleet, institutional and PSV/tonnage-tiered TPO.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Own Goods",
+    "Motor Commercial General Cartage",
+    "Institutional Group Motor",
+    "Motorcycle"
+   ],
+   "licensedGeneralClasses": [
+    "07",
+    "08"
+   ],
+   "claimTurnaroundDays": 7,
+   "emergencyPhone": "+254 20 3676000"
+  }
+ },
+ {
+  "slug": "directline",
+  "insurerId": "directline-general",
+  "displayName": "Directline Assurance Company Limited",
+  "ratingLabel": "Unrated (pending verification)",
+  "quotePoolOrder": 13,
+  "profile": {
+   "id": "directline",
+   "name": "Directline Assurance Company Limited",
+   "tradingName": "Directline Assurance",
+   "logoEmoji": "🚦",
+   "established": 2011,
+   "licenseYear": 2026,
+   "licenseStatus": "Active",
+   "iraLicenseMotor": "Not yet verified against IRA notice - binder confirms Motor Private & Commercial",
+   "iraLicenseMedical": "Not offered per binder (motor lines only)",
+   "odpcRegistered": true,
+   "memberOfAibk": true,
+   "rating": "Unrated (pending verification)",
+   "strengthReason": "Motor-focused underwriter with own goods, general cartage, institutional/school bus and PSV/matatu terms.",
+   "availableProducts": [
+    "Motor Private",
+    "Motor Commercial Own Goods",
+    "Motor Commercial General Cartage",
+    "Institutional Group Motor",
+    "PSV Motor Asset"
+   ],
+   "licensedGeneralClasses": [
+    "07",
+    "08"
+   ],
+   "claimTurnaroundDays": 7,
+   "emergencyPhone": "+254 20 4443364"
+  }
+ },
+ {
+  "slug": "stardiscover",
+  "insurerId": "star-discover-general",
+  "displayName": "Star Discover Insurance Limited",
+  "ratingLabel": "BBB Rated (Innovator in Motor Care)",
+  "quotePoolOrder": 4,
+  "profile": {
+   "id": "stardiscover",
+   "name": "Star Discover Insurance Limited",
+   "tradingName": "Star Discover Insurance Limited",
+   "profileComplete": false,
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ]
+  }
+ },
+ {
+  "slug": "oldmutual",
+  "insurerId": "old-mutual-general",
+  "displayName": "Old Mutual General Insurance Kenya Limited",
+  "ratingLabel": "A+ Rated (Premium Corporate Underwriter)",
+  "quotePoolOrder": 6,
+  "profile": {
+   "id": "oldmutual",
+   "name": "Old Mutual General Insurance Kenya Limited",
+   "tradingName": "Old Mutual General Insurance Kenya Limited",
+   "profileComplete": false,
+   "licensedGeneralClasses": [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ],
+   "licensedLifeClasses": [
+    "31",
+    "37a"
+   ]
+  }
+ },
+ {
+  "slug": "aar",
+  "insurerId": "aar-general",
+  "displayName": "AAR Insurance (Kenya) Limited",
+  "ratingLabel": null,
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "aar",
+   "name": "AAR Insurance (Kenya) Limited",
+   "tradingName": "AAR Insurance (Kenya) Limited",
+   "profileComplete": false,
+   "licensedGeneralClasses": [
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "09",
+    "10",
+    "11",
+    "12",
+    "14"
+   ]
+  }
+ },
+ {
+  "slug": "apa",
+  "insurerId": "apa-general",
+  "displayName": "APA Insurance Limited",
+  "ratingLabel": null,
+  "quotePoolOrder": null,
+  "profile": {
+   "id": "apa",
+   "name": "APA Insurance Limited",
+   "tradingName": "APA Insurance Limited",
+   "profileComplete": false,
+   "licensedGeneralClasses": [
+    "12",
+    "14"
+   ]
+  }
+ }
+]
