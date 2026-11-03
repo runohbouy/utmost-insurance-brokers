@@ -24,8 +24,8 @@ export function useAuth() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
-    const { token } = await api.auth.login(email, password);
+  async function login(email: string, password: string, code?: string) {
+    const { token } = await api.auth.login(email, password, code);
     localStorage.setItem(TOKEN_KEY, token);
     setAuthToken(token);
     const me = await api.auth.me();
@@ -38,5 +38,10 @@ export function useAuth() {
     setSession(null);
   }
 
-  return { session, loading, login, logout };
+  /** Re-read who is signed in (after two-step verification is turned on or off). */
+  async function refresh() {
+    setSession(await api.auth.me());
+  }
+
+  return { session, loading, login, logout, refresh };
 }

@@ -4,7 +4,9 @@ import { defineConfig } from "vitest/config";
 // and Tailwind plugins, none of which the tests need.
 export default defineConfig({
   test: {
-    include: ["tests/**/*.test.ts"],
+    // *.test.ts: API and unit tests (node). *.test.tsx: dashboard component tests, which opt in to jsdom with
+    // a `// @vitest-environment jsdom` comment at the top of the file.
+    include: ["tests/**/*.test.{ts,tsx}"],
     environment: "node",
     globalSetup: ["tests/global-setup.ts"],
     setupFiles: ["tests/setup.ts"],

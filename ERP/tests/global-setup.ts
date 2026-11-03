@@ -26,6 +26,11 @@ function migrationsHash(): string {
   ].sort();
   const hash = crypto.createHash("sha1");
   for (const f of files) hash.update(f).update(fs.readFileSync(path.join(dir, f)));
+  // Migrations also import the configuration region packs and the value objects they validate with.
+  const libDir = path.join(root, "lib");
+  for (const f of ["money.ts", "time.ts", ...fs.readdirSync(path.join(libDir, "config")).map((c) => path.join("config", c))].sort()) {
+    hash.update("lib/" + f).update(fs.readFileSync(path.join(libDir, f)));
+  }
   return hash.digest("hex");
 }
 

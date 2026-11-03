@@ -78,6 +78,48 @@ const MATRIX: [string, string, Role[]][] = [
   ["PATCH", "/obligations/x", ["admin", "supervisor"]],
   // recommendation.decide — admin, supervisor
   ["POST", "/risk-clearances", ["admin", "supervisor"]],
+  // receipts, invoices and allocation: receipt.record / allocation.manage / invoice.manage — admin, accountant; reading is finance.view
+  ["POST", "/receipts", ["admin", "accountant"]],
+  ["POST", "/receipts/x/deposit", ["admin", "accountant"]],
+  ["POST", "/receipts/x/clear", ["admin", "accountant"]],
+  ["POST", "/receipts/x/bounce", ["admin", "accountant"]],
+  ["POST", "/receipts/x/cancel", ["admin", "accountant"]],
+  ["POST", "/receipts/x/approve", ["admin", "accountant", "supervisor"]],
+  ["POST", "/receipts/x/reject", ["admin", "accountant", "supervisor"]],
+  ["POST", "/receipts/x/print", ["admin", "accountant", "supervisor"]],
+  ["POST", "/receipts/x/allocations", ["admin", "accountant"]],
+  ["POST", "/receipts/x/allocations/preview", ["admin", "accountant"]],
+  ["POST", "/allocations/x/reverse", ["admin", "accountant"]],
+  ["POST", "/invoices", ["admin", "accountant"]],
+  ["POST", "/invoices/x/void", ["admin", "accountant"]],
+  ["GET", "/receipts", ["admin", "accountant", "supervisor"]],
+  ["GET", "/receipts/x", ["admin", "accountant", "supervisor"]],
+  ["GET", "/invoices", ["admin", "accountant", "supervisor"]],
+  ["GET", "/invoices/x", ["admin", "accountant", "supervisor"]],
+  ["GET", "/clients/x/position", ["admin", "accountant", "supervisor"]],
+  // tenant_config.manage — admin
+  ["GET", "/config/versions", ["admin"]],
+  ["GET", "/config/versions/x", ["admin"]],
+  ["GET", "/config/current", ["admin"]],
+  ["GET", "/config/region-packs/KE", ["admin"]],
+  ["GET", "/config/region-packs", ["admin"]],
+  ["GET", "/config/draft", ["admin"]],
+  ["PUT", "/config/draft", ["admin"]],
+  ["DELETE", "/config/draft", ["admin"]],
+  ["POST", "/config/draft/from-current", ["admin"]],
+  ["POST", "/config/draft/publish", ["admin"]],
+  // mfa.reset — admin
+  ["POST", "/staff/x/mfa/reset", ["admin"]],
+  ["POST", "/portal-users/x/mfa/reset", ["admin"]],
+  // portal.manage — admin, supervisor
+  ["GET", "/portal-users", ["admin", "supervisor"]],
+  ["POST", "/portal-users", ["admin", "supervisor"]],
+  ["PATCH", "/portal-users/x", ["admin", "supervisor"]],
+  ["POST", "/portal-users/x/reset-password", ["admin", "supervisor"]],
+  // KPIs: money KPIs need analytics.finance, operational ones analytics.view
+  ["GET", "/kpis/cash_cleared", ["admin", "accountant", "supervisor"]],
+  ["GET", "/kpis/outstanding_premium", ["admin", "accountant", "supervisor"]],
+  ["GET", "/kpis/receipts_recorded", ["admin", "underwriter", "claims", "accountant", "supervisor"]],
 ];
 
 let app: TestApp;

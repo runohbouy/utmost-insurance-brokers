@@ -7,6 +7,9 @@ export interface StaffProfile {
 
 export interface StaffSession extends StaffProfile {
   permissions: string[];
+  /** Two-step verification state. mfaEnrollmentRequired: the tenant insists on it and this person has not set it up. */
+  mfaEnabled?: boolean;
+  mfaEnrollmentRequired?: boolean;
 }
 
 export interface AuditLogEntry {

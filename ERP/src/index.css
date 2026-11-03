@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-sans: var(--brand-font, ui-sans-serif, system-ui, "Segoe UI", sans-serif);
   --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* The dashboard's accent colour is the tenant's brand colour. The screens already use the `indigo`
+     scale for every primary button, link and highlight, so mapping that scale onto the brand variable
+     re-themes all of them at once, with no per-screen changes. --brand-primary is set at runtime from the
+     published tenant configuration (src/ConfigContext.tsx); the fallback is the original indigo. */
+  --color-indigo-50: color-mix(in srgb, var(--brand-primary, #4f46e5) 9%, white);
+  --color-indigo-100: color-mix(in srgb, var(--brand-primary, #4f46e5) 18%, white);
+  --color-indigo-200: color-mix(in srgb, var(--brand-primary, #4f46e5) 32%, white);
+  --color-indigo-300: color-mix(in srgb, var(--brand-primary, #4f46e5) 50%, white);
+  --color-indigo-400: color-mix(in srgb, var(--brand-primary, #4f46e5) 72%, white);
+  --color-indigo-500: color-mix(in srgb, var(--brand-primary, #4f46e5) 90%, white);
+  --color-indigo-600: var(--brand-primary, #4f46e5);
+  --color-indigo-700: color-mix(in srgb, var(--brand-primary, #4f46e5) 85%, black);
+  --color-indigo-800: color-mix(in srgb, var(--brand-primary, #4f46e5) 70%, black);
 }
 
 body {
@@ -13,4 +27,14 @@ body {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Keyboard users get the same visible focus ring everywhere (WCAG 2.1 AA, 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--color-indigo-600);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

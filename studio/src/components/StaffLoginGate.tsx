@@ -22,6 +22,9 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
   const [checkedStorage, setCheckedStorage] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  // set once the server has seen a right password for an account that has two-step verification on
+  const [needsCode, setNeedsCode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,10 +48,16 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
       const res = await fetch(`${SITE_API}/staff/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password })
+        body: JSON.stringify({ username: username.trim(), password, ...(needsCode ? { code } : {}) })
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.mfaRequired) {
+          setError(needsCode ? data.error : null); // asking for the code the first time is not an error
+          setNeedsCode(true);
+          setCode("");
+          return;
+        }
         throw new Error(data.error || "Login failed.");
       }
       const session: AuthenticatedStaff = { token: data.token, staffId: data.staffId, fullName: data.fullName, role: data.role };
@@ -72,6 +81,8 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
     setStaff(null);
     setUsername("");
     setPassword("");
+    setCode("");
+    setNeedsCode(false);
   };
 
   if (!checkedStorage) {
@@ -99,10 +110,19 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
           This area is restricted to Utmost brokerage staff. Rate tables, insurer registry changes, and compliance logs require an authenticated session.
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-4 text-xs font-semibold">
+        <form onSubmit={handleLogin} className="space-y-4 text-xs font-semibold" aria-label="Staff sign in">
+          {needsCode ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-normal text-[#5E5A51]">Two-step verification is on for {username}. Enter the 6-digit code from your authenticator app.</p>
+              <label htmlFor="staff-code" className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">6-digit code *</label>
+              <input id="staff-code" required autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={7} value={code} onChange={(e) => setCode(e.target.value)}
+                className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-base font-mono tracking-widest text-slate-800 focus:border-[#316EC9] focus:outline-none" />
+            </div>
+          ) : (<>
           <div className="space-y-1.5">
-            <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Staff Email *</label>
+            <label htmlFor="staff-email" className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Staff Email *</label>
             <input
+              id="staff-email"
               type="email"
               required
               autoComplete="username"
@@ -113,8 +133,9 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Password *</label>
+            <label htmlFor="staff-password" className="text-[9px] font-bold text-[#8C887D] uppercase tracking-wider">Password *</label>
             <input
+              id="staff-password"
               type="password"
               required
               autoComplete="current-password"
@@ -123,9 +144,10 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
               className="w-full bg-white rounded-none border border-[#D8E2F0] p-2.5 text-xs text-slate-800 focus:border-[#316EC9] focus:outline-none"
             />
           </div>
+          </>)}
 
           {error && (
-            <div className="border border-red-200 bg-red-50 p-3 text-[11px] text-red-700 rounded-none flex items-start space-x-1.5">
+            <div role="alert" className="border border-red-200 bg-red-50 p-3 text-[11px] text-red-700 rounded-none flex items-start space-x-1.5">
               <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -136,7 +158,7 @@ export default function StaffLoginGate({ setActiveTab, children }: StaffLoginGat
             disabled={isSubmitting}
             className="w-full bg-[#142C54] hover:bg-[#316EC9] text-white text-xs font-bold uppercase tracking-widest py-3.5 border border-[#142C54] hover:border-[#316EC9] transition-all rounded-none cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? "Verifying..." : "Sign In"}
+            {isSubmitting ? "Verifying..." : needsCode ? "Verify and Sign In" : "Sign In"}
           </button>
         </form>
 

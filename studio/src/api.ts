@@ -7,6 +7,9 @@ const API_ORIGIN = ((import.meta as any).env?.VITE_API_URL as string | undefined
 
 export const SITE_API = `${API_ORIGIN}/api/site`;
 
+// The client self-service portal (real accounts, real records) lives beside the site API.
+export const PORTAL_API = `${API_ORIGIN}/api/portal`;
+
 // Files the backend serves (e.g. uploaded insurer logos) come back as
 // root-relative "/api/site/files/..." paths; point them at the backend origin.
 export function backendAssetUrl(src: string): string {

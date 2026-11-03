@@ -6,7 +6,16 @@ import crypto from "crypto";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import dotenv from "dotenv";
+import compression from "compression";
 import { createSiteRouter, type StaffIdentity } from "./site/router";
+import { createConfigRouter } from "./modules/config/router";
+import { createFinanceRouter } from "./modules/receipts/router";
+import { createAnalyticsRouter } from "./modules/analytics/router";
+import { createPortalAdminRouter, createPortalRouter } from "./modules/portal/router";
+import { createStaffMfaRouter } from "./modules/mfa/router";
+import * as mfa from "./modules/mfa/service";
+import { getEffectiveConfig } from "./lib/config/service";
+import { DEFAULT_TENANT_ID } from "./lib/tenant";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { eq, desc, and, or, isNull, lte, gte, inArray, ilike, count } from "drizzle-orm";
@@ -106,6 +115,9 @@ fs.mkdirSync(STORAGE_DIR, { recursive: true });
 app.use(helmet({ contentSecurityPolicy: IS_PRODUCTION ? undefined : false }));
 app.disable("x-powered-by");
 
+// JSON lists and the dashboard bundle compress 5-10x; below 1 KB it isn't worth the CPU.
+app.use(compression({ threshold: 1024 }));
+
 // Dashboard calls are same-origin, and studio calls server-to-server, so
 // CORS only matters for browsers on another origin. Production allows
 // exactly ALLOWED_ORIGIN; dev additionally allows any localhost port.
@@ -149,12 +161,15 @@ async function staffIdentity(id: string): Promise<StaffIdentity | null> {
 }
 
 app.use("/api/site", createSiteRouter({
-  login: async (email, password) => {
-    const member = await checkCredentials(email, password);
-    if (!member) return null;
-    const identity = await staffIdentity(member.id);
+  login: async (email, password, code) => {
+    const outcome = await checkCredentials(email, password, code);
+    if (outcome.status === "invalid") return null;
+    if (outcome.status !== "ok") return { problem: outcome.status };
+    // the workspace has no enrolment screen: when two-step verification is required, set it up in the dashboard first
+    if (!outcome.member.mfaEnabled && (await staffMfaRequired())) return { problem: "enrollment-required" };
+    const identity = await staffIdentity(outcome.member.id);
     if (!identity) return null;
-    return { ...identity, token: issueToken(member.id), expiresAt: Date.now() + SESSION_HOURS * 3600 * 1000 };
+    return { ...identity, token: issueToken(outcome.member.id), expiresAt: Date.now() + SESSION_HOURS * 3600 * 1000 };
   },
   authenticate: async (token) => {
     try {
@@ -173,7 +188,14 @@ app.use("/api/site", createSiteRouter({
 // Anything under /api/site that the router didn't answer is simply not there.
 app.use("/api/site", (_req, res) => res.status(404).json({ error: "Not found" }));
 
+// Client portal: clients, not staff. Its own token (signed with a key derived from JWT_SECRET so it can
+// never pass as a staff token), its own limits, and no route that reaches staff data.
+app.use("/api/portal", createPortalRouter({ jwtSecret: JWT_SECRET }));
+
 app.use(express.json({ limit: "20mb" }));
+
+// Everything under /api below this point is per-user data (money, people, claims): never cached by a browser or proxy.
+app.use("/api", (_req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
 
 // One structured JSON line per API request (method, path, status, duration,
 // caller) so logs can be searched and alerted on. Skipped under test to keep
@@ -240,13 +262,18 @@ app.use("/api", (req, res, next) => {
 // below. A header that IS present but invalid/expired is rejected
 // rather than silently ignored, so a stale token can't masquerade as
 // "no session."
-interface AuthedStaff { id: string; fullName: string; roleId: string | null }
+// `permissions` is loaded in the same query that re-reads the staff record, so an RBAC check costs no
+// further database round trip.
+interface AuthedStaff { id: string; fullName: string; roleId: string | null; permissions: ReadonlySet<string>; mfaEnabled: boolean }
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request { staff?: AuthedStaff }
   }
 }
+
+// What a signed-in person who still has to enrol in two-step verification may reach.
+const MFA_SETUP_PATHS = /^\/(auth\/me|auth\/mfa\/(setup|enable)|health)$/;
 
 app.use("/api", async (req, res, next) => {
   const header = req.header("authorization");
@@ -263,9 +290,20 @@ app.use("/api", async (req, res, next) => {
     // token's snapshot: a terminated or deactivated employee loses access
     // immediately instead of when their 8h token expires, and a role change
     // takes effect on the next call.
-    const [member] = await db.select().from(staff).where(eq(staff.id, payload.id));
+    const found = await db.select({ member: staff, permissionId: rolePermissions.permissionId })
+      .from(staff)
+      .leftJoin(rolePermissions, eq(rolePermissions.roleId, staff.roleId))
+      .where(eq(staff.id, payload.id));
+    const member = found[0]?.member;
     if (!member || !member.active) return res.status(401).json({ error: "Invalid or expired session" });
-    req.staff = { id: member.id, fullName: member.fullName, roleId: member.roleId };
+    req.staff = {
+      id: member.id, fullName: member.fullName, roleId: member.roleId, mfaEnabled: member.mfaEnabled,
+      permissions: new Set(found.flatMap((f) => (f.permissionId ? [f.permissionId] : []))),
+    };
+    // When the tenant requires two-step verification, someone who has not set it up can do exactly one thing: set it up.
+    if (!member.mfaEnabled && !MFA_SETUP_PATHS.test(req.path) && (await staffMfaRequired())) {
+      return res.status(403).json({ error: "Set up two-step verification to continue", mfaEnrollmentRequired: true });
+    }
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired session" });
@@ -296,9 +334,7 @@ async function hasPermission(req: express.Request, permissionId: string): Promis
   // confined to parties/policies by the middleware above and never holds
   // a permission — so it fails every RBAC check rather than passing them.
   if (!req.staff || !req.staff.roleId) return false;
-  const [grant] = await db.select().from(rolePermissions)
-    .where(and(eq(rolePermissions.roleId, req.staff.roleId), eq(rolePermissions.permissionId, permissionId)));
-  return Boolean(grant);
+  return req.staff.permissions.has(permissionId);
 }
 
 function requirePermission(permissionId: string) {
@@ -317,14 +353,39 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync("not-a-real-password", 10);
 
 // Shared by the dashboard login below and the website workspace login
 // (/api/site/staff/login): one set of accounts, one JWT.
-async function checkCredentials(email: string, password: string) {
+// A password that is right is not yet a sign-in when the account has two-step verification on: the
+// caller must also supply a current authenticator code. "invalid" deliberately covers both an unknown
+// email and a wrong password; only after the password is right do we say a code is needed.
+type StaffRow = typeof staff.$inferSelect;
+type CredentialOutcome =
+  | { status: "ok"; member: StaffRow }
+  | { status: "invalid" | "mfa-required" | "bad-code" | "locked" };
+
+async function checkCredentials(email: string, password: string, code?: string): Promise<CredentialOutcome> {
   const [member] = await db.select().from(staff).where(eq(staff.email, email));
   const usable = member && member.active && member.passwordHash;
   const valid = await bcrypt.compare(password, usable ? member.passwordHash! : DUMMY_PASSWORD_HASH);
-  if (!usable || !valid) return null;
+  if (!usable || !valid) return { status: "invalid" };
+  if (member.mfaEnabled) {
+    if (!code) return { status: "mfa-required" };
+    const result = await mfa.verifyForLogin({ table: "access.staff", id: member.id, account: member.email ?? member.id }, code, JWT_SECRET);
+    if (result !== "ok") return { status: result === "locked" ? "locked" : "bad-code" };
+  }
   await db.update(staff).set({ lastLoginAt: new Date() }).where(eq(staff.id, member.id));
-  return member;
+  return { status: "ok", member };
 }
+
+/** Does the tenant insist on two-step verification for staff? A missing configuration must not lock everyone out. */
+async function staffMfaRequired(): Promise<boolean> {
+  try { return (await getEffectiveConfig(DEFAULT_TENANT_ID)).security.mfa === "required"; } catch { return false; }
+}
+
+const CREDENTIAL_PROBLEMS = {
+  invalid: [401, { error: "Invalid email or password" }],
+  "mfa-required": [401, { error: "Enter the 6-digit code from your authenticator app", mfaRequired: true }],
+  "bad-code": [401, { error: "That code is not right. Check your authenticator app and try again.", mfaRequired: true }],
+  locked: [429, { error: "Too many wrong codes — try again in 5 minutes", mfaRequired: true }],
+} as const;
 
 const SESSION_HOURS = 8;
 function issueToken(staffId: string): string {
@@ -332,23 +393,31 @@ function issueToken(staffId: string): string {
 }
 
 app.post("/api/auth/login", asyncRoute(async (req, res) => {
-  const { email, password } = req.body ?? {};
+  const { email, password, code } = req.body ?? {};
   if (typeof email !== "string" || typeof password !== "string" || !email || !password || password.length > 200) {
     return res.status(400).json({ error: "Email and password are required" });
   }
-  const member = await checkCredentials(email, password);
-  if (!member) return res.status(401).json({ error: "Invalid email or password" });
-
+  if (code !== undefined && (typeof code !== "string" || code.length > 12)) return res.status(400).json({ error: "The code must be the 6 digits from your authenticator app" });
+  const outcome = await checkCredentials(email, password, code || undefined);
+  if (outcome.status !== "ok") {
+    const [status, body] = CREDENTIAL_PROBLEMS[outcome.status];
+    return res.status(status).json(body);
+  }
+  const member = outcome.member;
   const token = issueToken(member.id);
-  res.json({ token, staff: { id: member.id, fullName: member.fullName, email: member.email, roleId: member.roleId } });
+  res.json({
+    token, staff: { id: member.id, fullName: member.fullName, email: member.email, roleId: member.roleId },
+    // the tenant requires two-step verification and this person has not set it up: the dashboard sends them to do so first
+    mfaEnrollmentRequired: !member.mfaEnabled && (await staffMfaRequired()),
+  });
 }));
 
 app.get("/api/auth/me", asyncRoute(async (req, res) => {
   if (!req.staff) return res.status(401).json({ error: "Not signed in" });
-  const grants = req.staff.roleId
-    ? await db.select().from(rolePermissions).where(eq(rolePermissions.roleId, req.staff.roleId))
-    : [];
-  res.json({ ...req.staff, permissions: grants.map((g) => g.permissionId) });
+  res.json({
+    id: req.staff.id, fullName: req.staff.fullName, roleId: req.staff.roleId, permissions: [...req.staff.permissions].sort(),
+    mfaEnabled: req.staff.mfaEnabled, mfaEnrollmentRequired: !req.staff.mfaEnabled && (await staffMfaRequired()),
+  });
 }));
 
 function asyncRoute(handler: (req: express.Request, res: express.Response) => Promise<unknown>) {
@@ -2645,9 +2714,13 @@ app.get("/api/payments", asyncRoute(async (req, res) => {
   const rows = req.query.partyId
     ? await db.select().from(payments).where(eq(payments.partyId, String(req.query.partyId))).orderBy(desc(payments.receivedAt))
     : await db.select().from(payments).orderBy(desc(payments.receivedAt));
-  const allConfirmations = await db.select().from(premiumConfirmations);
+  const confirmations = rows.length > 0
+    ? await db.select({ paymentId: premiumConfirmations.paymentId, amount: premiumConfirmations.confirmedAmountKes }).from(premiumConfirmations).where(inArray(premiumConfirmations.paymentId, rows.map((p) => p.id)))
+    : [];
+  const allocatedByPayment = new Map<string, number>();
+  for (const c of confirmations) allocatedByPayment.set(c.paymentId!, (allocatedByPayment.get(c.paymentId!) ?? 0) + Number(c.amount));
   const withBalances = rows.map((p) => {
-    const allocatedKes = allConfirmations.filter((c) => c.paymentId === p.id).reduce((sum, c) => sum + Number(c.confirmedAmountKes), 0);
+    const allocatedKes = allocatedByPayment.get(p.id) ?? 0;
     return { ...p, allocatedKes, unallocatedKes: Math.round((Number(p.totalAmountKes) - allocatedKes) * 100) / 100 };
   });
   res.json(withBalances);
@@ -3003,12 +3076,22 @@ app.patch("/api/accounting-periods/:id", requirePermission("gl.period_close"), a
 }));
 
 app.get("/api/journal-entries", requirePermission("finance.view"), asyncRoute(async (req, res) => {
-  const entries = req.query.periodId
-    ? await db.select().from(journalEntries).where(eq(journalEntries.periodId, String(req.query.periodId))).orderBy(desc(journalEntries.entryDate), desc(journalEntries.id))
-    : await db.select().from(journalEntries).orderBy(desc(journalEntries.entryDate), desc(journalEntries.id));
-  // Only the lines belonging to the entries being returned, not the whole table.
+  const paging = readPaging(req);
+  const where = and(
+    req.query.periodId ? eq(journalEntries.periodId, String(req.query.periodId)) : undefined,
+    paging ? searchAny(paging.q, [journalEntries.description, journalEntries.reference, journalEntries.id]) : undefined,
+  );
+  const base = db.select().from(journalEntries).where(where).orderBy(desc(journalEntries.entryDate), desc(journalEntries.id));
+  const [entries, total] = paging
+    ? await Promise.all([base.limit(paging.limit).offset(paging.offset), db.select({ total: count() }).from(journalEntries).where(where).then(([r]) => r.total)])
+    : [await base, 0];
+  // Only the lines belonging to the entries being returned, grouped in one pass.
   const lines = entries.length > 0 ? await db.select().from(journalLines).where(inArray(journalLines.entryId, entries.map((e) => e.id))) : [];
-  res.json(entries.map((e) => ({ ...e, lines: lines.filter((l) => l.entryId === e.id) })));
+  const byEntry = new Map<string, typeof lines>();
+  for (const l of lines) (byEntry.get(l.entryId) ?? byEntry.set(l.entryId, []).get(l.entryId)!).push(l);
+  const out = entries.map((e) => ({ ...e, lines: byEntry.get(e.id) ?? [] }));
+  if (paging) return sendPage(res, out, total);
+  res.json(out);
 }));
 
 app.get("/api/journal-entries/:id", requirePermission("finance.view"), asyncRoute(async (req, res) => {
@@ -3856,6 +3939,19 @@ app.post("/api/producer-commission-splits/:id/pay", requirePermission("producer.
 }));
 
 // ----------------------------------------------------
+// Tenant configuration and the receipts / invoices / premium allocation ledger.
+// Each module is a router factory in ./modules with its permission gate and
+// actor lookup injected, so it stays testable apart from this file. These
+// routes answer in RFC 7807 problem documents; see docs/api/errors.md.
+// ----------------------------------------------------
+const moduleDeps = { requirePermission, hasPermission, actorId: (req: express.Request) => actorId(req) };
+app.use("/api", createConfigRouter(moduleDeps));
+app.use("/api", createFinanceRouter(moduleDeps));
+app.use("/api", createAnalyticsRouter(moduleDeps));
+app.use("/api", createPortalAdminRouter(moduleDeps));
+app.use("/api", createStaffMfaRouter({ requirePermission, jwtSecret: JWT_SECRET }));
+
+// ----------------------------------------------------
 // Dashboard front-end — Vite dev middleware, or the static build in
 // production. Mirrors ../studio/server.ts so both services boot the
 // same way.
@@ -3867,8 +3963,12 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Vite fingerprints everything in /assets, so those files can be cached for a year; index.html names the
+    // current fingerprints and must always be re-checked.
+    app.use("/assets", express.static(path.join(distPath, "assets"), { maxAge: "1y", immutable: true }));
+    app.use(express.static(distPath, { index: false, maxAge: "1h" }));
     app.get("*", (req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

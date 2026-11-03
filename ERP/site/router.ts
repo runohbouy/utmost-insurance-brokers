@@ -30,10 +30,16 @@ dotenv.config();
 
 export interface StaffIdentity { staffId: string; fullName: string; role: string; permissions: string[] }
 
+/** What a workspace sign-in attempt can come to: a session, nothing (wrong email/password), or a specific second-factor problem. */
+export type SiteLoginOutcome =
+  | ({ token: string; expiresAt: number } & StaffIdentity)
+  | { problem: "mfa-required" | "bad-code" | "locked" | "enrollment-required" }
+  | null;
+
 // What the website router needs from the ERP, injected so this file doesn't
 // depend on server.ts (and so tests can fake it).
 export interface SiteDeps {
-  login: (email: string, password: string) => Promise<{ token: string; expiresAt: number } & StaffIdentity | null>;
+  login: (email: string, password: string, code?: string) => Promise<SiteLoginOutcome>;
   authenticate: (token: string) => Promise<StaffIdentity | null>;
   listStaff: () => Promise<{ id: string; fullName: string; role: string; active: boolean }[]>;
 }
@@ -80,13 +86,22 @@ const requireStaffAuth = requireStaff();
 // ERP dashboard (the old hard-coded shared-password list is gone). The login
 // field takes the staff email address.
 router.post("/staff/login", asyncRoute(async (req, res) => {
-  const { username, password } = req.body ?? {};
+  const { username, password, code } = req.body ?? {};
   if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
     return res.status(400).json({ error: "Enter your staff email and password." });
   }
-  const session = await deps.login(username.trim(), password);
-  if (!session) return res.status(401).json({ error: "Invalid staff email or password." });
-  res.json(session);
+  if (code !== undefined && (typeof code !== "string" || code.length > 12)) return res.status(400).json({ error: "The code must be the 6 digits from your authenticator app." });
+  const outcome = await deps.login(username.trim(), password, code || undefined);
+  if (!outcome) return res.status(401).json({ error: "Invalid staff email or password." });
+  if ("problem" in outcome) {
+    switch (outcome.problem) {
+      case "mfa-required": return res.status(401).json({ error: "Enter the 6-digit code from your authenticator app.", mfaRequired: true });
+      case "bad-code": return res.status(401).json({ error: "That code is not right. Check your authenticator app and try again.", mfaRequired: true });
+      case "locked": return res.status(429).json({ error: "Too many wrong codes — try again in 5 minutes.", mfaRequired: true });
+      case "enrollment-required": return res.status(403).json({ error: "Two-step verification is required for staff. Sign in to the ERP dashboard once to set it up, then come back here." });
+    }
+  }
+  res.json(outcome);
 }));
 
 // Tokens are stateless JWTs, so there is nothing to revoke server-side; the
