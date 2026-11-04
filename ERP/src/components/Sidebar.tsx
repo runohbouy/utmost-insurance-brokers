@@ -4,6 +4,7 @@ import {
   Receipt, BarChart3, Settings as SettingsIcon, KeyRound,
 } from "lucide-react";
 import { useTenant } from "../ConfigContext";
+import { canSeeView } from "../navAccess";
 import type { View } from "../App";
 import type { StaffSession } from "../types";
 
@@ -59,16 +60,6 @@ export const NAV_GROUPS: { label: string; items: { id: View; label: string; icon
   },
 ];
 
-// A menu item shows only if the role has its view.<id> permission AND, where listed here, ANY of these permissions, and the tenant's plan
-// includes the module. Cosmetic only — the server enforces the same rules on every route.
-const NAV_PERMISSIONS: Partial<Record<View, string[]>> = {
-  finance: ["finance.view"],
-  receipts: ["finance.view"],
-  analytics: ["analytics.view", "analytics.finance"],
-  settings: ["tenant_config.manage", "portal.manage"],
-};
-const NAV_MODULES: Partial<Record<View, string>> = { receipts: "finance", analytics: "analytics" };
-
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   underwriter: "Underwriter",
@@ -77,20 +68,15 @@ const ROLE_LABELS: Record<string, string> = {
   accountant: "Accountant",
   supervisor: "Supervisor",
   sales_agent: "Sales Agent",
+  operations: "Operations",
+  hr_officer: "HR Officer",
   system: "System",
 };
 
 export default function Sidebar({ active, onSelect, staff, onLogout, onSecurity }: { active: View; onSelect: (v: View) => void; staff: StaffSession; onLogout: () => void; onSecurity?: () => void }) {
   const tenant = useTenant();
-  const visible = (id: View) => {
-    // the role must be given the screen (view.<id>, see migrate-029-role-views.ts) ...
-    if (!staff.permissions.includes(`view.${id}`)) return false;
-    // ... and, for screens that show sensitive data, hold the permission behind it
-    const needs = NAV_PERMISSIONS[id];
-    if (needs && !needs.some((p) => staff.permissions.includes(p))) return false;
-    const module = NAV_MODULES[id];
-    return !module || tenant.hasModule(module);
-  };
+  // the rules live in navAccess.ts so scripts/test-users.ts reports exactly what this menu shows
+  const visible = (id: View) => canSeeView(id, staff.permissions, tenant.hasModule);
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
       <div className="border-b border-slate-200 px-5 py-5">

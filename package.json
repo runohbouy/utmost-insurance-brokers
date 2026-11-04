@@ -4,6 +4,9 @@
   "description": "Utmost Insurance Brokers — the public website (studio/) and the backend that runs the business (ERP/): one repository, one database.",
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "demo": "node scripts/dev.mjs --demo",
+    "test-users": "npm --prefix ERP run test-users --",
+    "demo:reset": "npm --prefix ERP run demo:reset",
     "postinstall": "npm run install:all",
     "install:all": "cd ERP && npm install --no-audit --no-fund && cd ../studio && npm install --no-audit --no-fund",
     "lint": "npm --prefix ERP run lint && npm --prefix studio run lint",

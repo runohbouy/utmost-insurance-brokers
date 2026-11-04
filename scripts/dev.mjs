@@ -3,6 +3,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const apps = [
@@ -10,8 +11,17 @@ const apps = [
   { name: "web", dir: "studio", color: "\x1b[35m" },
 ];
 
+// `npm run demo`: the same two apps, but the backend runs on the separate DEMO database (built on first use).
+const demo = process.argv.includes("--demo");
+if (demo) {
+  const built = spawnSync("npm", ["--prefix", "ERP", "run", "demo:build"], { cwd: root, stdio: "inherit", shell: true });
+  if (built.status !== 0) process.exit(built.status ?? 1);
+}
+const demoPort = process.env.ERP_PORT || "3101";
+const demoEnv = { ERP_PORT: demoPort, PGLITE_DEV: "true", PGLITE_DATA_DIR: path.join(root, "ERP", "database", ".pgdata-demo") };
+
 const children = apps.map(({ name, dir, color }) => {
-  const child = spawn("npm", ["run", "dev"], { cwd: path.join(root, dir), shell: true, env: process.env });
+  const child = spawn("npm", ["run", "dev"], { cwd: path.join(root, dir), shell: true, env: demo ? (name === "api" ? { ...process.env, ...demoEnv } : { ...process.env, ERP_URL: `http://localhost:${demoPort}` }) : process.env });
   const tag = `${color}[${name}]\x1b[0m `;
   const pipe = (stream, out) => stream.on("data", (chunk) => {
     for (const line of String(chunk).split(/\r?\n/)) if (line.trim()) out.write(tag + line + "\n");

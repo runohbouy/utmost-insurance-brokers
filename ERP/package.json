@@ -41,7 +41,11 @@
     "db:migrate:hr": "tsx database/migrate-018-hr.ts",
     "db:migrate:producers": "tsx database/migrate-019-producers.ts",
     "db:migrate:route-permissions": "tsx database/migrate-020-route-permissions.ts",
-    "perf": "tsx scripts/perf.ts"
+    "perf": "tsx scripts/perf.ts",
+    "demo": "node scripts/demo.mjs",
+    "test-users": "tsx scripts/test-users.ts",
+    "demo:build": "tsx scripts/demo-data.ts",
+    "demo:reset": "tsx scripts/demo-data.ts --reset"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.12",

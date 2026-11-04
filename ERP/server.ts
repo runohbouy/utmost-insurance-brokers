@@ -40,7 +40,8 @@ const app = express();
 // Behind a reverse proxy (Render, nginx, ...) the client IP — which the rate limits
 // key on — is in X-Forwarded-For. Set TRUST_PROXY to the number of proxy hops.
 if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
-const PORT = 3100;
+// 3100 unless ERP_PORT says otherwise (the demo runs on 3101 so it can sit beside the development server).
+const PORT = Number(process.env.ERP_PORT) || 3100;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 // Placeholder values shipped in .env.example — fine for local dev, never
